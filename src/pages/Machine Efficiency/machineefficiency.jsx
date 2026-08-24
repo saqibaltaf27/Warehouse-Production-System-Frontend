@@ -3,7 +3,7 @@ import { machineEfficiencyApi } from '../../apis/auth/machine-efficiency';
 import DashboardFilters from '../../components/MachineEfficiency/DashboardFilters';
 import DashboardCharts from '../../components/MachineEfficiency/DashboardCharts';
 import DrilldownModal from '../../components/MachineEfficiency/DrilldownModal';
-import StatCard from '../../global-components/StatCard/StatCard';
+import Card from '../../global-components/Card/Card';
 import Table from '../../global-components/Table/Table';
 import EmptyState from '../../global-components/EmptyState/EmptyState';
 import {
@@ -149,46 +149,39 @@ const MachineEfficiency = () => {
             <>
               {/* KPI Cards & Charts */}
               <div className="fade-in-up delay-100">
-                <div className="stat-card-grid">
-                  <StatCard
-                    title="Actual Consumed / Available"
-                    value={`${totalConsumed.toFixed(0)} / ${totalAvailable.toFixed(0)}`}
-                    subtext={`Utilization: ${globalUtilization.toFixed(2)}%`}
-                    color="blue"
-                    icon={IconClock}
-                  />
-
-                  <StatCard
-                    title="Production Efficiency"
-                    value={`${globalEfficiency.toFixed(2)}%`}
-                    subtext={`Actual: ${totalOutput.toFixed(0)} | Planned: ${totalPlannedOutput.toFixed(0)}`}
-                    color="emerald"
-                    icon={IconPercentage}
-                  />
-
-                  <StatCard
-                    title="Production Output"
-                    value={totalOutput.toFixed(0)}
-                    subtext={`Planned: ${totalPlannedOutput.toFixed(0)} | Var: ${(totalOutput - totalPlannedOutput).toFixed(0)}`}
-                    color="amber"
-                    icon={IconBox}
-                  />
-
-                  <StatCard
-                    title="Production / Machine Hr"
-                    value={globalQtyPerHour.toFixed(2)}
-                    subtext="Average Qty per Hour"
-                    color="rose"
-                    icon={IconActivity}
-                  />
-
-                  <StatCard
-                    title="Active Orders"
-                    value={summary.totalOrders || 0}
-                    subtext={`Active: ${summary.activeOrders || 0} | Done: ${summary.closedOrders || 0}`}
-                    color="purple"
-                    icon={IconClipboardList}
-                  />
+                <div className="mb-6">
+                  <Card items={[
+                    {
+                      title: "Actual Consumed / Available",
+                      value: `${totalConsumed.toFixed(0)} / ${totalAvailable.toFixed(0)}`,
+                      trendText: `Utilization: ${globalUtilization.toFixed(2)}%`,
+                      icon: IconClock
+                    },
+                    {
+                      title: "Production Efficiency",
+                      value: `${globalEfficiency.toFixed(2)}%`,
+                      trendText: `Actual: ${totalOutput.toFixed(0)} | Planned: ${totalPlannedOutput.toFixed(0)}`,
+                      icon: IconPercentage
+                    },
+                    {
+                      title: "Production Output",
+                      value: totalOutput.toFixed(0),
+                      trendText: `Planned: ${totalPlannedOutput.toFixed(0)} | Var: ${(totalOutput - totalPlannedOutput).toFixed(0)}`,
+                      icon: IconBox
+                    },
+                    {
+                      title: "Production / Machine Hr",
+                      value: globalQtyPerHour.toFixed(2),
+                      trendText: "Average Qty per Hour",
+                      icon: IconActivity
+                    },
+                    {
+                      title: "Active Orders",
+                      value: summary.totalOrders || 0,
+                      trendText: `Active: ${summary.activeOrders || 0} | Done: ${summary.closedOrders || 0}`,
+                      icon: IconClipboardList
+                    }
+                  ]} />
                 </div>
 
                 <DashboardCharts data={chartData} />

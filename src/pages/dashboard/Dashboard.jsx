@@ -15,7 +15,7 @@ import {
 import LineChart from "../../global-components/Charts/LineChart";
 import PieChart from "../../global-components/Charts/PieChart";
 import BarChart from "../../global-components/Charts/BarChart";
-import StatCard from "../../global-components/StatCard/StatCard";
+import Card from "../../global-components/Card/Card";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
 import Pagination from "../../global-components/Pagination/Pagination";
@@ -232,42 +232,39 @@ export default function Dashboard() {
     <div className="executive-dashboard">
 
       {/* Row 1: KPIs */}
-      <div className="stat-card-grid fade-in-up delay-100">
-        <StatCard
-          title="Total Orders"
-          value={executiveKPIs.totalOrders}
-          color="blue"
-          icon={IconClipboardList}
-          subtext="Total created orders"
-        />
-        <StatCard
-          title="In Progress Orders"
-          value={executiveKPIs.activeOrders}
-          color="emerald"
-          icon={IconCheck}
-          subtext="Orders in production"
-        />
-        <StatCard
-          title="Cancelled Orders"
-          value={executiveKPIs.cancelledOrders || 0}
-          color="amber"
-          icon={IconAlertCircle}
-          subtext="Cancelled production orders"
-        />
-        <StatCard
-          title="Delayed Orders"
-          value={executiveKPIs.delayedOrders || 0}
-          color="rose"
-          icon={IconAlertTriangle}
-          subtext="Orders behind schedule"
-        />
-        <StatCard
-          title="Completed Orders"
-          value={executiveKPIs.closedOrders || 0}
-          color="purple"
-          icon={IconCheck}
-          subtext="Completed/Completed orders"
-        />
+      <div className="fade-in-up delay-100 mb-6">
+        <Card items={[
+          {
+            title: "Total Orders",
+            value: executiveKPIs.totalOrders,
+            trendText: "Total created orders",
+            icon: IconClipboardList
+          },
+          {
+            title: "In Progress Orders",
+            value: executiveKPIs.activeOrders,
+            trendText: "Orders in production",
+            icon: IconCheck
+          },
+          {
+            title: "Cancelled Orders",
+            value: executiveKPIs.cancelledOrders || 0,
+            trendText: "Cancelled production orders",
+            icon: IconAlertCircle
+          },
+          {
+            title: "Delayed Orders",
+            value: executiveKPIs.delayedOrders || 0,
+            trendText: "Orders behind schedule",
+            icon: IconAlertTriangle
+          },
+          {
+            title: "Completed Orders",
+            value: executiveKPIs.closedOrders || 0,
+            trendText: "Completed orders",
+            icon: IconCheck
+          }
+        ]} />
       </div>
 
       {/* Row 2: Production Trend */}

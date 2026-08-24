@@ -10,7 +10,7 @@ import {
   IconCheck,
   IconX
 } from '@tabler/icons-react';
-import StatCard from '../../global-components/StatCard/StatCard';
+import Card from '../../global-components/Card/Card';
 import '../../components/ProductionTrend/ProductionTrend.css';
 
 const ProductionTrend = () => {
@@ -126,43 +126,39 @@ const ProductionTrend = () => {
       />
 
       {/* KPI Cards */}
-      <div className="stat-card-grid fade-in-up delay-100">
-        <StatCard
-          title="Production Orders"
-          value={summary.totalOrders}
-          subtext="Unique Work Orders"
-          color="purple"
-          icon={IconClipboardList}
-        />
-
-        <StatCard
-          title="Pending Orders"
-          value={summary.pendingOrders}
-          subtext="Planned & In Progress"
-          color="amber"
-          icon={IconClock}
-        />
-        <StatCard
-          title="Complete Orders"
-          value={summary.completeOrders}
-          subtext="Finished Orders"
-          color="blue"
-          icon={IconCheck}
-        />
-        <StatCard
-          title="Cancelled Orders"
-          value={summary.cancelledOrders}
-          subtext="Cancelled Work Orders"
-          color="rose"
-          icon={IconX}
-        />
-        <StatCard
-          title="Total Production"
-          value={formatNumber(summary.totalProduction)}
-          subtext="Total Quantity Received"
-          color="indigo"
-          icon={IconBox}
-        />
+      <div className="fade-in-up delay-100 mb-6">
+        <Card items={[
+          {
+            title: "Production Orders",
+            value: summary.totalOrders,
+            trendText: "Unique Work Orders",
+            icon: IconClipboardList
+          },
+          {
+            title: "Pending Orders",
+            value: summary.pendingOrders,
+            trendText: "Planned & In Progress",
+            icon: IconClock
+          },
+          {
+            title: "Complete Orders",
+            value: summary.completeOrders,
+            trendText: "Finished Orders",
+            icon: IconCheck
+          },
+          {
+            title: "Cancelled Orders",
+            value: summary.cancelledOrders,
+            trendText: "Cancelled Work Orders",
+            icon: IconX
+          },
+          {
+            title: "Total Production",
+            value: formatNumber(summary.totalProduction),
+            trendText: "Total Quantity Received",
+            icon: IconBox
+          }
+        ]} />
       </div>
 
       {/* Charts */}

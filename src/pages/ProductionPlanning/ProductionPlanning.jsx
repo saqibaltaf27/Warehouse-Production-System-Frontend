@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
-import StatCard from '../../global-components/StatCard/StatCard';
+import Card from '../../global-components/Card/Card';
 import Pagination from '../../global-components/Pagination/Pagination';
 import ProductionHistory from './ProductionHistory';
 import ProductionTrend from './ProductionTrend';
@@ -223,35 +223,33 @@ const ProductionPlanning = () => {
       </div>
 
       {kpiData && (
-        <div className="planning-kpi-grid fade-in-up">
-          <StatCard
-            title="Open Orders"
-            value={fmt(kpiData.totalOpen)}
-            icon={IconChecklist}
-            color="primary"
-            subtext="Released & Planned"
-          />
-          <StatCard
-            title="Delayed Orders"
-            value={fmt(kpiData.delayedOrders)}
-            icon={IconClock}
-            color="rose"
-            subtext="Past Due Date"
-          />
-          <StatCard
-            title="Material Shortages"
-            value={fmt(shortagesTotal)}
-            icon={IconAlertTriangle}
-            color="amber"
-            subtext="Missing Components"
-          />
-          <StatCard
-            title="Production Completion"
-            value={`${kpiData.completionPct}%`}
-            icon={IconReportAnalytics}
-            color="emerald"
-            subtext="Overall Backlog Yield"
-          />
+        <div className="fade-in-up mb-6">
+          <Card items={[
+            {
+              title: "Open Orders",
+              value: fmt(kpiData.totalOpen),
+              trendText: "Released & Planned",
+              icon: IconChecklist
+            },
+            {
+              title: "Delayed Orders",
+              value: fmt(kpiData.delayedOrders),
+              trendText: "Past Due Date",
+              icon: IconClock
+            },
+            {
+              title: "Material Shortages",
+              value: fmt(shortagesTotal),
+              trendText: "Missing Components",
+              icon: IconAlertTriangle
+            },
+            {
+              title: "Production Completion",
+              value: `${kpiData.completionPct}%`,
+              trendText: "Overall Backlog Yield",
+              icon: IconReportAnalytics
+            }
+          ]} />
         </div>
       )}
 
