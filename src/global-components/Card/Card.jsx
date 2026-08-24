@@ -10,42 +10,60 @@ const Card = ({ items = [] }) => {
       {items.map((item, index) => {
         const hasTrend = item.trend !== undefined && item.trend !== null;
         const isPositive = hasTrend && item.trend >= 0;
-        
+
+        // Colors
+        const themeColor = item.color || '#06588D'; // var(--primary-blue)
+
         const CardContent = (
-          <div className={`dome-card-premium ${item.isDark ? 'is-dark' : ''}`}>
-            <div className="card-bg-gradient"></div>
-            
+          <div className={`dome-card-premium ${item.isDark ? 'is-dark' : ''} ${item.active ? 'is-active' : ''}`} style={{ '--theme-color': themeColor }}>
+
             <div className="card-top-section">
-              <div className="card-title-wrap">
-                {item.icon && (
-                  <div className="card-icon-wrapper">
-                    <item.icon size={18} stroke={2} />
-                  </div>
-                )}
-                <span className="card-title-text">{item.title}</span>
-              </div>
-              {item.link && (
-                <div className="card-link-arrow">
-                  <IconArrowRight size={16} />
+              {item.icon && (
+                <div className="card-icon-wrapper" style={{ color: themeColor, backgroundColor: `color-mix(in srgb, ${themeColor} 12%, transparent)` }}>
+                  <item.icon size={20} stroke={2} />
+                </div>
+              )}
+              {hasTrend && (
+                <div className={`trend-badge ${isPositive ? 'positive' : 'negative'}`}>
+                  {isPositive ? <IconTrendingUp size={14} stroke={2.5} /> : <IconTrendingDown size={14} stroke={2.5} />}
+                  <span>{Math.abs(item.trend)}%</span>
                 </div>
               )}
             </div>
-            
+
             <div className="card-middle-section">
-              <h2 className="card-value-text">{item.value || item.description}</h2>
-            </div>
-            
-            {(hasTrend || item.trendText) && (
-              <div className="card-bottom-section">
-                {hasTrend && (
-                  <div className={`trend-indicator ${isPositive ? 'positive' : 'negative'}`}>
-                    {isPositive ? <IconTrendingUp size={16} stroke={2.5} /> : <IconTrendingDown size={16} stroke={2.5} />}
-                    <span>{Math.abs(item.trend)}%</span>
+              <div className="card-title-wrap">
+                <span className="card-title-text">{item.title}</span>
+                {item.link && (
+                  <div className="card-link-arrow">
+                    <IconArrowRight size={16} />
                   </div>
                 )}
-                {item.trendText && <span className="trend-context">{item.trendText}</span>}
+              </div>
+
+              {(item.description || item.trendText) && (
+                <div className="card-desc-text">{item.description || item.trendText}</div>
+              )}
+            </div>
+
+            {(item.stats || item.value !== undefined) && (
+              <div className="card-bottom-stats">
+                {item.stats ? (
+                  item.stats.map((stat, i) => (
+                    <div className="stat-block" key={i}>
+                      <div className="stat-label">{stat.label}</div>
+                      <div className="stat-value" style={{ color: stat.color || '#1e293b' }}>{stat.value}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="stat-block">
+                    <div className="stat-label">{item.valueLabel || 'Total Count'}</div>
+                    <div className="stat-value" style={{ color: item.valueColor || '#1e293b' }}>{item.value}</div>
+                  </div>
+                )}
               </div>
             )}
+
           </div>
         );
 

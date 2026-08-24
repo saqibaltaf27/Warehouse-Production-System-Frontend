@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Table from '../../global-components/Table/Table';
-import Breadcrumb from '../../global-components/Breadcrumb/Breadcrumb';
+import Tabs from '../../global-components/Tabs/Tabs';
 import {
   XAxis,
   YAxis,
@@ -166,7 +166,6 @@ const ItemMasterView = () => {
       <div className="breadcrumb-wrapper">
          <h1 className="page-title">Item Details: {itemCode}</h1>
       </div>
-      <Breadcrumb items={breadcrumbs} />
       
       <div className="item-detail-content mt-6">
         
@@ -211,10 +210,14 @@ const ItemMasterView = () => {
         <div className="detail-card mt-6">
           <div className="detail-card-header flex-between border-b">
             <div><span className="icon">🏢</span> Warehouse & Expiry Stock Summary</div>
-            <div className="tab-group">
-              <button className={`tab-btn ${stockTab === 'Warehouse Report' ? 'active' : ''}`} onClick={() => setStockTab('Warehouse Report')}>Warehouse Report</button>
-              <button className={`tab-btn ${stockTab === 'Batch & Serial Expiry' ? 'active' : ''}`} onClick={() => setStockTab('Batch & Serial Expiry')}>Batch & Serial Expiry</button>
-            </div>
+            <Tabs 
+              tabs={[
+                { key: 'Warehouse Report', label: 'Warehouse Report' },
+                { key: 'Batch & Serial Expiry', label: 'Batch & Serial Expiry' }
+              ]} 
+              activeTab={stockTab} 
+              onTabChange={setStockTab} 
+            />
           </div>
           <div className="table-container p-6">
             {stockTab === 'Warehouse Report' ? (
@@ -259,12 +262,16 @@ const ItemMasterView = () => {
         <div className="detail-card mt-6 relative">
           <div className="detail-card-header flex-between border-b" style={{ flexWrap: 'wrap', gap: '1rem' }}>
             <div><span className="icon">🕒</span> Inventory Audit Movement History & Transaction Log</div>
-            <div className="tab-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-               <button className={`tab-btn ${historyTab === 'Current Month' ? 'active' : ''}`} onClick={() => setHistoryTab('Current Month')}>Current Month</button>
-               <button className={`tab-btn ${historyTab === 'Current Year' ? 'active' : ''}`} onClick={() => setHistoryTab('Current Year')}>Current Year</button>
-               <button className={`tab-btn ${historyTab === 'All Time' ? 'active' : ''}`} onClick={() => setHistoryTab('All Time')}>All Time</button>
-               <button className={`tab-btn ${historyTab === 'Custom Date' ? 'active' : ''}`} onClick={() => setHistoryTab('Custom Date')}>Custom Date</button>
-            </div>
+            <Tabs 
+              tabs={[
+                { key: 'Current Month', label: 'Current Month' },
+                { key: 'Current Year', label: 'Current Year' },
+                { key: 'All Time', label: 'All Time' },
+                { key: 'Custom Date', label: 'Custom Date' }
+              ]} 
+              activeTab={historyTab} 
+              onTabChange={setHistoryTab} 
+            />
           </div>
           
           {historyTab === 'Custom Date' && (

@@ -23,7 +23,18 @@ const Layout = () => {
     "/settings": "Settings",
   };
 
-  const pageTitle = moduleTitles[pathname] || "Dashboard";
+  let breadcrumbItems = [];
+  if (pathname.startsWith('/inventory/item-master/')) {
+    const parts = pathname.split('/');
+    const itemCode = decodeURIComponent(parts[parts.length - 1]);
+    breadcrumbItems = [
+      { label: 'Inventory', href: '/inventory' },
+      { label: itemCode, current: true }
+    ];
+  } else {
+    const pageTitle = moduleTitles[pathname] || "Dashboard";
+    breadcrumbItems = [{ label: pageTitle, current: true }];
+  }
 
   return (
     <div className="dribbble-layout">
@@ -45,7 +56,7 @@ const Layout = () => {
               <IconMenu2 size={22} />
             </button>
             <div>
-              <Breadcrumb items={[{ label: pageTitle, current: true }]} />
+              <Breadcrumb items={breadcrumbItems} />
             </div>
           </div>
         </header>

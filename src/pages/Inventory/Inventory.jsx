@@ -144,45 +144,55 @@ const Inventory = () => {
     ? [
         {
           title: 'Total Items',
+          description: 'Overall registered SKUs and items currently managed in the inventory.',
           value: fmt(dashboardCards.TotalActiveItems),
-          trend: 12,
-          trendText: 'Last month',
-          icon: IconPackage,
+          valueLabel: 'Total Count',
+          icon: IconBox,
+          color: '#1e293b',
         },
         {
           title: 'Item Groups',
+          description: 'Distinct high-level item groupings categorized for accounting.',
           value: fmt(dashboardCards.TotalItemGroups),
-          trend: 4,
-          trendText: 'Last month',
-          icon: IconBox,
+          valueLabel: 'Active Groups',
+          icon: IconPackage,
+          color: '#3b82f6',
         },
         {
           title: 'Categories',
+          description: 'Sub-classifications of inventory items for precise tracking.',
           value: fmt(dashboardCards.TotalCategories),
-          trend: 8,
-          trendText: 'Last month',
+          valueLabel: 'Total Categories',
           icon: IconCategory,
+          color: '#f59e0b',
+          valueColor: '#f59e0b',
         },
         {
           title: 'Warehouses',
+          description: 'Physical and virtual storage locations for current stock.',
           value: fmt(dashboardCards.TotalWarehouses),
-          trend: 0,
-          trendText: 'Last month',
+          valueLabel: 'Locations',
           icon: IconBuildingWarehouse,
+          color: '#10b981',
+          valueColor: '#10b981',
         },
         {
           title: 'Goods Received',
+          description: 'Inbound inventory items securely receipted into stock.',
           value: fmt(dashboardCards.TotalGoodsReceived),
-          trend: -2,
-          trendText: 'Last month',
+          valueLabel: 'Volume',
           icon: IconTruckDelivery,
+          color: '#64748b',
+          valueColor: '#64748b',
         },
         {
           title: 'Goods Issued',
+          description: 'Outbound inventory shipments and dispatched lots.',
           value: fmt(dashboardCards.TotalGoodsIssued),
-          trend: 5,
-          trendText: 'Last month',
+          valueLabel: 'Volume',
           icon: IconTruckDelivery,
+          color: '#ef4444',
+          valueColor: '#ef4444',
         },
       ]
     : [];
@@ -267,52 +277,67 @@ const Inventory = () => {
               <Card items={[
                 {
                   title: 'EXPIRED',
-                  value: fmt(summaryBuckets['EXPIRED']?.stockQty),
-                  trend: -12,
-                  trendText: `${fmt(summaryBuckets['EXPIRED']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['EXPIRED']?.batchCount)} Batches${summaryBuckets['EXPIRED']?.serialCount ? ` • ${fmt(summaryBuckets['EXPIRED'].serialCount)} Serials` : ''}`,
                   icon: IconAlertCircle,
+                  color: '#ef4444',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['EXPIRED']?.stockQty), color: '#ef4444' }
+                  ]
                 },
                 {
                   title: '0-30 DAYS',
-                  value: fmt(summaryBuckets['0-30']?.stockQty),
-                  trend: -5,
-                  trendText: `${fmt(summaryBuckets['0-30']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['0-30']?.batchCount)} Batches`,
                   icon: IconClock,
+                  color: '#f97316',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['0-30']?.stockQty), color: '#f97316' }
+                  ]
                 },
                 {
                   title: '31-60 DAYS',
-                  value: fmt(summaryBuckets['31-60']?.stockQty),
-                  trend: 2,
-                  trendText: `${fmt(summaryBuckets['31-60']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['31-60']?.batchCount)} Batches${summaryBuckets['31-60']?.serialCount ? ` • ${fmt(summaryBuckets['31-60'].serialCount)} Serials` : ''}`,
                   icon: IconClock,
+                  color: '#f59e0b',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['31-60']?.stockQty), color: '#f59e0b' }
+                  ]
                 },
                 {
                   title: '61-90 DAYS',
-                  value: fmt(summaryBuckets['61-90']?.stockQty),
-                  trend: 8,
-                  trendText: `${fmt(summaryBuckets['61-90']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['61-90']?.batchCount)} Batches`,
                   icon: IconClock,
+                  color: '#3b82f6',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['61-90']?.stockQty), color: '#3b82f6' }
+                  ]
                 },
                 {
                   title: '91-180 DAYS',
-                  value: fmt(summaryBuckets['91-180']?.stockQty),
-                  trend: 14,
-                  trendText: `${fmt(summaryBuckets['91-180']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['91-180']?.batchCount)} Batches`,
                   icon: IconClock,
+                  color: '#10b981',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['91-180']?.stockQty), color: '#10b981' }
+                  ]
                 },
                 {
                   title: '180+ DAYS',
-                  value: fmt(summaryBuckets['180+']?.stockQty),
-                  trend: 22,
-                  trendText: `${fmt(summaryBuckets['180+']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['180+']?.batchCount)} Batches${summaryBuckets['180+']?.serialCount ? ` • ${fmt(summaryBuckets['180+'].serialCount)} Serials` : ''}`,
                   icon: IconClock,
+                  color: '#06b6d4',
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['180+']?.stockQty), color: '#06b6d4' }
+                  ]
                 },
                 {
                   title: 'TOTAL INVENTORY',
-                  value: fmt(summaryBuckets['ALL']?.stockQty),
-                  trend: 5,
-                  trendText: `${fmt(summaryBuckets['ALL']?.batchCount)} Batches`,
+                  description: `${fmt(summaryBuckets['ALL']?.batchCount)} Batches${summaryBuckets['ALL']?.serialCount ? ` • ${fmt(summaryBuckets['ALL'].serialCount)} Serials` : ''}`,
                   icon: IconPackage,
+                  color: '#4f46e5',
+                  active: true,
+                  stats: [
+                    { label: 'Stock Qty', value: fmt(summaryBuckets['ALL']?.stockQty), color: '#4f46e5' }
+                  ]
                 },
               ]} />
             </div>

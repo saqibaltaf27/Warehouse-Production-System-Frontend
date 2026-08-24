@@ -1,6 +1,6 @@
 .dome-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 16px;
 }
 
@@ -18,93 +18,117 @@
 .dome-card-premium {
     position: relative;
     height: 100%;
-    padding: 20px;
+    padding: 16px 20px 20px;
     background-color: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
     border-radius: 16px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     overflow: hidden;
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease, background-color 0.25s ease;
-}
-
-.card-bg-gradient {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: radial-gradient(circle at top left, rgba(6, 88, 141, 0.03), transparent 70%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .dome-card-premium:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
 }
 
-.dome-card-premium:hover .card-bg-gradient {
-    opacity: 1;
+.dome-card-premium.is-active {
+    border-color: var(--primary-blue, #06588D);
+    background-color: #f8fafc;
 }
 
-/* Dark Mode & Hover Dark Effect */
-.dome-card-premium.is-dark,
-.dome-card-premium:hover {
-    background-color: #0a0a0a;
-    border-color: rgba(255, 255, 255, 0.25);
+/* Dark Mode */
+.dome-card-premium.is-dark {
+    background-color: #0f172a;
+    border-color: #1e293b;
 }
 
-.dome-card-premium.is-dark .card-bg-gradient,
-.dome-card-premium:hover .card-bg-gradient {
-    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 70%);
+.dome-card-premium.is-dark:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
-/* Top Section (Icon & Title) */
+/* Top Section (Icon & Trend) */
 .card-top-section {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px;
-    z-index: 1;
-}
-
-.card-title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    margin-bottom: 16px;
 }
 
 .card-icon-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: rgba(6, 88, 141, 0.08);
-    color: var(--primary-blue, #06588D);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    /* Background and color are set inline via style prop using color-mix */
+    transition: transform 0.2s ease;
 }
 
-.is-dark .card-icon-wrapper,
 .dome-card-premium:hover .card-icon-wrapper {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* Trend Badge */
+.trend-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.trend-badge.positive {
+    background-color: rgba(5, 150, 105, 0.1);
+    color: #059669;
+}
+
+.trend-badge.negative {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+}
+
+/* Middle Section (Title & Desc) */
+.card-middle-section {
+    margin-bottom: 24px;
+    flex-grow: 1;
+}
+
+.card-title-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
 }
 
 .card-title-text {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary, #64748b);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-    transition: color 0.25s ease;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.01em;
 }
 
-.is-dark .card-title-text,
-.dome-card-premium:hover .card-title-text {
+.is-dark .card-title-text {
+    color: #f1f5f9;
+}
+
+.card-desc-text {
+    font-size: 13px;
+    font-weight: 400;
+    color: #64748b;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.is-dark .card-desc-text {
     color: #94a3b8;
 }
 
@@ -113,85 +137,35 @@
     transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.is-dark .card-link-arrow,
-.dome-card-premium:hover .card-link-arrow {
-    color: #ffffff;
-}
-
 .dome-card-premium:hover .card-link-arrow {
     transform: translateX(4px);
+    color: var(--primary-blue, #06588D);
 }
 
-/* Middle Section (Value) */
-.card-middle-section {
-    margin-bottom: 16px;
-    z-index: 1;
-}
 
-.card-value-text {
-    font-size: clamp(28px, 3vw, 36px);
-    font-weight: 500;
-    line-height: 1.1;
-    margin: 0;
-    letter-spacing: -0.03em;
-    /* Premium gradient text */
-    background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    word-break: break-word;
-}
-
-.is-dark .card-value-text,
-.dome-card-premium:hover .card-value-text {
-    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Bottom Section (Trend) */
-.card-bottom-section {
+.stat-block {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    z-index: 1;
-}
-
-.trend-indicator {
-    display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    transition: color 0.25s ease;
 }
 
-.trend-indicator.positive {
-    color: #059669;
-}
-
-.trend-indicator.negative {
-    color: #dc2626;
-}
-
-.is-dark .trend-indicator.positive,
-.dome-card-premium:hover .trend-indicator.positive {
-    color: #34d399;
-}
-
-.is-dark .trend-indicator.negative,
-.dome-card-premium:hover .trend-indicator.negative {
-    color: #f87171;
-}
-
-.trend-context {
-    font-size: 13px;
-    color: var(--text-secondary, #64748b);
+.stat-label {
+    font-size: 12px;
+    color: #64748b;
     font-weight: 500;
-    transition: color 0.25s ease;
 }
 
-.is-dark .trend-context,
-.dome-card-premium:hover .trend-context {
+.is-dark .stat-label {
     color: #94a3b8;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.is-dark .stat-value {
+    /* Fallback color for dark mode if inline color isn't provided */
+    color: #f8fafc;
 }
