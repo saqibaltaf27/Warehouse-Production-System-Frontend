@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import StatCard from '../../global-components/StatCard/StatCard';
+import Card from '../../global-components/Card/Card';
 import Table from '../../global-components/Table/Table';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import EmptyState from '../../global-components/EmptyState/EmptyState';
@@ -201,35 +201,33 @@ const CostAnalysis = () => {
       ) : (
         <>
           {/* KPI Cards Layer 1 */}
-          <div className="stat-card-grid fade-in-up delay-100">
-            <StatCard
-              title="Total Actual Cost"
-              value={`${(summary?.TotalActualCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              subtext={`Planned: ${(summary?.TotalPlannedCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              color="blue"
-              icon={IconCurrencyDollar}
-            />
-            <StatCard
-              title="Overall Variance"
-              value={`${(summary?.VariancePercent || 0).toFixed(2)}%`}
-              subtext={(summary?.VariancePercent > 0) ? 'Over Budget' : 'Under Budget'}
-              color={(summary?.VariancePercent > 0) ? 'rose' : 'emerald'}
-              icon={IconPercentage}
-            />
-            <StatCard
-              title="Production Yield %"
-              value={`${(summary?.YieldPercent || 0).toFixed(2)}%`}
-              subtext={`Produced: ${(summary?.TotalFGProduced || 0).toLocaleString()} / Planned: ${(summary?.TotalPlannedFGQty || 0).toLocaleString()}`}
-              color={(summary?.YieldPercent < 90) ? 'rose' : 'emerald'}
-              icon={IconChartLine}
-            />
-            <StatCard
-              title="Total WIP Cost"
-              value={`${(summary?.TotalWIPCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              subtext="Cost tied up in Open/Released orders"
-              color="amber"
-              icon={IconClipboardList}
-            />
+          <div className="fade-in-up delay-100 mb-6">
+            <Card items={[
+              {
+                title: "Total Actual Cost",
+                value: `${(summary?.TotalActualCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                trendText: `Planned: ${(summary?.TotalPlannedCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                icon: IconCurrencyDollar
+              },
+              {
+                title: "Overall Variance",
+                value: `${(summary?.VariancePercent || 0).toFixed(2)}%`,
+                trendText: (summary?.VariancePercent > 0) ? 'Over Budget' : 'Under Budget',
+                icon: IconPercentage
+              },
+              {
+                title: "Production Yield %",
+                value: `${(summary?.YieldPercent || 0).toFixed(2)}%`,
+                trendText: `Produced: ${(summary?.TotalFGProduced || 0).toLocaleString()} / Planned: ${(summary?.TotalPlannedFGQty || 0).toLocaleString()}`,
+                icon: IconChartLine
+              },
+              {
+                title: "Total WIP Cost",
+                value: `${(summary?.TotalWIPCost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                trendText: "Cost tied up in Open/Released orders",
+                icon: IconClipboardList
+              }
+            ]} />
           </div>
 
           {/* Charts Row */}

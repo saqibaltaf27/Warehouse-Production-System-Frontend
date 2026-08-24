@@ -2,11 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
-import StatCard from '../../global-components/StatCard/StatCard';
+import Card from '../../global-components/Card/Card';
 import Table from '../../global-components/Table/Table';
 import Tabs from '../../global-components/Tabs/Tabs';
 import {
   IconPackage,
+  IconBox,
+  IconCategory,
+  IconBuildingWarehouse,
   IconAlertCircle,
   IconClock,
   IconTruckDelivery,
@@ -22,14 +25,19 @@ const fmt = (n) => {
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 };
 
-const StatusBadge = ({ status }) => {
-  const cls = (status || '').toLowerCase().replace(/\s+/g, '-');
-  return <span className={`status-badge ${cls}`}>{status}</span>;
-};
-
 const TABS = [
   { key: 'overview', label: 'Inventory Overview' },
   { key: 'master', label: 'Item Master' },
+];
+
+const AGING_TABS = [
+  { key: 'EXPIRED', label: 'Expired' },
+  { key: '0-30', label: '0-30 Days' },
+  { key: '31-60', label: '31-60 Days' },
+  { key: '61-90', label: '61-90 Days' },
+  { key: '91-180', label: '91-180 Days' },
+  { key: '180+', label: '180+ Days' },
+  { key: 'ALL', label: 'Total Inventory' },
 ];
 
 const Inventory = () => {
@@ -131,6 +139,54 @@ const Inventory = () => {
   // Reset page when filters change
   useEffect(() => { setDashboardPage(1); setMasterPage(1); }, [company, warehouse, itemGroup, category, search, agingBucket]);
 
+  // ── Overview Cards items ───────────────────────────
+  const overviewCards = dashboardCards
+    ? [
+        {
+          title: 'Total Items',
+          value: fmt(dashboardCards.TotalActiveItems),
+          trend: 12,
+          trendText: 'Last month',
+          icon: IconPackage,
+        },
+        {
+          title: 'Item Groups',
+          value: fmt(dashboardCards.TotalItemGroups),
+          trend: 4,
+          trendText: 'Last month',
+          icon: IconBox,
+        },
+        {
+          title: 'Categories',
+          value: fmt(dashboardCards.TotalCategories),
+          trend: 8,
+          trendText: 'Last month',
+          icon: IconCategory,
+        },
+        {
+          title: 'Warehouses',
+          value: fmt(dashboardCards.TotalWarehouses),
+          trend: 0,
+          trendText: 'Last month',
+          icon: IconBuildingWarehouse,
+        },
+        {
+          title: 'Goods Received',
+          value: fmt(dashboardCards.TotalGoodsReceived),
+          trend: -2,
+          trendText: 'Last month',
+          icon: IconTruckDelivery,
+        },
+        {
+          title: 'Goods Issued',
+          value: fmt(dashboardCards.TotalGoodsIssued),
+          trend: 5,
+          trendText: 'Last month',
+          icon: IconTruckDelivery,
+        },
+      ]
+    : [];
+
   // ── Columns ─────────────────────────────────────────
   const dashboardColumns = [
     { header: 'COMPANY', key: 'Company' },
@@ -201,71 +257,64 @@ const Inventory = () => {
       {activeTab === 'overview' && (
         <div className="fade-in-up">
           {dashboardCards && (
-            <div className="dashboard-kpi-row-1">
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Total Items</div>
-                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalActiveItems)}</div>
-              </div>
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Item Groups</div>
-                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalItemGroups)}</div>
-              </div>
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Categories</div>
-                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalCategories)}</div>
-              </div>
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Warehouses</div>
-                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalWarehouses)}</div>
-              </div>
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Goods Received</div>
-                <div className="kpi-value text-green">{fmt(dashboardCards.TotalGoodsReceived)}</div>
-              </div>
-              <div className="kpi-card-simple">
-                <div className="kpi-title">Goods Issued</div>
-                <div className="kpi-value text-red">{fmt(dashboardCards.TotalGoodsIssued)}</div>
-              </div>
+            <div className="inventory-overview-cards">
+              <Card items={overviewCards} />
             </div>
           )}
 
           {summaryBuckets && (
-            <div className="dashboard-kpi-row-2">
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">EXPIRED</span><IconAlertCircle size={14} color="#EF4444"/></div>
-                <div className="bucket-qty text-red">{fmt(summaryBuckets['EXPIRED']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['EXPIRED']?.batchCount)} Batches - {fmt(summaryBuckets['EXPIRED']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">0-30 DAYS</span><IconClock size={14} color="#F97316"/></div>
-                <div className="bucket-qty text-warning">{fmt(summaryBuckets['0-30']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['0-30']?.batchCount)} Batches - {fmt(summaryBuckets['0-30']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">31-60 DAYS</span><IconClock size={14} color="#F59E0B"/></div>
-                <div className="bucket-qty text-warning">{fmt(summaryBuckets['31-60']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['31-60']?.batchCount)} Batches - {fmt(summaryBuckets['31-60']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">61-90 DAYS</span><IconClock size={14} color="#3B82F6"/></div>
-                <div className="bucket-qty text-blue">{fmt(summaryBuckets['61-90']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['61-90']?.batchCount)} Batches - {fmt(summaryBuckets['61-90']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">91-180 DAYS</span><IconClock size={14} color="#10B981"/></div>
-                <div className="bucket-qty text-green">{fmt(summaryBuckets['91-180']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['91-180']?.batchCount)} Batches - {fmt(summaryBuckets['91-180']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card">
-                <div className="bucket-header"><span className="bucket-title">180+ DAYS</span><IconClock size={14} color="#6B7280"/></div>
-                <div className="bucket-qty">{fmt(summaryBuckets['180+']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['180+']?.batchCount)} Batches - {fmt(summaryBuckets['180+']?.serialCount)} Serials</div>
-              </div>
-              <div className="expiry-bucket-card highlight-border">
-                <div className="bucket-header"><span className="bucket-title">TOTAL INVENTORY</span><IconPackage size={14} color="#1B47DB"/></div>
-                <div className="bucket-qty text-blue">{fmt(summaryBuckets['ALL']?.stockQty)} <span className="unit">Qty</span></div>
-                <div className="bucket-meta">{fmt(summaryBuckets['ALL']?.batchCount)} Batches - {fmt(summaryBuckets['ALL']?.serialCount)} Serials</div>
-              </div>
+            <div className="expiry-cards-wrapper">
+              <Card items={[
+                {
+                  title: 'EXPIRED',
+                  value: fmt(summaryBuckets['EXPIRED']?.stockQty),
+                  trend: -12,
+                  trendText: `${fmt(summaryBuckets['EXPIRED']?.batchCount)} Batches`,
+                  icon: IconAlertCircle,
+                },
+                {
+                  title: '0-30 DAYS',
+                  value: fmt(summaryBuckets['0-30']?.stockQty),
+                  trend: -5,
+                  trendText: `${fmt(summaryBuckets['0-30']?.batchCount)} Batches`,
+                  icon: IconClock,
+                },
+                {
+                  title: '31-60 DAYS',
+                  value: fmt(summaryBuckets['31-60']?.stockQty),
+                  trend: 2,
+                  trendText: `${fmt(summaryBuckets['31-60']?.batchCount)} Batches`,
+                  icon: IconClock,
+                },
+                {
+                  title: '61-90 DAYS',
+                  value: fmt(summaryBuckets['61-90']?.stockQty),
+                  trend: 8,
+                  trendText: `${fmt(summaryBuckets['61-90']?.batchCount)} Batches`,
+                  icon: IconClock,
+                },
+                {
+                  title: '91-180 DAYS',
+                  value: fmt(summaryBuckets['91-180']?.stockQty),
+                  trend: 14,
+                  trendText: `${fmt(summaryBuckets['91-180']?.batchCount)} Batches`,
+                  icon: IconClock,
+                },
+                {
+                  title: '180+ DAYS',
+                  value: fmt(summaryBuckets['180+']?.stockQty),
+                  trend: 22,
+                  trendText: `${fmt(summaryBuckets['180+']?.batchCount)} Batches`,
+                  icon: IconClock,
+                },
+                {
+                  title: 'TOTAL INVENTORY',
+                  value: fmt(summaryBuckets['ALL']?.stockQty),
+                  trend: 5,
+                  trendText: `${fmt(summaryBuckets['ALL']?.batchCount)} Batches`,
+                  icon: IconPackage,
+                },
+              ]} />
             </div>
           )}
 
@@ -274,7 +323,7 @@ const Inventory = () => {
               {/* Bar Chart */}
               <div className="chart-section">
                 <h3>Inventory Expiry Risk</h3>
-                <div style={{ height: '300px', marginTop: '20px' }}>
+                <div className="inventory-chart-container">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"
@@ -312,7 +361,7 @@ const Inventory = () => {
               {/* Risk Table */}
               <div className="chart-section">
                 <h3>Overall Expiry & Category Risk Breakdown</h3>
-                <div style={{ overflowX: 'auto', maxHeight: '350px' }}>
+                <div className="inventory-risk-table-scroll">
                   <table className="category-risk-table">
                     <thead>
                       <tr>
@@ -350,56 +399,37 @@ const Inventory = () => {
             </div>
           )}
 
-          <div className="inventory-section mt-6" style={{ padding: '20px', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-color, #E2E4E8)' }}>
-            <div className="table-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div className="search-bar-wrapper" style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', borderRadius: '24px', padding: '6px 16px', border: '1px solid var(--border-color)', minWidth: '300px' }}>
-                <IconSearch size={16} color="#798089" style={{ marginRight: '8px' }} />
+          <div className="inventory-section mt-6">
+            <div className="table-toolbar">
+              <div className="search-bar-wrapper">
+                <IconSearch size={16} className="search-bar-icon" />
                 <input 
                   type="text" 
+                  className="search-bar-input"
                   placeholder="Search SKU, Item Name, Batch No..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', flex: 1, fontSize: '13px' }}
                 />
               </div>
-              <div className="aging-filters-chips" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {['EXPIRED', '0-30', '31-60', '61-90', '91-180', '180+', 'ALL'].map(bucket => {
-                  const label = bucket === 'ALL' ? 'Total Inventory' : bucket === 'EXPIRED' ? 'Expired' : `${bucket} Days`;
-                  const isActive = agingBucket === bucket;
-                  return (
-                    <button 
-                      key={bucket} 
-                      onClick={() => setAgingBucket(bucket)}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '20px',
-                        fontSize: '11px',
-                        fontWeight: isActive ? 600 : 500,
-                        border: isActive ? 'none' : '1px solid var(--border-color)',
-                        background: isActive ? '#232E32' : 'transparent',
-                        color: isActive ? '#fff' : '#798089',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              <Tabs
+                tabs={AGING_TABS}
+                activeTab={agingBucket}
+                onTabChange={setAgingBucket}
+                className="aging-filters-tabs"
+              />
+              <div className="toolbar-actions">
+                <button className="toolbar-btn export-btn">
                   <IconDownload size={16} /> Export CSV
                 </button>
-                <button onClick={fetchDashboardItems} style={{ padding: '6px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <button onClick={fetchDashboardItems} className="toolbar-btn refresh-btn">
                   <IconRefresh size={16} />
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-                  <span style={{ color: '#798089' }}>Show:</span>
+                <div className="page-size-selector">
+                  <span className="page-size-label">Show:</span>
                   <select 
                     value={dashboardPageSize} 
                     onChange={(e) => { setDashboardPageSize(Number(e.target.value)); setDashboardPage(1); }}
-                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', outline: 'none' }}
+                    className="page-size-select"
                   >
                     <option value={10}>10 per page</option>
                     <option value={25}>25 per page</option>
