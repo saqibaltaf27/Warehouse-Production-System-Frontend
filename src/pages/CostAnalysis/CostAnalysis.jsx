@@ -76,7 +76,7 @@ const CostAnalysis = () => {
     setIsModalVisible(true);
     setMaterialsLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/cost-analysis/orders/${record.DocEntry}/materials`);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders/${record.DocEntry}/materials`);
       if (res.data?.success) {
         setMaterials(res.data.data);
       }

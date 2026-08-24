@@ -24,18 +24,12 @@ export const API_ENDPOINTS = {
   },
 
   INVENTORY: {
-    SUMMARY: '/inventory/summary',
-    CURRENT: '/inventory/current',
-    WAREHOUSES: '/inventory/warehouses',
-    ITEM_GROUPS: '/inventory/item-groups',
-    MOVEMENTS: '/inventory/movements',
-    EXPIRY: '/inventory/expiry',
-    BATCHES: '/inventory/batches',
-    PURCHASE_PIPELINE: '/inventory/purchase-pipeline',
-    COMMITMENTS: '/inventory/commitments',
-    PRODUCTION_DEMAND: '/inventory/production-demand',
     FILTERS: '/inventory/filters',
-    ITEM_DETAIL: (itemCode) => `/inventory/items/${encodeURIComponent(itemCode)}`,
+    DASHBOARD_CARDS: '/inventory/dashboard/cards',
+    DASHBOARD_ITEMS: '/inventory/dashboard/items',
+    ITEMS: '/inventory/items',
+    ITEM_DETAIL: (itemCode) => `/inventory/items/${encodeURIComponent(itemCode)}/details`,
+    ITEM_HISTORY: (itemCode) => `/inventory/items/${encodeURIComponent(itemCode)}/history`,
   },
   
   PRODUCTION_PLANNING: {
