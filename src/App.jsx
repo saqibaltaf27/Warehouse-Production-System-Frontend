@@ -9,6 +9,7 @@ import CostAnalysis from './pages/CostAnalysis/CostAnalysis.jsx';
 import ProductionTrend from './pages/ProductionTrend/ProductionTrend.jsx';
 import NotFound from './pages/NotFound/NotFound.jsx';
 import Inventory from './pages/Inventory/Inventory.jsx';
+import ItemMasterView from './pages/Inventory/ItemMasterView.jsx';
 import ProductionPlanning from './pages/ProductionPlanning/ProductionPlanning.jsx';
 import ProductionOrders from './pages/ProductionOrders/ProductionOrders.jsx';
 import './App.css'
@@ -37,6 +38,7 @@ function AppContent() {
           <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
           <Route path="production-trend" element={<ProductionTrend />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="inventory/item-master/:itemCode" element={<ItemMasterView />} />
           <Route path="orders" element={<SimplePlaceholder title="Orders" />} />
           <Route path="production-orders" element={<ProductionOrders />} />
           <Route path="delivery" element={<SimplePlaceholder title="Delivery" />} />

@@ -1,420 +1,177 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import StatCard from '../../global-components/StatCard/StatCard';
 import Table from '../../global-components/Table/Table';
-import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
-import PieChart from '../../global-components/Charts/PieChart';
-import BarChart from '../../global-components/Charts/BarChart';
 import Tabs from '../../global-components/Tabs/Tabs';
-import Breadcrumb from '../../global-components/Breadcrumb/Breadcrumb';
 import {
-  IconBox,
-  IconBuildingWarehouse,
   IconPackage,
-  IconAlertTriangle,
   IconAlertCircle,
-  IconTrendingDown,
   IconClock,
-  IconShoppingCart,
   IconTruckDelivery,
-  IconArrowsExchange,
-  IconClipboardList,
-  IconChartBar,
-  IconCurrencyDollar,
+  IconSearch,
+  IconDownload,
+  IconRefresh,
 } from '@tabler/icons-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import './Inventory.css';
 
-/* ── Number formatters ── */
 const fmt = (n) => {
   if (n == null || isNaN(n)) return '0';
   return Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
 };
-const fmtCurrency = (n) => {
-  if (n == null || isNaN(n)) return 'PKR 0';
-  if (Math.abs(n) >= 1e6) return `PKR ${(n / 1e6).toFixed(2)}M`;
-  if (Math.abs(n) >= 1e3) return `PKR ${(n / 1e3).toFixed(1)}K`;
-  return `PKR ${Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-};
-const fmtPrice = (n) => {
-  if (n == null || isNaN(n)) return '0.00';
-  return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
 
-/* ── Status badge renderer ── */
 const StatusBadge = ({ status }) => {
   const cls = (status || '').toLowerCase().replace(/\s+/g, '-');
   return <span className={`status-badge ${cls}`}>{status}</span>;
 };
 
-/* ── Tab definitions ── */
 const TABS = [
-  { key: 'stock', label: 'All Stock' },
-  { key: 'categories', label: 'Category-Wise' },
-  { key: 'warehouses', label: 'Warehouses' },
-  { key: 'batches', label: 'Batches & Expiry' },
-  // { key: 'movements', label: 'Stock Movements' },
-  // { key: 'pipeline', label: 'Demand & Pipeline' },
+  { key: 'overview', label: 'Inventory Overview' },
+  { key: 'master', label: 'Item Master' },
 ];
 
 const Inventory = () => {
+  const navigate = useNavigate();
+
   // ── State ──────────────────────────────────────────
-  const [summary, setSummary] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
   const [filterOptions, setFilterOptions] = useState(null);
-  const [activeTab, setActiveTab] = useState('stock');
 
   // Filters
+  const [company, setCompany] = useState('LDS');
   const [warehouse, setWarehouse] = useState('');
   const [itemGroup, setItemGroup] = useState('');
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
+  const [agingBucket, setAgingBucket] = useState('ALL');
 
-  // Stock tab
-  const [stockData, setStockData] = useState([]);
-  const [stockPage, setStockPage] = useState(1);
-  const [stockPageSize, setStockPageSize] = useState(20);
-  const [stockTotal, setStockTotal] = useState(0);
-  const [stockStatus, setStockStatus] = useState('');
+  // Overview Tab Data
+  const [dashboardCards, setDashboardCards] = useState(null);
+  const [dashboardItems, setDashboardItems] = useState([]);
+  const [dashboardPage, setDashboardPage] = useState(1);
+  const [dashboardPageSize, setDashboardPageSize] = useState(25);
+  const [dashboardTotal, setDashboardTotal] = useState(0);
+  const [summaryBuckets, setSummaryBuckets] = useState(null);
+  const [categorySummary, setCategorySummary] = useState([]);
 
-  // Warehouses tab
-  const [warehouseData, setWarehouseData] = useState([]);
-
-  // Item groups chart
-  const [itemGroupData, setItemGroupData] = useState([]);
-
-  // Batch / Expiry tab
-  const [batchData, setBatchData] = useState([]);
-  const [batchPage, setBatchPage] = useState(1);
-  const [batchPageSize, setBatchPageSize] = useState(20);
-  const [batchTotal, setBatchTotal] = useState(0);
-  const [expiryBuckets, setExpiryBuckets] = useState([]);
-  const [expiryBucket, setExpiryBucket] = useState('');
-
-  // Movements tab
-  const [movementData, setMovementData] = useState([]);
-  const [movementPage, setMovementPage] = useState(1);
-  const [movementPageSize, setMovementPageSize] = useState(20);
-  const [movementTotal, setMovementTotal] = useState(0);
-
-  // Pipeline tab
-  const [poPipeline, setPoPipeline] = useState([]);
-  const [poPage, setPoPage] = useState(1);
-  const [poPageSize, setPoPageSize] = useState(20);
-  const [poTotal, setPoTotal] = useState(0);
-
-  const [commitments, setCommitments] = useState([]);
-  const [soPage, setSoPage] = useState(1);
-  const [soPageSize, setSoPageSize] = useState(20);
-  const [soTotal, setSoTotal] = useState(0);
-
-  const [prodDemand, setProdDemand] = useState([]);
-  const [prodPage, setProdPage] = useState(1);
-  const [prodPageSize, setProdPageSize] = useState(20);
-  const [prodTotal, setProdTotal] = useState(0);
-
-  // Item detail modal
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [itemDetail, setItemDetail] = useState(null);
+  // Item Master Tab Data
+  const [itemMasterData, setItemMasterData] = useState([]);
+  const [masterPage, setMasterPage] = useState(1);
+  const [masterPageSize, setMasterPageSize] = useState(25);
+  const [masterTotal, setMasterTotal] = useState(0);
 
   // ── Fetch helpers ──────────────────────────────────
-  const fetchSummary = useCallback(async () => {
-    try {
-      const params = {};
-      if (warehouse) params.warehouse = warehouse;
-      if (itemGroup) params.itemGroup = itemGroup;
-      if (category) params.category = category;
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.SUMMARY, { params });
-      if (res.data?.success) setSummary(res.data.data);
-    } catch (err) {
-      console.error('Inventory summary error:', err);
-    }
-  }, [warehouse, itemGroup, category]);
-
   const fetchFilters = useCallback(async () => {
     try {
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.FILTERS);
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.FILTERS, { params: { company } });
       if (res.data?.success) setFilterOptions(res.data.data);
     } catch (err) {
       console.error('Inventory filter error:', err);
     }
-  }, []);
+  }, [company]);
 
-  const fetchStock = useCallback(async () => {
+  const fetchDashboardCards = useCallback(async () => {
     try {
-      const params = { page: stockPage, pageSize: stockPageSize };
-      if (warehouse) params.warehouse = warehouse;
-      if (itemGroup) params.itemGroup = itemGroup;
-      if (category) params.category = category;
-      if (search) params.search = search;
-      if (stockStatus) params.status = stockStatus;
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.CURRENT, { params });
+      const params = { company, warehouse, group: itemGroup, category };
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_CARDS, { params });
+      if (res.data?.success) setDashboardCards(res.data.data.kpiTotals);
+    } catch (err) {
+      console.error('Dashboard cards error:', err);
+    }
+  }, [company, warehouse, itemGroup, category]);
+
+  const fetchDashboardItems = useCallback(async () => {
+    try {
+      const params = { 
+        company, warehouse, group: itemGroup, category, search, agingBucket,
+        page: dashboardPage, limit: dashboardPageSize 
+      };
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_ITEMS, { params });
       if (res.data?.success) {
-        setStockData(res.data.data);
-        setStockTotal(res.data.pagination.totalRecords);
+        setDashboardItems(res.data.data.shortExpiryItemsTable || []);
+        setDashboardTotal(res.data.data.totalRecords || 0);
+        setSummaryBuckets(res.data.data.summaryBuckets || null);
+        setCategorySummary(res.data.data.categorySummary || []);
       }
     } catch (err) {
-      console.error('Stock data error:', err);
+      console.error('Dashboard items error:', err);
     }
-  }, [stockPage, stockPageSize, warehouse, itemGroup, category, search, stockStatus]);
+  }, [company, warehouse, itemGroup, category, search, agingBucket, dashboardPage, dashboardPageSize]);
 
-  const fetchWarehouses = useCallback(async () => {
+  const fetchItemMaster = useCallback(async () => {
     try {
-      const [whRes, grpRes] = await Promise.all([
-        axiosInstance.get(API_ENDPOINTS.INVENTORY.WAREHOUSES),
-        axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEM_GROUPS),
-      ]);
-      if (whRes.data?.success) setWarehouseData(whRes.data.data);
-      if (grpRes.data?.success) setItemGroupData(grpRes.data.data);
-    } catch (err) {
-      console.error('Warehouse data error:', err);
-    }
-  }, []);
-
-  const fetchBatches = useCallback(async () => {
-    try {
-      const params = { page: batchPage, pageSize: batchPageSize, search };
-      if (expiryBucket) params.expiryBucket = expiryBucket;
-      const [bRes, eRes] = await Promise.all([
-        axiosInstance.get(API_ENDPOINTS.INVENTORY.BATCHES, { params }),
-        axiosInstance.get(API_ENDPOINTS.INVENTORY.EXPIRY),
-      ]);
-      if (bRes.data?.success) {
-        setBatchData(bRes.data.data);
-        setBatchTotal(bRes.data.pagination.totalRecords);
-      }
-      if (eRes.data?.success) setExpiryBuckets(eRes.data.data);
-    } catch (err) {
-      console.error('Batch data error:', err);
-    }
-  }, [batchPage, batchPageSize, search, expiryBucket]);
-
-  const fetchMovements = useCallback(async () => {
-    try {
-      const params = { page: movementPage, pageSize: movementPageSize };
-      if (warehouse) params.warehouse = warehouse;
-      if (search) params.search = search;
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.MOVEMENTS, { params });
+      const params = { 
+        company, warehouse, group: itemGroup, category, search, 
+        page: masterPage, limit: masterPageSize 
+      };
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEMS, { params });
       if (res.data?.success) {
-        setMovementData(res.data.data);
-        setMovementTotal(res.data.pagination.totalRecords);
+        setItemMasterData(res.data.data.items || []);
+        setMasterTotal(res.data.data.total || 0);
       }
     } catch (err) {
-      console.error('Movement data error:', err);
+      console.error('Item master error:', err);
     }
-  }, [movementPage, movementPageSize, warehouse, search]);
-
-  const fetchPoPipeline = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.PURCHASE_PIPELINE, {
-        params: { page: poPage, pageSize: poPageSize }
-      });
-      if (res.data?.success) {
-        setPoPipeline(res.data.data);
-        setPoTotal(res.data.pagination.totalRecords);
-      }
-    } catch (err) {
-      console.error('PO Pipeline error:', err);
-    }
-  }, [poPage, poPageSize]);
-
-  const fetchCommitments = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.COMMITMENTS, {
-        params: { page: soPage, pageSize: soPageSize }
-      });
-      if (res.data?.success) {
-        setCommitments(res.data.data);
-        setSoTotal(res.data.pagination.totalRecords);
-      }
-    } catch (err) {
-      console.error('Commitments error:', err);
-    }
-  }, [soPage, soPageSize]);
-
-  const fetchProdDemand = useCallback(async () => {
-    try {
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.PRODUCTION_DEMAND, {
-        params: { page: prodPage, pageSize: prodPageSize }
-      });
-      if (res.data?.success) {
-        setProdDemand(res.data.data);
-        setProdTotal(res.data.pagination.totalRecords);
-      }
-    } catch (err) {
-      console.error('Production demand error:', err);
-    }
-  }, [prodPage, prodPageSize]);
-
-  const fetchItemDetail = useCallback(async (itemCode) => {
-    try {
-      setSelectedItem(itemCode);
-      setItemDetail(null);
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEM_DETAIL(itemCode));
-      if (res.data?.success) setItemDetail(res.data.data);
-    } catch (err) {
-      console.error('Item detail error:', err);
-    }
-  }, []);
+  }, [company, warehouse, itemGroup, category, search, masterPage, masterPageSize]);
 
   // ── Effects ────────────────────────────────────────
   useEffect(() => { fetchFilters(); }, [fetchFilters]);
-  useEffect(() => { fetchSummary(); }, [fetchSummary]);
 
   useEffect(() => {
-    if (activeTab === 'stock') fetchStock();
-    else if (activeTab === 'warehouses') fetchWarehouses();
-    else if (activeTab === 'batches') fetchBatches();
-    else if (activeTab === 'movements') fetchMovements();
-    else if (activeTab === 'pipeline') {
-      fetchPoPipeline();
-      fetchCommitments();
-      fetchProdDemand();
+    if (activeTab === 'overview') {
+      fetchDashboardCards();
+      fetchDashboardItems();
+    } else if (activeTab === 'master') {
+      fetchItemMaster();
     }
-  }, [activeTab, fetchStock, fetchWarehouses, fetchBatches, fetchMovements, fetchPoPipeline, fetchCommitments, fetchProdDemand]);
+  }, [activeTab, fetchDashboardCards, fetchDashboardItems, fetchItemMaster]);
 
   // Reset page when filters change
-  useEffect(() => { setStockPage(1); }, [warehouse, itemGroup, category, search, stockStatus]);
-  useEffect(() => { setBatchPage(1); }, [search, expiryBucket]);
+  useEffect(() => { setDashboardPage(1); setMasterPage(1); }, [company, warehouse, itemGroup, category, search, agingBucket]);
 
-  // ── Chart data transforms ─────────────────────────
-  const warehouseChartData = warehouseData.slice(0, 8).map((w) => ({
-    name: w.WhsName || w.WhsCode,
-    value: Math.round(w.TotalOnHand || 0),
-  }));
-
-  const itemGroupChartData = itemGroupData.slice(0, 8).map((g) => ({
-    name: g.ItemGroup || 'Unknown',
-    value: Math.round(g.TotalOnHand || 0),
-  }));
-
-  const bucketOrder = ['0-30 Days', '31-60 Days', '61-90 Days', '91-180 Days', '180+ Days', 'Expired'];
-  
-  const expiryChartData = expiryBuckets
-    .map((b) => ({
-      name: b.Bucket,
-      value: b.BatchCount,
-      color: b.Bucket === 'Expired' ? '#dc2626' : b.Bucket === '0-30 Days' ? '#f59e0b' : b.Bucket === '31-60 Days' ? '#eab308' : '#10b981',
-    }))
-    .sort((a, b) => {
-      const idxA = bucketOrder.indexOf(a.name);
-      const idxB = bucketOrder.indexOf(b.name);
-      return (idxA !== -1 ? idxA : 99) - (idxB !== -1 ? idxB : 99);
-    });
-
-  // ── Stock Table Columns ────────────────────────────
-  const stockColumns = [
-    { header: 'Item Code', key: 'ItemCode' },
-    { header: 'Item Name', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 35)}</span> },
-    { header: 'Group', key: 'ItemGroup', render: (r) => <span title={r.ItemGroup}>{(r.ItemGroup || '').substring(0, 20)}</span> },
-    { header: 'Warehouse', key: 'WhsCode', render: (r) => <span title={r.WhsName}>{r.WhsCode}</span> },
-    { header: 'On Hand', key: 'OnHand', render: (r) => <span className="text-right tabular-nums">{fmt(r.OnHand)}</span> },
-    { header: 'Committed', key: 'Committed', render: (r) => <span className="text-right tabular-nums">{fmt(r.Committed)}</span> },
-    { header: 'On Order', key: 'OnOrder', render: (r) => <span className="text-right tabular-nums">{fmt(r.OnOrder)}</span> },
-    { header: 'Available', key: 'Available', render: (r) => <span className="text-right tabular-nums">{fmt(r.Available)}</span> },
-    { header: 'Out of Order', key: 'OutOfOrder', render: (r) => r.OutOfOrder > 0 ? <span className="text-right tabular-nums text-rose-600 font-medium">{fmt(r.OutOfOrder)}</span> : <span className="text-right tabular-nums text-gray-400">-</span> },
-    { header: 'Status', key: 'StockStatus', render: (r) => <StatusBadge status={r.StockStatus} /> },
-  ];
-
-  // ── Warehouse Table Columns ────────────────────────
-  const warehouseColumns = [
-    { header: 'Code', key: 'WhsCode' },
-    { header: 'Warehouse', key: 'WhsName' },
-    { header: 'On Hand', key: 'TotalOnHand', render: (r) => <span className="tabular-nums">{fmt(r.TotalOnHand)}</span> },
-    { header: 'Committed', key: 'TotalCommitted', render: (r) => <span className="tabular-nums">{fmt(r.TotalCommitted)}</span> },
-    { header: 'On Order', key: 'TotalOnOrder', render: (r) => <span className="tabular-nums">{fmt(r.TotalOnOrder)}</span> },
-    { header: 'Available', key: 'TotalAvailable', render: (r) => <span className="tabular-nums">{fmt(r.TotalAvailable)}</span> },
-  ];
-
-  // ── Batch Table Columns ────────────────────────────
-  const batchColumns = [
-    { header: 'Item', key: 'ItemCode' },
-    { header: 'Item Name', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 30)}</span> },
-    { header: 'Batch', key: 'BatchNumber' },
-    { header: 'Warehouse', key: 'WhsCode' },
-    { header: 'Quantity', key: 'Quantity', render: (r) => <span className="tabular-nums">{fmt(r.Quantity)}</span> },
-    { header: 'Expiry Date', key: 'ExpDate', render: (r) => r.ExpDate ? new Date(r.ExpDate).toLocaleDateString() : '—' },
-    {
-      header: 'Days Left', key: 'DaysUntilExpiry', render: (r) => {
-        if (r.DaysUntilExpiry == null) return '—';
-        if (r.DaysUntilExpiry < 0) return <span className="status-badge expired">Expired</span>;
-        if (r.DaysUntilExpiry <= 90) return <span className="status-badge near-expiry">{r.DaysUntilExpiry}d</span>;
-        return <span className="tabular-nums">{r.DaysUntilExpiry}d</span>;
-      },
+  // ── Columns ─────────────────────────────────────────
+  const dashboardColumns = [
+    { header: 'COMPANY', key: 'Company' },
+    { header: 'ITEM CODE', key: 'ItemCode' },
+    { header: 'ITEM NAME', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 30)}</span> },
+    { header: 'CATEGORY', key: 'Category' },
+    { header: 'LOT / SERIAL NO', key: 'BatchNumber' },
+    { header: 'EXPIRY DATE', key: 'ExpiryDate', render: (r) => r.ExpiryDate ? new Date(r.ExpiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' },
+    { header: 'DAYS TO EXPIRY', key: 'DaysToExpiry', render: (r) => r.DaysToExpiry != null ? `${Math.abs(r.DaysToExpiry)} days` : '—' },
+    { 
+      header: 'EXPIRY AGING', key: 'AgingBucket', render: (r) => {
+        if (!r.AgingBucket || r.AgingBucket === 'ALL') return '—';
+        if (r.AgingBucket === 'EXPIRED') return <span className="status-badge expired">Expired</span>;
+        return <span className="status-badge near-expiry">{r.AgingBucket} Days</span>;
+      }
     },
-    { header: 'QC', key: 'QCDecision', render: (r) => r.QCDecision || '—' },
+    { header: 'STOCK UNITS', key: 'StockQty', render: (r) => <span className="text-right tabular-nums font-bold">{fmt(r.StockQty)}</span> },
   ];
 
-  // ── Movement Table Columns ─────────────────────────
-  const movementColumns = [
-    { header: 'Date', key: 'DocDate', render: (r) => r.DocDate ? new Date(r.DocDate).toLocaleDateString() : '—' },
-    { header: 'Item', key: 'ItemCode' },
-    { header: 'Item Name', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 25)}</span> },
-    { header: 'Warehouse', key: 'Warehouse', render: (r) => <span title={r.WhsName}>{r.Warehouse}</span> },
-    { header: 'Type', key: 'TransTypeName' },
-    { header: 'In', key: 'InQty', render: (r) => r.InQty > 0 ? <span className="tabular-nums qty-in-text">+{fmt(r.InQty)}</span> : '—' },
-    { header: 'Out', key: 'OutQty', render: (r) => r.OutQty > 0 ? <span className="tabular-nums qty-out-text">-{fmt(r.OutQty)}</span> : '—' },
-    { header: 'Doc #', key: 'DocNumber' },
+  const masterColumns = [
+    { header: 'ITEM CODE', key: 'ItemCode' },
+    { header: 'ITEM NAME', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 35)}</span> },
+    { header: 'CAT NO', key: 'FrgnName' },
+    { header: 'COMPANY', key: 'Company' },
+    { header: 'CATEGORY', key: 'Category' },
+    { header: 'QUANTITY', key: 'Stock', render: (r) => <span className="text-right tabular-nums">{fmt(r.Stock)}</span> },
   ];
-
-  // ── Purchase Pipeline Columns ──────────────────────
-  const poColumns = [
-    { header: 'PO #', key: 'PONumber' },
-    { header: 'Supplier', key: 'Supplier', render: (r) => <span title={r.Supplier}>{(r.Supplier || '').substring(0, 25)}</span> },
-    { header: 'Item', key: 'ItemCode' },
-    { header: 'Item Name', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 20)}</span> },
-    { header: 'Open Qty', key: 'OpenQty', render: (r) => <span className="tabular-nums">{fmt(r.OpenQty)}</span> },
-    { header: 'ETA', key: 'ExpectedDelivery', render: (r) => r.ExpectedDelivery ? new Date(r.ExpectedDelivery).toLocaleDateString() : '—' },
-  ];
-
-  // ── Category Table Columns ──────────────────────────
-  const categoryColumns = [
-    { header: 'Category', key: 'Category' },
-    { header: 'On Hand', key: 'OnHand', render: (r) => <span className="tabular-nums">{fmt(r.OnHand)}</span> },
-    { header: 'On Order', key: 'OnOrder', render: (r) => <span className="tabular-nums">{fmt(r.OnOrder)}</span> },
-    { header: 'Committed', key: 'Committed', render: (r) => <span className="tabular-nums">{fmt(r.Committed)}</span> },
-    { header: 'Available', key: 'Available', render: (r) => <span className="tabular-nums">{fmt(r.Available)}</span> },
-    { header: 'Out of Stock', key: 'OutOfStockItems', render: (r) => r.OutOfStockItems > 0 ? <span className="status-badge out-of-stock">{r.OutOfStockItems}</span> : <span>0</span> },
-  ];
-
-  // ── Commitment Columns ─────────────────────────────
-  const soColumns = [
-    { header: 'SO #', key: 'SONumber' },
-    { header: 'Customer', key: 'Customer', render: (r) => <span title={r.Customer}>{(r.Customer || '').substring(0, 25)}</span> },
-    { header: 'Item', key: 'ItemCode' },
-    { header: 'Open Qty', key: 'OpenQty', render: (r) => <span className="tabular-nums">{fmt(r.OpenQty)}</span> },
-    { header: 'Due', key: 'RequiredDate', render: (r) => r.RequiredDate ? new Date(r.RequiredDate).toLocaleDateString() : '—' },
-  ];
-
-  // ── Production Demand Columns ──────────────────────
-  const prodColumns = [
-    { header: 'Item', key: 'ItemCode' },
-    { header: 'Item Name', key: 'ItemName', render: (r) => <span title={r.ItemName}>{(r.ItemName || '').substring(0, 25)}</span> },
-    { header: 'Planned', key: 'TotalPlanned', render: (r) => <span className="tabular-nums">{fmt(r.TotalPlanned)}</span> },
-    { header: 'Issued', key: 'TotalIssued', render: (r) => <span className="tabular-nums">{fmt(r.TotalIssued)}</span> },
-    { header: 'Remaining', key: 'RemainingRequirement', render: (r) => <span className="tabular-nums">{fmt(r.RemainingRequirement)}</span> },
-    { header: 'Available', key: 'AvailableStock', render: (r) => <span className="tabular-nums">{fmt(r.AvailableStock)}</span> },
-    {
-      header: 'Shortage', key: 'ShortageQty', render: (r) =>
-        r.ShortageQty > 0 ? <span className="status-badge critical">{fmt(r.ShortageQty)}</span> : <span className="tabular-nums">0</span>,
-    },
-  ];
-
-  // ── Render ─────────────────────────────────────────
-  const activeTabLabel = TABS.find(t => t.key === activeTab)?.label || 'All Stock';
 
   return (
     <div className="inventory-page fade-in-up">
-
-
       {/* Filters */}
       <div className="inventory-filters">
-        <input
-          className="search-input"
-          type="text"
-          placeholder="Search items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        {activeTab !== 'overview' && (
+          <input
+            className="search-input"
+            type="text"
+            placeholder="Search items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
         <select value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
           <option value="">All Warehouses</option>
           {filterOptions?.warehouses?.map((w) => (
@@ -433,311 +190,257 @@ const Inventory = () => {
             <option key={c.value} value={c.value}>{c.label}</option>
           ))}
         </select>
-        {activeTab === 'stock' && (
-          <select value={stockStatus} onChange={(e) => setStockStatus(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="normal">Normal</option>
-            <option value="out">Out of Stock</option>
-            <option value="excess">Excess</option>
-          </select>
-        )}
-        {activeTab === 'batches' && (
-          <select value={expiryBucket} onChange={(e) => setExpiryBucket(e.target.value)}>
-            <option value="">All Expiry Buckets</option>
-            <option value="0-30 Days">0-30 Days</option>
-            <option value="31-60 Days">31-60 Days</option>
-            <option value="61-90 Days">61-90 Days</option>
-            <option value="91-180 Days">91-180 Days</option>
-            <option value="180+ Days">180+ Days</option>
-            <option value="Expired">Expired</option>
-          </select>
-        )}
       </div>
-
-      {/* KPI Cards */}
-      {summary && (
-        <div className="inventory-kpi-grid fade-in-up">
-          {/* <StatCard title="Total Items" value={fmt(summary.activeSKUs)} icon={IconBox} color="indigo" subtext="active SKUs" /> */}
-          <StatCard title="Total Categories" value={fmt(summary.categoryWise?.length || 0)} icon={IconClipboardList} color="teal" subtext="unique categories" />
-          <StatCard title="On Hand" value={fmt(summary.totalOnHand)} icon={IconPackage} color="blue" subtext={`${fmt(summary.activeWarehouses)} warehouses`} />
-          <StatCard title="On Order" value={fmt(summary.totalOnOrder)} icon={IconTruckDelivery} color="emerald" subtext="Incoming from POs" />
-          <StatCard title="Out of Stock" value={fmt(summary.outOfStockItems)} icon={IconAlertCircle} color="rose" subtext={`${fmt(summary.negativeStockItems)} negative`} />
-          <StatCard title="Expired Batches" value={fmt(summary.expiredBatches)} icon={IconClock} color="purple" subtext={`${fmt(summary.nearExpiryBatches)} near expiry`} />
-        </div>
-      )}
-
-
 
       {/* Tabs */}
       <div className="inventory-tabs">
-        <Tabs
-          tabs={TABS}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+        <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
       </div>
 
-      {/* ── Tab Content ── */}
-
-      {/* Charts (warehouse + item group) */}
-      {activeTab === 'warehouses' && warehouseChartData.length > 0 && (
-        <div className="inventory-charts-grid fade-in-up delay-100">
-          <div className="inventory-chart-card">
-            <h3>Stock On Hand by Warehouse</h3>
-            <div className="chart-wrapper">
-              <PieChart data={warehouseChartData} />
-            </div>
-          </div>
-          <div className="inventory-chart-card">
-            <h3>Stock On Hand by Item Group</h3>
-            <div className="chart-wrapper">
-              <BarChart data={itemGroupChartData} layout="vertical" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Expiry chart */}
-      {activeTab === 'batches' && expiryChartData.length > 0 && (
-        <div className="inventory-charts-grid fade-in-up delay-100">
-          <div className="inventory-chart-card">
-            <h3>Batch Expiry Distribution</h3>
-            <div className="chart-wrapper">
-              <PieChart data={expiryChartData} />
-            </div>
-          </div>
-          <div className="inventory-chart-card">
-            <h3>Batches by Expiry Bucket</h3>
-            <div className="chart-wrapper">
-              <BarChart data={expiryChartData} />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* All Stock */}
-      {activeTab === 'stock' && (
-        <div className="inventory-section fade-in-up">
-          <Table
-            data={stockData}
-            columns={stockColumns}
-            totalEntries={stockTotal}
-            showActions={false}
-            showPagination
-            currentPage={stockPage}
-            pageSize={stockPageSize}
-            onPageChange={setStockPage}
-            onItemsPerPageChange={(size) => { setStockPageSize(size); setStockPage(1); }}
-            onRowClick={(row) => fetchItemDetail(row.ItemCode)}
-          />
-        </div>
-      )}
-
-      {/* Categories */}
-      {activeTab === 'categories' && summary && summary.categoryWise && (
-        <div className="inventory-section fade-in-up">
-          <h3>Category-Wise Inventory</h3>
-          <Table
-            data={summary.categoryWise}
-            columns={categoryColumns}
-            totalEntries={summary.categoryWise.length}
-            showActions={false}
-            showPagination={false}
-          />
-        </div>
-      )}
-
-      {/* Warehouses */}
-      {activeTab === 'warehouses' && (
-        <div className="inventory-section fade-in-up">
-          <h3>Warehouse Inventory Overview</h3>
-          <Table
-            data={warehouseData}
-            columns={warehouseColumns}
-            totalEntries={warehouseData.length}
-            showActions={false}
-            showPagination={false}
-          />
-        </div>
-      )}
-
-      {/* Batches & Expiry */}
-      {activeTab === 'batches' && (
-        <div className="inventory-section fade-in-up">
-          <h3>Batch Inventory</h3>
-          <Table
-            data={batchData}
-            columns={batchColumns}
-            totalEntries={batchTotal}
-            showActions={false}
-            showPagination
-            currentPage={batchPage}
-            pageSize={batchPageSize}
-            onPageChange={setBatchPage}
-            onItemsPerPageChange={(size) => { setBatchPageSize(size); setBatchPage(1); }}
-          />
-        </div>
-      )}
-
-      {/* Movements */}
-      {activeTab === 'movements' && (
-        <div className="inventory-section fade-in-up">
-          <h3>Inventory Movement History</h3>
-          <Table
-            data={movementData}
-            columns={movementColumns}
-            totalEntries={movementTotal}
-            showActions={false}
-            showPagination
-            currentPage={movementPage}
-            pageSize={movementPageSize}
-            onPageChange={setMovementPage}
-            onItemsPerPageChange={(size) => { setMovementPageSize(size); setMovementPage(1); }}
-          />
-        </div>
-      )}
-
-      {/* Pipeline & Demand */}
-      {activeTab === 'pipeline' && (
+      {/* Overview Tab Content */}
+      {activeTab === 'overview' && (
         <div className="fade-in-up">
-          <div className="inventory-section">
-            <h3>Purchase Pipeline (Open POs)</h3>
+          {dashboardCards && (
+            <div className="dashboard-kpi-row-1">
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Total Items</div>
+                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalActiveItems)}</div>
+              </div>
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Item Groups</div>
+                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalItemGroups)}</div>
+              </div>
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Categories</div>
+                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalCategories)}</div>
+              </div>
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Warehouses</div>
+                <div className="kpi-value text-blue">{fmt(dashboardCards.TotalWarehouses)}</div>
+              </div>
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Goods Received</div>
+                <div className="kpi-value text-green">{fmt(dashboardCards.TotalGoodsReceived)}</div>
+              </div>
+              <div className="kpi-card-simple">
+                <div className="kpi-title">Goods Issued</div>
+                <div className="kpi-value text-red">{fmt(dashboardCards.TotalGoodsIssued)}</div>
+              </div>
+            </div>
+          )}
+
+          {summaryBuckets && (
+            <div className="dashboard-kpi-row-2">
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">EXPIRED</span><IconAlertCircle size={14} color="#EF4444"/></div>
+                <div className="bucket-qty text-red">{fmt(summaryBuckets['EXPIRED']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['EXPIRED']?.batchCount)} Batches - {fmt(summaryBuckets['EXPIRED']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">0-30 DAYS</span><IconClock size={14} color="#F97316"/></div>
+                <div className="bucket-qty text-warning">{fmt(summaryBuckets['0-30']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['0-30']?.batchCount)} Batches - {fmt(summaryBuckets['0-30']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">31-60 DAYS</span><IconClock size={14} color="#F59E0B"/></div>
+                <div className="bucket-qty text-warning">{fmt(summaryBuckets['31-60']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['31-60']?.batchCount)} Batches - {fmt(summaryBuckets['31-60']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">61-90 DAYS</span><IconClock size={14} color="#3B82F6"/></div>
+                <div className="bucket-qty text-blue">{fmt(summaryBuckets['61-90']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['61-90']?.batchCount)} Batches - {fmt(summaryBuckets['61-90']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">91-180 DAYS</span><IconClock size={14} color="#10B981"/></div>
+                <div className="bucket-qty text-green">{fmt(summaryBuckets['91-180']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['91-180']?.batchCount)} Batches - {fmt(summaryBuckets['91-180']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card">
+                <div className="bucket-header"><span className="bucket-title">180+ DAYS</span><IconClock size={14} color="#6B7280"/></div>
+                <div className="bucket-qty">{fmt(summaryBuckets['180+']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['180+']?.batchCount)} Batches - {fmt(summaryBuckets['180+']?.serialCount)} Serials</div>
+              </div>
+              <div className="expiry-bucket-card highlight-border">
+                <div className="bucket-header"><span className="bucket-title">TOTAL INVENTORY</span><IconPackage size={14} color="#1B47DB"/></div>
+                <div className="bucket-qty text-blue">{fmt(summaryBuckets['ALL']?.stockQty)} <span className="unit">Qty</span></div>
+                <div className="bucket-meta">{fmt(summaryBuckets['ALL']?.batchCount)} Batches - {fmt(summaryBuckets['ALL']?.serialCount)} Serials</div>
+              </div>
+            </div>
+          )}
+
+          {summaryBuckets && categorySummary && (
+            <div className="dashboard-bottom-grid">
+              {/* Bar Chart */}
+              <div className="chart-section">
+                <h3>Inventory Expiry Risk</h3>
+                <div style={{ height: '300px', marginTop: '20px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      layout="vertical"
+                      data={[
+                        { name: '91-180 Days', value: summaryBuckets['91-180']?.stockQty || 0, color: '#10B981' },
+                        { name: '61-90 Days', value: summaryBuckets['61-90']?.stockQty || 0, color: '#3B82F6' },
+                        { name: '31-60 Days', value: summaryBuckets['31-60']?.stockQty || 0, color: '#F59E0B' },
+                        { name: '0-30 Days', value: summaryBuckets['0-30']?.stockQty || 0, color: '#F97316' },
+                        { name: 'Expired', value: summaryBuckets['EXPIRED']?.stockQty || 0, color: '#EF4444' }
+                      ]}
+                      margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} />
+                      <XAxis type="number" tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
+                      <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11, fill: '#798089' }} />
+                      <Tooltip formatter={(value) => [fmt(value), 'Qty']} />
+                      <Bar dataKey="value" barSize={12} radius={[0, 4, 4, 0]}>
+                        {
+                          [
+                            { color: '#10B981' },
+                            { color: '#3B82F6' },
+                            { color: '#F59E0B' },
+                            { color: '#F97316' },
+                            { color: '#EF4444' }
+                          ].map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))
+                        }
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Risk Table */}
+              <div className="chart-section">
+                <h3>Overall Expiry & Category Risk Breakdown</h3>
+                <div style={{ overflowX: 'auto', maxHeight: '350px' }}>
+                  <table className="category-risk-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Lots & Tracking</th>
+                        <th className="text-right">Expired</th>
+                        <th className="text-right">0-30d</th>
+                        <th className="text-right">31-60d</th>
+                        <th className="text-right">61-90d</th>
+                        <th className="text-right">91-180d</th>
+                        <th className="text-right">180+d</th>
+                        <th className="text-right">Total Risk</th>
+                        <th className="text-right">Total Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categorySummary.map((cat, i) => (
+                        <tr key={i}>
+                          <td className="font-bold">{cat.Category}</td>
+                          <td>{cat.BatchCount} Batches - {cat.SerialCount} Serials</td>
+                          <td className="text-right text-danger font-bold">{cat.ExpiredQty > 0 ? fmt(cat.ExpiredQty) : '-'}</td>
+                          <td className="text-right text-warning">{cat.Days0To30Qty > 0 ? fmt(cat.Days0To30Qty) : '-'}</td>
+                          <td className="text-right text-warning">{cat.Days31To60Qty > 0 ? fmt(cat.Days31To60Qty) : '-'}</td>
+                          <td className="text-right text-blue">{cat.Days61To90Qty > 0 ? fmt(cat.Days61To90Qty) : '-'}</td>
+                          <td className="text-right text-green">{cat.Days91To180Qty > 0 ? fmt(cat.Days91To180Qty) : '-'}</td>
+                          <td className="text-right">{cat.Days180PlusQty > 0 ? fmt(cat.Days180PlusQty) : '-'}</td>
+                          <td className="text-right text-danger font-bold">{fmt(cat.TotalRiskStockQty)}</td>
+                          <td className="text-right font-bold">{fmt(cat.TotalStockQty)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="inventory-section mt-6" style={{ padding: '20px', background: '#fff', borderRadius: '12px', border: '1px solid var(--border-color, #E2E4E8)' }}>
+            <div className="table-toolbar" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div className="search-bar-wrapper" style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', borderRadius: '24px', padding: '6px 16px', border: '1px solid var(--border-color)', minWidth: '300px' }}>
+                <IconSearch size={16} color="#798089" style={{ marginRight: '8px' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search SKU, Item Name, Batch No..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', flex: 1, fontSize: '13px' }}
+                />
+              </div>
+              <div className="aging-filters-chips" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {['EXPIRED', '0-30', '31-60', '61-90', '91-180', '180+', 'ALL'].map(bucket => {
+                  const label = bucket === 'ALL' ? 'Total Inventory' : bucket === 'EXPIRED' ? 'Expired' : `${bucket} Days`;
+                  const isActive = agingBucket === bucket;
+                  return (
+                    <button 
+                      key={bucket} 
+                      onClick={() => setAgingBucket(bucket)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '20px',
+                        fontSize: '11px',
+                        fontWeight: isActive ? 600 : 500,
+                        border: isActive ? 'none' : '1px solid var(--border-color)',
+                        background: isActive ? '#232E32' : 'transparent',
+                        color: isActive ? '#fff' : '#798089',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="toolbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                  <IconDownload size={16} /> Export CSV
+                </button>
+                <button onClick={fetchDashboardItems} style={{ padding: '6px', borderRadius: '8px', border: '1px solid var(--border-color)', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <IconRefresh size={16} />
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                  <span style={{ color: '#798089' }}>Show:</span>
+                  <select 
+                    value={dashboardPageSize} 
+                    onChange={(e) => { setDashboardPageSize(Number(e.target.value)); setDashboardPage(1); }}
+                    style={{ padding: '4px 8px', borderRadius: '6px', border: '1px solid var(--border-color)', outline: 'none' }}
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
+                  </select>
+                </div>
+              </div>
+            </div>
             <Table
-              data={poPipeline}
-              columns={poColumns}
-              totalEntries={poTotal}
+              data={dashboardItems}
+              columns={dashboardColumns}
+              totalEntries={dashboardTotal}
               showActions={false}
-              showPagination
-              currentPage={poPage}
-              pageSize={poPageSize}
-              onPageChange={setPoPage}
-              onItemsPerPageChange={(size) => { setPoPageSize(size); setPoPage(1); }}
-            />
-          </div>
-          <div className="inventory-section">
-            <h3>Sales Commitments (Open SOs)</h3>
-            <Table
-              data={commitments}
-              columns={soColumns}
-              totalEntries={soTotal}
-              showActions={false}
-              showPagination
-              currentPage={soPage}
-              pageSize={soPageSize}
-              onPageChange={setSoPage}
-              onItemsPerPageChange={(size) => { setSoPageSize(size); setSoPage(1); }}
-            />
-          </div>
-          <div className="inventory-section">
-            <h3>Production Material Demand</h3>
-            <Table
-              data={prodDemand}
-              columns={prodColumns}
-              totalEntries={prodTotal}
-              showActions={false}
-              showPagination
-              currentPage={prodPage}
-              pageSize={prodPageSize}
-              onPageChange={setProdPage}
-              onItemsPerPageChange={(size) => { setProdPageSize(size); setProdPage(1); }}
+              showPagination={true}
+              currentPage={dashboardPage}
+              pageSize={dashboardPageSize}
+              onPageChange={setDashboardPage}
+              onItemsPerPageChange={(size) => { setDashboardPageSize(size); setDashboardPage(1); }}
+              onRowClick={(row) => navigate(`/inventory/item-master/${encodeURIComponent(row.ItemCode)}?company=${company}`)}
             />
           </div>
         </div>
       )}
 
-      {/* ── Item Detail Modal ── */}
-      {selectedItem && (
-        <GlobalPopup title={`Item: ${selectedItem}`} onClose={() => { setSelectedItem(null); setItemDetail(null); }} className="item-detail-modal">
-          {!itemDetail ? (
-            <div className="item-detail-body"><p>Loading...</p></div>
-          ) : (
-            <>
-              <div className="item-detail-header">
-                <h2>{itemDetail.overview?.ItemName || selectedItem}</h2>
-                <div className="item-meta">
-                  {itemDetail.overview?.ItemCode} • {itemDetail.overview?.ItemGroup} • {itemDetail.overview?.Category || '—'} • {itemDetail.overview?.UOM}
-                </div>
-              </div>
-              <div className="item-detail-body">
-                {/* Metrics */}
-                <div className="item-detail-grid">
-                  <div className="item-detail-metric"><span className="metric-label">On Hand</span><span className="metric-value">{fmt(itemDetail.overview?.OnHand)}</span></div>
-                  <div className="item-detail-metric"><span className="metric-label">Committed</span><span className="metric-value">{fmt(itemDetail.overview?.Committed)}</span></div>
-                  <div className="item-detail-metric"><span className="metric-label">On Order</span><span className="metric-value">{fmt(itemDetail.overview?.OnOrder)}</span></div>
-                  <div className="item-detail-metric"><span className="metric-label">Available</span><span className="metric-value">{fmt(itemDetail.overview?.Available)}</span></div>
-                </div>
-
-                {/* Warehouse Breakdown */}
-                {itemDetail.warehouses?.length > 0 && (
-                  <div className="item-detail-section">
-                    <h4>Stock by Warehouse</h4>
-                    <Table
-                      data={itemDetail.warehouses}
-                      columns={[
-                        { header: 'Warehouse', key: 'WhsCode', render: (r) => <span title={r.WhsName}>{r.WhsCode} - {r.WhsName}</span> },
-                        { header: 'On Hand', key: 'OnHand', render: (r) => <span className="tabular-nums">{fmt(r.OnHand)}</span> },
-                        { header: 'Committed', key: 'Committed', render: (r) => <span className="tabular-nums">{fmt(r.Committed)}</span> },
-                        { header: 'Available', key: 'Available', render: (r) => <span className="tabular-nums">{fmt(r.Available)}</span> },
-                      ]}
-                      totalEntries={itemDetail.warehouses.length}
-                      showActions={false}
-                      showPagination={false}
-                    />
-                  </div>
-                )}
-
-                {/* Batches */}
-                {itemDetail.batches?.length > 0 && (
-                  <div className="item-detail-section">
-                    <h4>Batches</h4>
-                    <Table
-                      data={itemDetail.batches}
-                      columns={[
-                        { header: 'Batch', key: 'BatchNumber' },
-                        { header: 'Warehouse', key: 'WhsCode' },
-                        { header: 'Quantity', key: 'Quantity', render: (r) => <span className="tabular-nums">{fmt(r.Quantity)}</span> },
-                        { header: 'Expiry', key: 'ExpDate', render: (r) => r.ExpDate ? new Date(r.ExpDate).toLocaleDateString() : '—' },
-                        {
-                          header: 'Days Left', key: 'DaysUntilExpiry', render: (r) => {
-                            if (r.DaysUntilExpiry == null) return '—';
-                            if (r.DaysUntilExpiry < 0) return <span className="status-badge expired">Expired</span>;
-                            if (r.DaysUntilExpiry <= 90) return <span className="status-badge near-expiry">{r.DaysUntilExpiry}d</span>;
-                            return <span>{r.DaysUntilExpiry}d</span>;
-                          },
-                        },
-                        { header: 'QC', key: 'QCDecision', render: (r) => r.QCDecision || '—' },
-                      ]}
-                      totalEntries={itemDetail.batches.length}
-                      showActions={false}
-                      showPagination={false}
-                    />
-                  </div>
-                )}
-
-                {/* Recent Movements */}
-                {itemDetail.movements?.length > 0 && (
-                  <div className="item-detail-section">
-                    <h4>Recent Movements</h4>
-                    <Table
-                      data={itemDetail.movements}
-                      columns={[
-                        { header: 'Date', key: 'DocDate', render: (r) => r.DocDate ? new Date(r.DocDate).toLocaleDateString() : '—' },
-                        { header: 'Type', key: 'TransTypeName' },
-                        { header: 'Warehouse', key: 'Warehouse' },
-                        { header: 'In', key: 'InQty', render: (r) => r.InQty > 0 ? <span className="tabular-nums qty-in-text">+{fmt(r.InQty)}</span> : '—' },
-                        { header: 'Out', key: 'OutQty', render: (r) => r.OutQty > 0 ? <span className="tabular-nums qty-out-text">-{fmt(r.OutQty)}</span> : '—' },
-                        { header: 'Doc #', key: 'DocNumber' },
-                      ]}
-                      totalEntries={itemDetail.movements.length}
-                      showActions={false}
-                      showPagination={false}
-                    />
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </GlobalPopup>
+      {/* Item Master Tab Content */}
+      {activeTab === 'master' && (
+        <div className="inventory-section mt-6 fade-in-up">
+          <h3>Item Master</h3>
+          <Table
+            data={itemMasterData}
+            columns={masterColumns}
+            totalEntries={masterTotal}
+            showActions={false}
+            showPagination
+            currentPage={masterPage}
+            pageSize={masterPageSize}
+            onPageChange={setMasterPage}
+            onItemsPerPageChange={(size) => { setMasterPageSize(size); setMasterPage(1); }}
+            onRowClick={(row) => navigate(`/inventory/item-master/${encodeURIComponent(row.ItemCode)}?company=${company}`)}
+          />
+        </div>
       )}
     </div>
   );
