@@ -1,0 +1,95 @@
+.complaints-container {
+  background-color: var(--bg-color, #f8f9fa);
+  min-height: calc(100vh - 60px);
+}
+
+.complaints-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.complaints-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-color, #202224);
+  margin: 0;
+}
+
+/* Modal styles */
+.generate-complain-modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+}
+
+.generate-complain-modal-header {
+  padding: 20px 24px 10px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.generate-complain-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-color, #202224);
+}
+
+.generate-complain-modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.generate-complain-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.col-span-3 {
+  grid-column: span 3;
+}
+
+.generate-complain-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #fff;
+  flex-shrink: 0;
+}
+
+/* Scrollbar styling for modal body */
+.generate-complain-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.generate-complain-modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.generate-complain-modal-body::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.generate-complain-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.complaints-table-section {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
+}

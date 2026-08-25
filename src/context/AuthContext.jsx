@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { authApi } from "../apis/auth/auth";
 
 const AuthContext = createContext(null);
@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       setLoading(false);
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchUser();
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, fetchUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );

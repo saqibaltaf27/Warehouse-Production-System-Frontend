@@ -12,6 +12,8 @@ import Inventory from './pages/Inventory/Inventory.jsx';
 import ItemMasterView from './pages/Inventory/ItemMasterView.jsx';
 import ProductionPlanning from './pages/ProductionPlanning/ProductionPlanning.jsx';
 import ProductionOrders from './pages/ProductionOrders/ProductionOrders.jsx';
+import Complaints from './pages/Complaints/Complaints.jsx';
+import QC from './pages/QC/QC.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -45,6 +47,7 @@ function AppContent() {
           <Route path="machine-efficiency" element={<MachineEfficiency />} />
           <Route path="cost-analysis" element={<CostAnalysis />} />
           <Route path="production-planning" element={<ProductionPlanning />} />
+          <Route path="qc" element={<QC />} />
           <Route path="settings" element={<SimplePlaceholder title="Settings" />} />
           <Route path="*" element={<NotFound />} />
         </Route>

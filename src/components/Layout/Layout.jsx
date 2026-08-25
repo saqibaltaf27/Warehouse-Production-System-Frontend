@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { IconMenu2 } from "@tabler/icons-react";
@@ -7,9 +7,15 @@ import Breadcrumb from "../../global-components/Breadcrumb/Breadcrumb";
 import "./Layout.css";
 
 const Layout = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, fetchUser } = useAuth();
   const { pathname } = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (fetchUser) {
+      fetchUser();
+    }
+  }, [pathname, fetchUser]);
   const moduleTitles = {
     "/dashboard": "Dashboard",
     "/analytics": "Analytics",

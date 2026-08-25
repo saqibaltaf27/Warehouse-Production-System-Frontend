@@ -1,7 +1,83 @@
-.global-popup-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(35, 46, 50, 0.28); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: globalPopupFadeIn var(--transition-fast) forwards; }
-.global-popup { position: relative; display: flex; width: min(100%, 880px); max-height: calc(100vh - 48px); flex-direction: column; overflow: hidden; color: var(--dashboard-text); background: var(--dashboard-surface); border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 24px; animation: globalPopupSlideIn var(--transition-base) forwards; }
-.global-popup-close { position: absolute; top: 16px; right: 16px; z-index: 2; display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; color: var(--dashboard-text-muted); background: var(--dashboard-surface); border: 1px solid var(--dashboard-border); border-radius: 50%; cursor: pointer; }
-.global-popup-close:hover { color: var(--color-danger); background: var(--color-danger-light); }
-@keyframes globalPopupFadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes globalPopupSlideIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-@media (max-width: 560px) { .global-popup-overlay { align-items: flex-end; padding: 12px; } .global-popup { max-height: calc(100vh - 24px); border-radius: 22px 22px 12px 12px; } }
+.global-popup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(35, 46, 50, 0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: globalPopupFadeIn var(--transition-fast) forwards;
+}
+
+.global-popup {
+    position: relative;
+    display: flex;
+    width: min(100%, 1200px);
+    max-height: calc(100vh - 48px);
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--dashboard-text);
+    background: var(--dashboard-surface);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 24px;
+    animation: globalPopupSlideIn var(--transition-base) forwards;
+}
+
+.global-popup-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 2;
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    color: var(--dashboard-text-muted);
+    background: var(--dashboard-surface);
+    border: 1px solid var(--dashboard-border);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.global-popup-close:hover {
+    color: var(--color-danger);
+    background: var(--color-danger-light);
+}
+
+@keyframes globalPopupFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes globalPopupSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 560px) {
+    .global-popup-overlay {
+        align-items: flex-end;
+        padding: 12px;
+    }
+
+    .global-popup {
+        max-height: calc(100vh - 24px);
+        border-radius: 22px 22px 12px 12px;
+    }
+}

@@ -22,6 +22,7 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
     { title: 'Production Planning', path: '/production-planning' },
     { title: 'Production Trend', path: '/production-trend' },
     { title: 'Production Orders', path: '/production-orders' },
+    { title: 'QC', path: '/qc' },
   ];
 
   const firstName = user?.FirstName || "";

@@ -53,5 +53,13 @@ export const API_ENDPOINTS = {
     CUSTOMERS: '/production-orders/customers',
     DETAILS: (itemCode) => `/production-orders/${encodeURIComponent(itemCode)}`,
     BOM_DETAILS: (itemCode) => `/production-orders/bom/${encodeURIComponent(itemCode)}`,
+  },
+
+  COMPLAINTS: {
+    LOOKUP_ITEMS: '/complain/lookup/items',
+    CREATE_COMPLAINT: '/complain',
+    GET_COMPLAINTS: '/complain',
+    UPDATE_COMPLAINT: '/complain',
+    COA_PRODUCT_DETAILS: (itemCode) => `/complain/coa/product-details/${encodeURIComponent(itemCode)}`,
   }
 };
