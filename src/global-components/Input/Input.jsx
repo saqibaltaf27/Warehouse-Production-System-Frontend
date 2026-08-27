@@ -23,15 +23,31 @@ const Input = ({
       )}
       
       <div className="dome-input-wrapper">
-        <input
-          id={id}
-          type={type}
-          className={inputClass}
-          disabled={disabled}
-          aria-invalid={!!error}
-          aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
-          {...rest}
-        />
+        {type === 'select' ? (
+          <select
+            id={id}
+            className={inputClass}
+            disabled={disabled}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            {...rest}
+          >
+            <option value="" disabled hidden>Select {label}</option>
+            {rest.options && rest.options.map((opt, i) => (
+              <option key={i} value={opt.value || opt}>{opt.label || opt}</option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id={id}
+            type={type}
+            className={inputClass}
+            disabled={disabled}
+            aria-invalid={!!error}
+            aria-describedby={error ? `${id}-error` : helpText ? `${id}-help` : undefined}
+            {...rest}
+          />
+        )}
         {rightElement && (
           <div className="dome-input-right-element">
             {rightElement}

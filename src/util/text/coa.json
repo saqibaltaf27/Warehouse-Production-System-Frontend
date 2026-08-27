@@ -1,0 +1,193 @@
+{
+  "Alventri": {
+    "tests": [
+      {
+        "id": 1,
+        "tests": "Appearance",
+        "specifications": "The Appearance of tubes and caps is tight and integrated, No Damage\nISO 6710:2017; LDS-GMP-QC-017",
+        "analyzedBy": "Husnain",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 2,
+        "tests": "Tube Volume",
+        "specifications": "As per standard\nISO 6710:2017; LDS-GMP-QC-017",
+        "analyzedBy": "Saba",
+        "result": "3ml",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 3,
+        "tests": "Chemical Dosing",
+        "specifications": "Complies all buffer formulation\nLDS-GMP-QC-018, LDS-GMP-QC-015",
+        "analyzedBy": "Faisal",
+        "result": "K3 EDTA",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 4,
+        "tests": "Additive Volume Accuracy",
+        "specifications": "Detect 10 Tubes, Coincidence rate should be 10/10\nISO 6710:2017; LDS-GMP-QC-017",
+        "analyzedBy": "Husnain",
+        "result": "10/10",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 5,
+        "tests": "Vacuum Draw Volume",
+        "specifications": "Vacuum and volume is accurate.\nISO 6710:2017; LDS-GMP-QC-017",
+        "analyzedBy": "Saba",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 6,
+        "tests": "Closure Integrity",
+        "specifications": "Tube and rubber stopper intact and closed properly",
+        "analyzedBy": "Saba",
+        "result": "Closed",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 7,
+        "tests": "Label Verification",
+        "specifications": "As per approved artwork",
+        "analyzedBy": "Faisal",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 8,
+        "tests": "Packaging Integrity",
+        "specifications": "Packaging is suitable for transport and storage",
+        "analyzedBy": "Husnain",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 9,
+        "tests": "Appearance",
+        "specifications": "No damage",
+        "analyzedBy": "Husnain",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      }
+    ],
+    "remarks": "This product complies as per approved specifications."
+  },
+  "i-Sugar / Glucometer": {
+    "tests": [
+      {
+        "id": 1,
+        "tests": "Appearance",
+        "specifications": "The Appearance of test strip is tight and integrate, No Damage. Content is complete",
+        "analyzedBy": "Husnain",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 2,
+        "tests": "Dimensions of strip",
+        "specifications": "Compatible with Glucometers",
+        "analyzedBy": "Saba",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 3,
+        "tests": "Conformance Rate with normal Sugar Control",
+        "specifications": "Detect 10 negative samples of internal reference products, Coincidence rate should be 10/10",
+        "analyzedBy": "Faisal",
+        "result": "10/10",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 4,
+        "tests": "Conformance Rate with normal Sugar Control",
+        "specifications": "Detect 10 positive samples of internal reference products, Coincidence rate should be 10/10",
+        "analyzedBy": "Saba",
+        "result": "10/10",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 5,
+        "tests": "Precision",
+        "specifications": "Test with quality control (n=6), All are in range, the reaction results are Consistent and uniform",
+        "analyzedBy": "Husnain",
+        "result": "Complies",
+        "conclusion": "Conforms"
+      },
+      {
+        "id": 6,
+        "tests": "Coefficient of Variation (CV%)",
+        "specifications": "Detect 10 samples of diluent buffer, all of which should be Not more than 5%",
+        "analyzedBy": "Saba",
+        "result": ">5%",
+        "conclusion": "Conforms"
+      }
+    ],
+    "remarks": "This product complies as per approved specifications and it meets EN ISO 15197:2015 (±15 mg/dL / ±15%)"
+  },
+"R-Test": {
+  "tests": [
+    {
+      "id": 1,
+      "tests": "Appearance",
+      "specifications": "The Appearance of test strip is tight and integrate, No Damage. Content is complete. LDS-GMP-QC-018, LDS-GMP-P-023",
+      "analyzedBy": "Husnain",
+      "result": "Complies",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 2,
+      "tests": "Width of strip",
+      "specifications": "As per standard. LDS-GMP-QC-018",
+      "analyzedBy": "Saba",
+      "result": "3.5 mm",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 3,
+      "tests": "Conformance Rate with negative samples",
+      "specifications": "Detect 10 negative samples of internal reference products, Coincidence rate should be 10/10. LDS-GMP-QC-018, LDS-GMP-QC-015",
+      "analyzedBy": "Faisal",
+      "result": "10/10",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 4,
+      "tests": "Conformance Rate with positive samples",
+      "specifications": "Detect 10 positive samples of internal reference products, Coincidence rate should be 10/10. LDS-GMP-QC-018",
+      "analyzedBy": "Saba",
+      "result": "10/10",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 5,
+      "tests": "Precision",
+      "specifications": "Test with positive quality control (n=6), All are positive, the reaction results are consistent, and the color rendering is uniform",
+      "analyzedBy": "Faisal",
+      "result": "Complies",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 6,
+      "tests": "Diluent Buffer",
+      "specifications": "Detect 10 samples of diluent buffer, all of which should be negative",
+      "analyzedBy": "Saba",
+      "result": "Negative",
+      "conclusion": "Conforms"
+    },
+    {
+      "id": 7,
+      "tests": "Packing and Labeling",
+      "specifications": "As per approved artwork",
+      "analyzedBy": "Faisal",
+      "result": "Complies",
+      "conclusion": "Conforms"
+    }
+  ],
+  "remarks": "This product complies as per approved specifications."
+}
+}

@@ -1,0 +1,259 @@
+.coa-document-wrapper {
+  padding: 0;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+}
+
+.coa-document-container {
+  width: 100%;
+}
+
+.coa-top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 5px;
+}
+
+.coa-top-logo {
+  display: flex;
+  align-items: center;
+  border: 1px solid #333;
+}
+
+.logo-lds {
+  background-color: #4a86e8;
+  color: white;
+  padding: 5px 15px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.logo-text {
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #4a86e8;
+  line-height: 1.2;
+}
+
+.coa-top-title {
+  font-weight: bold;
+  font-size: 16px;
+  padding-bottom: 5px;
+}
+
+.coa-document {
+  background-color: transparent;
+  color: #333;
+  width: 100%;
+  border: 1px solid #333;
+
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+.coa-document input, .coa-document textarea {
+  background: transparent;
+  border: none;
+  color: #333;
+  font-family: inherit;
+  font-size: inherit;
+  width: 100%;
+  outline: none;
+}
+
+.coa-document input::placeholder {
+  color: #888;
+}
+
+/* Header Section */
+.coa-header {
+  display: flex;
+  border-bottom: 1px solid #333;
+}
+
+.coa-logo-section {
+  width: 15%;
+  border-right: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coa-logo-placeholder {
+  background-color: #4a86e8;
+  color: white;
+  padding: 10px 20px;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.coa-title-section {
+  width: 65%;
+  text-align: center;
+  padding: 15px;
+  border-right: 1px solid #333;
+}
+
+.coa-title-section h2, .coa-title-section h3, .coa-title-section h4 {
+  margin: 5px 0;
+}
+
+.coa-title-section h2 { font-size: 16px; }
+.coa-title-section h3 { font-size: 14px; }
+.coa-title-section h4 { font-size: 14px; }
+
+.coa-form-info {
+  width: 20%;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #333;
+  font-size: 11px;
+}
+
+.coa-form-row {
+  display: flex;
+  margin-bottom: 5px;
+}
+.coa-form-row label {
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+/* Product Details */
+.coa-details-section {
+  padding: 15px;
+  border-bottom: 1px solid #333;
+}
+
+.coa-detail-row {
+  display: flex;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.coa-detail-row label {
+  font-weight: bold;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.coa-grid-details {
+  display: flex;
+  margin-top: 20px;
+}
+
+.coa-grid-col {
+  flex: 1;
+}
+
+/* Tests Table */
+.coa-table-section {
+  width: 100%;
+  padding: 20px 20px 0px 20px;
+}
+
+.coa-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coa-table th, .coa-table td {
+  border: 1px solid #333;
+  padding: 8px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.coa-table th {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.coa-table td textarea {
+  resize: none;
+  overflow: hidden;
+  field-sizing: content;
+}
+
+.coa-add-row-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  font-weight: bold;
+}
+.coa-add-row-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Remarks Section */
+.coa-remarks-section {
+  display: flex;
+  border-bottom: 1px solid #333;
+  padding: 0px 20px 0px 20px;
+}
+
+.coa-remarks-label {
+  font-weight: bold;
+  padding: 10px;
+  width: 150px;
+  border-right: 1px solid #333;
+  display: flex;
+  align-items: center;
+}
+
+.coa-remarks-input {
+  flex: 1;
+  padding: 10px;
+}
+
+/* Signatures Section */
+.coa-signatures-section {
+  display: flex;
+  border-bottom: 1px solid #333;
+}
+
+.coa-signature-block {
+  flex: 1;
+  border-right: 1px solid #333;
+  text-align: center;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.coa-signature-block:last-child {
+  border-right: none;
+}
+
+.coa-sig-header {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.coa-signature-block input {
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+/* Footer Section */
+.coa-footer-status {
+  text-align: center;
+  padding: 15px;
+  font-weight: bold;
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+}
+
+.coa-footer-disclaimer {
+  padding: 5px 10px;
+  font-size: 11px;
+}
