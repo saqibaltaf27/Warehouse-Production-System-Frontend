@@ -7,7 +7,7 @@ const QC = () => {
   const [activeTab, setActiveTab] = useState('complaints');
 
   return (
-    <div className="qc-container">
+    <div>
       <div className="qc-header">
         
         <div className="qc-tabs">
