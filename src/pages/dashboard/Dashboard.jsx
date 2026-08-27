@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IconRefresh,
   IconAlertTriangle,
@@ -11,628 +11,732 @@ import {
   IconCurrencyDollar,
   IconClipboardList,
   IconClock,
+  IconCalendar,
+  IconCalendarEvent,
+  IconTarget,
+  IconActivity,
+  IconGauge
 } from "@tabler/icons-react";
 import LineChart from "../../global-components/Charts/LineChart";
 import PieChart from "../../global-components/Charts/PieChart";
 import BarChart from "../../global-components/Charts/BarChart";
-import Card from "../../global-components/Card/Card";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
-import Pagination from "../../global-components/Pagination/Pagination";
 import "./Dashboard.css";
 
-const COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#06b6d4",
-];
-
-const formatCompactCurrency = (value) => {
-  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
+const formatCurrency = (val) => {
+  if (val === undefined || val === null) return "0.00";
+  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-export default function Dashboard() {
-  const [data, setData] = useState(null);
+const formatNumberCompact = (num) => {
+  if (num === undefined || num === null) return "0";
+  if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
+  if (num >= 1000) return (num / 1000).toFixed(2) + 'K';
+  return num.toLocaleString();
+};
+
+// 1. Top Alerts Component
+const AlertsSection = ({ filters }) => {
+  const [data, setData] = useState({ delayedOrders: 0, materialShortages: 0, ordersOverCost: 0, highDowntime: 0, qualityIssues: 0 });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // History Pagination State
-  const [history, setHistory] = useState([]);
-  const [historyPagination, setHistoryPagination] = useState({
-    page: 1,
-    pageSize: 5,
-    totalRecords: 0,
-    totalPages: 0,
-  });
-  const [historyLoading, setHistoryLoading] = useState(false);
-
-  // Filtered Orders State
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [orderVolume, setOrderVolume] = useState({ ReleasedCount: 0, ClosedCount: 0, CancelledCount: 0, PlannedCount: 0, DelayedCount: 0 });
-  const [filteredOrdersLoading, setFilteredOrdersLoading] = useState(false);
-  const [orderStatusFilter, setOrderStatusFilter] = useState('All');
-  const [tableDateFilter, setTableDateFilter] = useState('today');
-  const [volumeDateFilter, setVolumeDateFilter] = useState('yearly');
-
-  // Filters and Warehouses
-  const [warehouses, setWarehouses] = useState([]);
-  const [filters, setFilters] = useState({
-    warehouse: "",
-    dateFrom: "",
-    dateTo: "",
-  });
-
-  const fetchHistory = useCallback(
-    async (page = 1, pageSize = 5) => {
-      setHistoryLoading(true);
-      try {
-        const params = { page, pageSize, months: 1 };
-        if (filters.warehouse) params.warehouse = filters.warehouse;
-        if (filters.dateFrom) params.dateFrom = filters.dateFrom;
-        if (filters.dateTo) params.dateTo = filters.dateTo;
-
-        const res = await axiosInstance.get(
-          API_ENDPOINTS.PRODUCTION_PLANNING.HISTORY,
-          { params },
-        );
-        if (res.data?.success) {
-          setHistory(res.data.data);
-          setHistoryPagination({
-            page: res.data.pagination.currentPage,
-            pageSize: res.data.pagination.pageSize,
-            totalRecords: res.data.pagination.totalRecords,
-            totalPages: res.data.pagination.totalPages,
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching history:", err);
-      } finally {
-        setHistoryLoading(false);
-      }
-    },
-    [filters],
-  );
-
-  const fetchOverviewData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Build query string
-      const params = {};
-      if (filters.warehouse) params.warehouse = filters.warehouse;
-      if (filters.dateFrom) params.dateFrom = filters.dateFrom;
-      if (filters.dateTo) params.dateTo = filters.dateTo;
-
-      const [overviewRes, shortagesRes] = await Promise.all([
-        axiosInstance.get(API_ENDPOINTS.DASHBOARD.OVERVIEW, { params }),
-        axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.SHORTAGES, {
-          params: { pageSize: 5, ...params },
-        }),
-      ]);
-
-      if (overviewRes.data && overviewRes.data.success) {
-        setData({
-          ...overviewRes.data.data,
-          shortages: shortagesRes.data?.data || [],
-        });
-      } else {
-        throw new Error(
-          overviewRes.data?.message || "Failed to fetch dashboard data",
-        );
-      }
-    } catch (err) {
-      console.error("Error fetching dashboard overview:", err);
-      setError(err.message || "An error occurred while fetching data");
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  const fetchFilteredOrders = useCallback(async () => {
-    setFilteredOrdersLoading(true);
-    try {
-      const params = {
-        status: orderStatusFilter,
-        tableDateFilter: tableDateFilter,
-        volumeDateFilter: volumeDateFilter
-      };
-      if (filters.warehouse) params.warehouse = filters.warehouse;
-
-      const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.OVERVIEW + '/filtered-orders', { params });
-      if (res.data?.success) {
-        setFilteredOrders(res.data.data.orders || []);
-        setOrderVolume(res.data.data.volume || { ReleasedCount: 0, ClosedCount: 0, CancelledCount: 0, PlannedCount: 0, DelayedCount: 0 });
-      }
-    } catch (err) {
-      console.error("Error fetching filtered orders:", err);
-    } finally {
-      setFilteredOrdersLoading(false);
-    }
-  }, [orderStatusFilter, tableDateFilter, volumeDateFilter, filters.warehouse]);
 
   useEffect(() => {
-    // Fetch warehouses for dropdown
+    const fetchAlerts = async () => {
+      setLoading(true);
+      try {
+        const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.ALERTS, { params: filters });
+        if (res.data?.success) setData(res.data.data);
+      } catch (err) { console.error(err); }
+      setLoading(false);
+    };
+    fetchAlerts();
+  }, [filters]);
+
+  return (
+    <div className="w-100 mb-4">
+       <div className="d-flex align-center justify-between mb-2 alert-section-header">
+           <span className="text-danger font-semibold text-uppercase alert-title">Attention Required</span>
+           <span className="text-primary alert-link">View All Alerts →</span>
+       </div>
+       <div className="d-flex gap-3 w-100 alert-container">
+       {loading ? <div>Loading alerts...</div> : (
+           <>
+               <div className="dashboard-alert-card flex-1 alert-danger">
+                    <div className="alert-icon-wrapper danger-bg"><IconClock size={28} className="text-danger" /></div>
+                    <div className="d-flex flex-column justify-center">
+                        <h3 className="text-danger m-0 alert-value">{data.delayedOrders}</h3>
+                        <p className="m-0 font-semibold alert-label">Orders Delayed</p>
+                        <small className="text-muted alert-desc">Require immediate action</small>
+                    </div>
+               </div>
+               <div className="dashboard-alert-card flex-1 alert-danger">
+                    <div className="alert-icon-wrapper danger-bg"><IconPackage size={28} className="text-danger" /></div>
+                    <div className="d-flex flex-column justify-center">
+                        <h3 className="text-danger m-0 alert-value">{data.materialShortages}</h3>
+                        <p className="m-0 font-semibold alert-label">Materials Shortage</p>
+                        <small className="text-muted alert-desc">Affecting production</small>
+                    </div>
+               </div>
+               <div className="dashboard-alert-card flex-1 alert-danger">
+                    <div className="alert-icon-wrapper danger-bg"><IconCurrencyDollar size={28} className="text-danger" /></div>
+                    <div className="d-flex flex-column justify-center">
+                        <h3 className="text-danger m-0 alert-value">{data.ordersOverCost}</h3>
+                        <p className="m-0 font-semibold alert-label">Orders Over Standard Cost</p>
+                        <small className="text-muted alert-desc">Variance &gt; 5%</small>
+                    </div>
+               </div>
+               <div className="dashboard-alert-card flex-1 alert-warning">
+                    <div className="alert-icon-wrapper warning-bg"><IconAlertTriangle size={28} className="text-warning" /></div>
+                    <div className="d-flex flex-column justify-center">
+                        <h3 className="text-warning m-0 alert-value">{data.highDowntime}</h3>
+                        <p className="m-0 font-semibold alert-label">High Downtime</p>
+                        <small className="text-muted alert-desc">Today</small>
+                    </div>
+               </div>
+               <div className="dashboard-alert-card flex-1 alert-warning">
+                    <div className="alert-icon-wrapper warning-bg"><IconCheck size={28} className="text-warning" /></div>
+                    <div className="d-flex flex-column justify-center">
+                        <h3 className="text-warning m-0 alert-value">{data.qualityIssues}</h3>
+                        <p className="m-0 font-semibold alert-label">Quality Issues</p>
+                        <small className="text-muted alert-desc">Rejection &gt; 2%</small>
+                    </div>
+               </div>
+           </>
+       )}
+       </div>
+    </div>
+  );
+};
+
+// 2. KPI Cards Row
+const KPIRow = ({ filters }) => {
+    const [data, setData] = useState({ plan: 0, actual: 0, achievement: 0 });
+    useEffect(() => {
+        const fetchOverview = async () => {
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.OVERVIEW, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+        };
+        fetchOverview();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-kpi-grid mb-4 grid-cols-6">
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Today's Plan</span> <IconCalendar size={18} color="#3b82f6" /></div>
+                 <h2 title={data.plan?.toLocaleString()} className="kpi-value">{formatNumberCompact(data.plan)}</h2>
+                 <small className="text-muted">Units</small>
+             </div>
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Today's Actual</span> <IconCalendarEvent size={18} color="#10b981" /></div>
+                 <h2 title={data.actual?.toLocaleString()} className="kpi-value">{formatNumberCompact(data.actual)}</h2>
+                 <small className="text-muted">Units</small>
+             </div>
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Achievement</span> <IconTarget size={18} color="#8b5cf6" /></div>
+                 <h2 className="kpi-value">{data.achievement}%</h2>
+                 <small className="text-muted">vs Plan</small>
+             </div>
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Daily Efficiency</span> <IconActivity size={18} color="#06b6d4" /></div>
+                 <h2 className="kpi-value">0.00%</h2>
+                 <small className="text-muted">vs Target 90%</small>
+             </div>
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">OEE</span> <IconSettings size={18} color="#f97316" /></div>
+                 <h2 className="kpi-value">0.00%</h2>
+                 <small className="text-muted">vs Target 85%</small>
+             </div>
+             <div className="kpi-card shadow-sm kpi-card-compact">
+                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Capacity Util</span> <IconGauge size={18} color="#3b82f6" /></div>
+                 <h2 className="kpi-value">0.00%</h2>
+                 <small className="text-muted">vs Available Capacity</small>
+             </div>
+        </div>
+    );
+};
+
+// 3. Plan vs Actual Chart
+const PlanVsActualChart = ({ filters }) => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTrend = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.PLAN_VS_ACTUAL, { params: filters });
+                if (res.data?.success) {
+                    const formattedData = res.data.data.map(item => ({
+                        ...item,
+                        date: new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+                    }));
+                    setData(formattedData);
+                }
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchTrend();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container card-no-border">
+            <div className="dashboard-card-header d-flex justify-between">
+                <h3>Production Plan vs Actual</h3>
+                <select className="select-filter-compact text-sm"><option>Daily</option></select>
+            </div>
+            <div className="dashboard-card-content p-4">
+                {loading ? (
+                    <div className="dashboard-state">
+                        <IconRefresh className="spin" size={32} color="var(--primary)" />
+                        <p>Loading chart...</p>
+                    </div>
+                ) : data.length > 0 ? (
+                    <div className="chart-content">
+                        <BarChart
+                            data={data}
+                            xAxisKey="date"
+                            series={[
+                                { key: "plannedQty", name: "Planned Qty", color: "#3b82f6" },
+                                { key: "actualQty", name: "Actual Qty", color: "#10b981" }
+                            ]}
+                            showLegend={true}
+                        />
+                    </div>
+                ) : (
+                    <div className="table-empty-cell">No data for the selected period</div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// 4. Cost Summary
+const CostSummary = ({ filters }) => {
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCost = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.COST_SUMMARY, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchCost();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header">
+                <h3>Cost Summary (Today)</h3>
+                <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View Details</span>
+            </div>
+            <div className="dashboard-card-content p-4">
+                {loading || !data ? (
+                    <div className="dashboard-state"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                ) : (
+                    <>
+                    <div className="compact-table-wrapper flex-1">
+                        <table className="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Particulars</th>
+                                    <th className="text-right">Standard</th>
+                                    <th className="text-right">Actual</th>
+                                    <th className="text-right">Variance</th>
+                                    <th className="text-right">Variance %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Material Cost</td>
+                                    <td className="text-right" title={data.material.standard}>{formatNumberCompact(data.material.standard)}</td>
+                                    <td className="text-right" title={data.material.actual}>{formatNumberCompact(data.material.actual)}</td>
+                                    <td className={`text-right ${data.material.variance > 0 ? 'text-danger' : 'text-success'}`}>{formatNumberCompact(data.material.variance)}</td>
+                                    <td className={`text-right ${data.material.variancePercent > 0 ? 'text-danger' : 'text-success'}`}>{data.material.variancePercent}%</td>
+                                </tr>
+                                <tr>
+                                    <td>Labor Cost</td>
+                                    <td className="text-right">{formatCurrency(data.labor.standard)}</td>
+                                    <td className="text-right">{formatCurrency(data.labor.actual)}</td>
+                                    <td className="text-right text-muted">—</td>
+                                    <td className="text-right text-muted">—</td>
+                                </tr>
+                                <tr>
+                                    <td>Overhead Cost</td>
+                                    <td className="text-right">{formatCurrency(data.overhead.standard)}</td>
+                                    <td className="text-right">{formatCurrency(data.overhead.actual)}</td>
+                                    <td className="text-right text-muted">—</td>
+                                    <td className="text-right text-muted">—</td>
+                                </tr>
+                                <tr style={{fontWeight: 'bold', borderTop: '2px solid #e2e8f0'}}>
+                                    <td>Total Cost</td>
+                                    <td className="text-right" title={data.total.standard}>{formatNumberCompact(data.total.standard)}</td>
+                                    <td className="text-right" title={data.total.actual}>{formatNumberCompact(data.total.actual)}</td>
+                                    <td className={`text-right ${data.total.variance > 0 ? 'text-danger' : 'text-success'}`}>{formatNumberCompact(data.total.variance)}</td>
+                                    <td className={`text-right ${data.total.variancePercent > 0 ? 'text-danger' : 'text-success'}`}>{data.total.variancePercent}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        
+                        <div className="d-flex gap-3 mt-4">
+                            <div className="flex-1 text-center" style={{padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                                <p className="m-0 text-muted font-semibold mb-2" style={{fontSize: '0.8rem'}}>Cost per Unit (Standard)</p>
+                                <h4 className="m-0">{formatCurrency(data.perUnit.standard)}</h4>
+                            </div>
+                            <div className="flex-1 text-center" style={{padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                                <p className="m-0 text-muted font-semibold mb-2" style={{fontSize: '0.8rem'}}>Cost per Unit (Actual)</p>
+                                <h4 className="m-0">{formatCurrency(data.perUnit.actual)}</h4>
+                            </div>
+                            <div className={`flex-1 text-center ${data.perUnit.variance > 0 ? 'bg-danger-light' : 'bg-success-light'}`} style={{padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                                <p className={`m-0 font-semibold mb-2 ${data.perUnit.variance > 0 ? 'text-danger' : 'text-success'}`} style={{fontSize: '0.8rem'}}>Variance per Unit</p>
+                                <h4 className={`m-0 ${data.perUnit.variance > 0 ? 'text-danger' : 'text-success'}`}>{formatCurrency(data.perUnit.variance)}</h4>
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// 5. Top Orders by Cost Variance
+const TopOrdersCostVariance = ({ filters }) => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchVar = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.COST_VARIANCE, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchVar();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header">
+                <h3>Top Orders by Cost Variance</h3>
+                <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
+            </div>
+            <div className="dashboard-card-content p-4">
+                {loading ? (
+                    <div className="dashboard-state"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                ) : data.length > 0 ? (
+                    <div className="compact-table-wrapper">
+                        <table className="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Product</th>
+                                    <th className="text-right">Actual Cost / Unit</th>
+                                    <th className="text-right">Std Cost / Unit</th>
+                                    <th className="text-right">Variance %</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.map((item, idx) => (
+                                    <tr key={idx}>
+                                        <td><strong>{item.OrderNum}</strong></td>
+                                        <td title={item.Product} style={{maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{item.Product}</td>
+                                        <td className="text-right" title={item.ActualCost}>{formatNumberCompact(item.ActualCost)}</td>
+                                        <td className="text-right" title={item.StdCost}>{formatNumberCompact(item.StdCost)}</td>
+                                        <td className={`text-right ${item.VariancePercent > 0 ? 'text-danger' : 'text-success'}`}><strong>{item.VariancePercent}%</strong></td>
+                                        <td>
+                                            {item.VariancePercent > 5 ? <span className="status-badge critical">Over Std</span> :
+                                             item.VariancePercent < -5 ? <span className="status-badge success">Under Std</span> :
+                                             <span className="status-badge good">On Std</span>}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                     <div className="table-empty-cell">No data for the selected period</div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// Reusable component for See More / See Less text
+const ExpandableText = ({ text, maxLength = 15 }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    if (!text) return null;
+    if (text.length <= maxLength) return <span>{text}</span>;
+    
+    return (
+        <span>
+            {isExpanded ? text : `${text.substring(0, maxLength)}...`}
+            <span 
+                onClick={() => setIsExpanded(!isExpanded)} 
+                className="text-primary font-semibold ms-1" 
+                style={{cursor: 'pointer', fontSize: '0.75rem', whiteSpace: 'nowrap'}}
+            >
+                {isExpanded ? ' See Less' : ' See More'}
+            </span>
+        </span>
+    );
+};
+
+// 6. Critical Material Shortages
+const CriticalMaterialShortages = ({ filters }) => {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchShortages = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.MATERIAL_SHORTAGES, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchShortages();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header d-flex justify-between">
+                <h3>Critical Material Shortages</h3>
+                <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
+            </div>
+            <div className="dashboard-card-content p-4">
+                {loading ? (
+                    <div className="dashboard-state"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                ) : data.length > 0 ? (
+                    <div className="compact-table-wrapper">
+                        <table className="compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Material Code</th>
+                                    <th>Material Description</th>
+                                    <th className="text-right">Required Qty</th>
+                                    <th className="text-right">Available Qty</th>
+                                    <th className="text-right">Shortage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {data.map((item, idx) => (
+                                    <tr key={idx}>
+                                        <td><strong>{item.ItemCode}</strong></td>
+                                        <td>
+                                            <ExpandableText text={item.ItemName} maxLength={15} />
+                                        </td>
+                                        <td className="text-right">{item.RequiredQty?.toLocaleString()}</td>
+                                        <td className="text-right">{item.AvailableQty?.toLocaleString()}</td>
+                                        <td className="text-right text-danger"><strong>{item.Shortage?.toLocaleString()}</strong></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                     <div className="table-empty-cell">No data for the selected period</div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// 7. Daily Efficiency Trend
+const DailyEfficiencyTrend = ({ filters }) => {
+    const data = []; // No hardcoded data
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header d-flex justify-between">
+                <h3>Daily Efficiency Trend (%)</h3>
+                <select className="select-filter-compact text-sm"><option>Daily</option></select>
+            </div>
+            <div className="dashboard-card-content p-4 d-flex">
+                <div className="chart-content flex-2 w-100 chart-fixed-height">
+                    {data.length > 0 ? (
+                        <LineChart data={data} xAxisKey="date" series={[{ key: "efficiency", name: "Efficiency %", color: "#10b981" }]} showLegend={false} />
+                    ) : (
+                        <div className="d-flex align-center justify-center w-100 h-100 text-muted">No data available</div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 8. Downtime Summary
+const DowntimeSummary = ({ filters }) => {
+    const downtimeReasons = []; // No hardcoded data
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header d-flex justify-between">
+                <h3>Downtime Summary (Today)</h3>
+                <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
+            </div>
+            <div className="dashboard-card-content p-3 d-flex align-center justify-center">
+                 {downtimeReasons.length > 0 ? (
+                     <>
+                         <div className="flex-1 donut-fixed-height">
+                             <PieChart data={downtimeReasons} dataKey="value" nameKey="name" showLegend={false} innerRadius={50} outerRadius={70} />
+                         </div>
+                         <div className="flex-1">
+                             <table className="downtime-legend-table w-100">
+                                 <tbody>
+                                     {downtimeReasons.map(r => (
+                                         <tr key={r.name}>
+                                             <td><span className="legend-dot" style={{ backgroundColor: r.color }}></span>{r.name}</td>
+                                             <td className="text-right">{r.value} hrs</td>
+                                         </tr>
+                                     ))}
+                                 </tbody>
+                             </table>
+                         </div>
+                     </>
+                 ) : (
+                     <div className="text-muted">No downtime data recorded</div>
+                 )}
+            </div>
+        </div>
+    );
+};
+
+// 9. OEE Breakdown
+const OEEBreakdown = ({ filters }) => {
+    // Zeroed out metrics to avoid hardcoding
+    const metrics = [
+        { name: 'Availability', value: 0, color: '#10b981' },
+        { name: 'Performance', value: 0, color: '#3b82f6' },
+        { name: 'Quality', value: 0, color: '#8b5cf6' },
+        { name: 'OEE', value: 0, color: '#f97316' }
+    ];
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header">
+                <h3>OEE Breakdown (Today)</h3>
+            </div>
+            <div className="dashboard-card-content p-4 d-flex justify-between align-center flex-row oee-breakdown-container">
+                 {metrics.map(m => (
+                     <div key={m.name} className="d-flex flex-column align-center flex-1">
+                          <p className="font-semibold text-muted mb-3 text-center oee-label">{m.name}</p>
+                          <div className="oee-arc-container">
+                              <div className="oee-arc-wrapper">
+                                 <div className="oee-arc-border" style={{ borderColor: m.color }}></div>
+                              </div>
+                              <div className="oee-arc-value">
+                                  <h3 className="m-0 text-bold text-dark">{m.value.toFixed(2)}%</h3>
+                              </div>
+                          </div>
+                     </div>
+                 ))}
+            </div>
+        </div>
+    );
+};
+
+// 10. Quality Summary
+const QualitySummary = ({ filters }) => {
+    const [data, setData] = useState({ rejectionPercent: 0, reworkPercent: 0, firstPassYield: 0, rejectedQty: 0, reworkedQty: 0, totalProduced: 0 });
+    useEffect(() => {
+        const fetchQuality = async () => {
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.QUALITY, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+        };
+        fetchQuality();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header d-flex justify-between">
+                <h3>Quality Summary (Today)</h3>
+                <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
+            </div>
+            <div className="dashboard-card-content p-4">
+                <div className="d-flex justify-between text-center gap-4 mb-4" style={{borderBottom: '1px solid #eee', paddingBottom: '15px'}}>
+                    <div className="flex-1 bg-light p-3" style={{borderRadius: '8px'}}>
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>Rejection %</p>
+                        <h3 className="text-danger m-0 mt-1">{data.rejectionPercent}%</h3>
+                    </div>
+                    <div className="flex-1 bg-light p-3" style={{borderRadius: '8px', opacity: 0.6}}>
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>Rework %</p>
+                        <h3 className="text-warning m-0 mt-1">—</h3>
+                    </div>
+                    <div className="flex-1 bg-light p-3" style={{borderRadius: '8px'}}>
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>First Pass Yield %</p>
+                        <h3 className="text-success m-0 mt-1">{data.firstPassYield}%</h3>
+                    </div>
+                </div>
+                <div className="d-flex justify-between text-center gap-4">
+                    <div className="flex-1">
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>Rejected Qty</p>
+                        <h4 className="m-0 text-danger">{formatNumberCompact(data.rejectedQty)}</h4>
+                    </div>
+                    <div className="flex-1" style={{ opacity: 0.6 }}>
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>Reworked Qty</p>
+                        <h4 className="m-0 text-warning">—</h4>
+                    </div>
+                    <div className="flex-1">
+                        <p className="m-0 text-muted" style={{fontSize: '0.85rem'}}>Total Produced</p>
+                        <h4 className="m-0">{formatNumberCompact(data.totalProduced)}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 11. Production Orders Summary
+const OrdersSummary = ({ filters }) => {
+    const [data, setData] = useState({ totalOrders: 0, inProgress: 0, onHold: 0, completed: 0, delayed: 0, atRisk: 0 });
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.ORDER_SUMMARY, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+        };
+        fetchOrders();
+    }, [filters]);
+
+    return (
+        <div className="dashboard-card chart-card-container">
+            <div className="dashboard-card-header">
+                <h3>Production Orders Summary</h3>
+            </div>
+            <div className="dashboard-card-content p-4">
+                <div className="order-summary-grid">
+                    <div className="text-center order-card order-total">
+                        <p className="m-0 text-muted font-semibold mb-2 order-label">Total Orders</p>
+                        <h3 className="m-0 order-value">{data.totalOrders}</h3>
+                    </div>
+                    <div className="text-center order-card order-progress">
+                        <p className="m-0 text-primary font-semibold mb-2 order-label">In Progress</p>
+                        <h3 className="m-0 text-primary order-value">{data.inProgress}</h3>
+                    </div>
+                    <div className="text-center order-card order-hold">
+                        <p className="m-0 text-warning font-semibold mb-2 order-label">On Hold</p>
+                        <h3 className="m-0 text-warning order-value">{data.onHold}</h3>
+                    </div>
+                    <div className="text-center order-card order-completed">
+                        <p className="m-0 text-success font-semibold mb-2 order-label">Completed</p>
+                        <h3 className="m-0 text-success order-value">{data.completed}</h3>
+                    </div>
+                    <div className="text-center order-card order-delayed">
+                        <p className="m-0 text-danger font-semibold mb-2 order-label">Delayed</p>
+                        <h3 className="m-0 text-danger order-value">{data.delayed}</h3>
+                    </div>
+                    <div className="text-center order-card order-risk">
+                        <p className="m-0 font-semibold mb-2 order-label text-risk">At Risk</p>
+                        <h3 className="m-0 order-value text-risk">{data.atRisk}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+export default function Dashboard() {
+  const defaultDate = new Date().toISOString().split('T')[0];
+  const [filters, setFilters] = useState({ startDate: defaultDate, endDate: defaultDate, warehouse: "All" });
+  const [warehouses, setWarehouses] = useState([]);
+
+  useEffect(() => {
     const fetchWarehouses = async () => {
       try {
-        const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.WAREHOUSES);
-        if (res.data?.success) {
-          setWarehouses(res.data.data || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch warehouses:", err);
-      }
+        const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.WAREHOUSES);
+        if (res.data?.success) setWarehouses(res.data.data || []);
+      } catch (err) { console.error(err); }
     };
     fetchWarehouses();
   }, []);
 
-  useEffect(() => {
-    fetchOverviewData();
-    fetchHistory(1, historyPagination.pageSize);
-  }, [fetchOverviewData, fetchHistory]);
-
-  useEffect(() => {
-    fetchFilteredOrders();
-  }, [fetchFilteredOrders]);
-
   const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+    setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
-
-  const handleRefresh = () => {
-    fetchOverviewData();
-    fetchFilteredOrders();
-  };
-
-  if (loading && !data) {
-    return (
-      <div className="executive-dashboard">
-        <div className="dashboard-state">
-          <IconRefresh className="spin" size={48} color="var(--primary)" />
-          <p>Loading Executive Overview...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="executive-dashboard">
-        <div className="dashboard-state">
-          <IconAlertTriangle size={48} color="#ef4444" />
-          <h3>Error Loading Dashboard</h3>
-          <p>{error}</p>
-          <button className="btn-refresh" onClick={handleRefresh}>
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const {
-    executiveKPIs,
-    productionPerformance,
-    inventoryHealth,
-    recentOrders,
-    openOrdersDetails,
-    alerts,
-    shortages,
-  } = data;
 
   return (
-    <div className="executive-dashboard">
+    <div className="executive-dashboard bg-light">
+       {/* Filters */}
+       <div className="dashboard-filters-bar mb-4">
+           <div className="d-flex flex-column">
+               <label>Start Date</label>
+               <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} />
+           </div>
+           <div className="d-flex flex-column">
+               <label>End Date</label>
+               <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} />
+           </div>
+           <div className="d-flex flex-column">
+               <label>Warehouse</label>
+               <select name="warehouse" value={filters.warehouse} onChange={handleFilterChange}>
+                   <option value="All">All Warehouses</option>
+                   {warehouses.map(w => <option key={w.code} value={w.code}>{w.name}</option>)}
+               </select>
+           </div>
+       </div>
 
-      {/* Row 1: KPIs */}
-      <div className="fade-in-up delay-100 mb-6">
-        <Card items={[
-          {
-            title: "Total Orders",
-            value: executiveKPIs.totalOrders,
-            trendText: "Total created orders",
-            icon: IconClipboardList
-          },
-          {
-            title: "In Progress Orders",
-            value: executiveKPIs.activeOrders,
-            trendText: "Orders in production",
-            icon: IconCheck
-          },
-          {
-            title: "Cancelled Orders",
-            value: executiveKPIs.cancelledOrders || 0,
-            trendText: "Cancelled production orders",
-            icon: IconAlertCircle
-          },
-          {
-            title: "Delayed Orders",
-            value: executiveKPIs.delayedOrders || 0,
-            trendText: "Orders behind schedule",
-            icon: IconAlertTriangle
-          },
-          {
-            title: "Completed Orders",
-            value: executiveKPIs.closedOrders || 0,
-            trendText: "Completed orders",
-            icon: IconCheck
-          }
-        ]} />
-      </div>
+       {/* Section 1: Alerts */}
+       <AlertsSection filters={filters} />
+       
+       <div className="mb-4"></div>
 
-      {/* Row 2: Production Trend */}
-      <div className="dashboard-row fade-in-up delay-200">
-        <div className="dashboard-col-2-3">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h3>
-                <IconTrendingUp size={20} /> Production Output Trend (Last 6
-                Months)
-              </h3>
-            </div>
-            <div className="dashboard-card-content">
-              <div className="chart-container">
-                  <BarChart
-                    data={productionPerformance?.map((item) => {
-                      const months = [
-                        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-                      ];
-                      return {
-                        ...item,
-                        MonthName: months[item.Month - 1] || item.Month
-                      };
-                    })}
-                    xAxisKey="MonthName"
-                    series={[
-                      { key: "PlannedQty", name: "Planned Qty", color: "#3b82f6", yAxisId: "left" },
-                      { key: "OrderCount", name: "Orders Count", color: "#10b981", yAxisId: "right" }
-                    ]}
-                    showLegend={true}
-                    secondaryYAxis={true}
-                  />
-              </div>
-            </div>
-          </div>
-        </div>
+       {/* Section 2: KPIs */}
+       <KPIRow filters={filters} />
 
-        <div className="dashboard-col-1-3">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h3>
-                <IconAlertCircle size={20} /> Operational Alerts
-              </h3>
+       {/* ROW 1: Plan vs Actual | Cost Summary | Top Orders Cost Variance */}
+       <div className="dashboard-row-multi row-dense">
+            <div className="dashboard-col-flex-1">
+                <PlanVsActualChart filters={filters} />
             </div>
-            <div className="dashboard-card-content no-padding">
-              {alerts && alerts.length > 0 ? (
-                <div className="alert-list alert-list-padding">
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className={`alert-item ${alert.type}`}>
-                      <div className={`alert-icon ${alert.type}`}>
-                        {alert.type === "critical" ? (
-                          <IconAlertTriangle />
-                        ) : (
-                          <IconAlertCircle />
-                        )}
-                      </div>
-                      <div className="alert-content">
-                        <div className="alert-title">{alert.title}</div>
-                        <div className="alert-desc">{alert.description}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="dashboard-state">
-                  <IconCheck size={48} color="#10b981" />
-                  <p>All operations are normal</p>
-                </div>
-              )}
+            <div className="dashboard-col-flex-1">
+                <CostSummary filters={filters} />
             </div>
-          </div>
-        </div>
-      </div>
+            <div className="dashboard-col-flex-1">
+                <TopOrdersCostVariance filters={filters} />
+            </div>
+       </div>
 
-      {/* Row 3: Inventory & Mix */}
-      <div className="dashboard-row fade-in-up delay-300">
-        <div className="dashboard-col-1-2">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h3>
-                <IconPackage size={20} /> Critical Material Shortages
-              </h3>
+       {/* ROW 2: Material Shortages | Efficiency Trend | Downtime Summary */}
+       <div className="dashboard-row-multi row-dense">
+            <div className="dashboard-col-flex-1">
+                <CriticalMaterialShortages filters={filters} />
             </div>
-            <div className="dashboard-card-content no-padding">
-              <div className="compact-table-wrapper">
-                <table className="compact-table">
-                  <thead>
-                    <tr>
-                      <th>Component</th>
-                      <th className="text-right">Required</th>
-                      <th className="text-right">Available</th>
-                      <th className="text-right">Shortage</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {shortages && shortages.length > 0 ? (
-                      shortages.map((item, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            <strong>{item.ComponentCode}</strong>
-                            <div
-                              className="alert-time"
-                            >
-                              {item.ComponentName}
-                            </div>
-                          </td>
-                          <td className="text-right">
-                            {item.RemainingRequired?.toLocaleString()}
-                          </td>
-                          <td className="text-right">
-                            {item.TotalAvailable?.toLocaleString()}
-                          </td>
-                          <td className="text-right">
-                            <span className="status-badge critical">
-                              {item.ShortageQty?.toLocaleString()}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan="4"
-                          className="table-empty-cell"
-                        >
-                          No critical shortages
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <div className="dashboard-col-flex-1">
+                <DailyEfficiencyTrend filters={filters} />
             </div>
-          </div>
-        </div>
+            <div className="dashboard-col-flex-1">
+                <DowntimeSummary filters={filters} />
+            </div>
+       </div>
 
-        <div className="dashboard-col-1-2">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header">
-              <h3>
-                <IconClipboardList size={20} /> Open Orders
-              </h3>
+       {/* ROW 3: OEE Breakdown | Quality Summary | Orders Summary */}
+       <div className="dashboard-row-multi row-dense">
+            <div className="dashboard-col-flex-1">
+                <OEEBreakdown filters={filters} />
             </div>
-            <div className="dashboard-card-content no-padding">
-              <div
-                className="compact-table-wrapper alert-scroll-container"
-              >
-                <table className="compact-table">
-                  <thead>
-                    <tr>
-                      <th>Order #</th>
-                      <th>Product</th>
-                      <th>Status</th>
-                      <th className="text-right">Qty (Actual / Plan)</th>
-                      <th className="text-right">Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {openOrdersDetails && openOrdersDetails.length > 0 ? (
-                      openOrdersDetails.map((order, idx) => {
-                        const progress =
-                          order.PlannedQty > 0
-                            ? (order.ActualQty / order.PlannedQty) * 100
-                            : 0;
-                        return (
-                          <tr key={idx}>
-                            <td>
-                              <strong>{order.DocNum}</strong>
-                            </td>
-                            <td>
-                              {(order.ProductName || "").substring(0, 20)}
-                            </td>
-                            <td>
-                              <span
-                                className={`status-badge ${order.Status === "L"
-                                  ? "success"
-                                  : order.Status === "R"
-                                    ? "warning"
-                                    : order.Status === "C"
-                                      ? "critical"
-                                      : "default"
-                                }`}
-                              >
-                                {order.Status === "L"
-                                  ? "Completed"
-                                  : order.Status === "R"
-                                    ? "Work In Progress"
-                                    : order.Status === "C"
-                                      ? "Cancelled"
-                                      : "Planned"}
-                              </span>
-                            </td>
-                            <td className="text-right">
-                              <strong>
-                                {order.ActualQty?.toLocaleString()}
-                              </strong>{" "}
-                              / {order.PlannedQty?.toLocaleString()}
-                            </td>
-                            <td className="text-right">
-                              <div className="progress-bar-cell-container">
-                                <span className="progress-bar-text">
-                                  {progress.toFixed(0)}%
-                                </span>
-                                <div className="progress-bar-track">
-                                  <div
-                                    className={`progress-bar-fill ${progress < 100 ? "incomplete" : "complete"}`}
-                                    style={{ width: `${Math.min(progress, 100)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan="5"
-                          className="table-empty-cell"
-                        >
-                          No open orders
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+            <div className="dashboard-col-flex-1">
+                <QualitySummary filters={filters} />
             </div>
-          </div>
-        </div>
-      </div>
+            <div className="dashboard-col-flex-1">
+                <OrdersSummary filters={filters} />
+            </div>
+       </div>
 
-      {/* Row 4: Filtered Orders & Volume summary */}
-      <div className="dashboard-row fade-in-up delay-300">
-        <div className="dashboard-col-2-3">
-          <div className="dashboard-card">
-            <div className="dashboard-card-header header-spaced">
-              <h3 className="no-margin">
-                <IconClipboardList size={20} /> Production Orders
-              </h3>
-              <div className="flex-gap-8">
-                <select
-                  value={orderStatusFilter}
-                  onChange={(e) => setOrderStatusFilter(e.target.value)}
-                  className="select-filter-compact"
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="R">Work In Progress</option>
-                  <option value="L">Completed</option>
-                  <option value="C">Cancelled</option>
-                  <option value="Delayed">Delayed</option>
-                </select>
-                <select
-                  value={tableDateFilter}
-                  onChange={(e) => setTableDateFilter(e.target.value)}
-                  className="select-filter-compact"
-                >
-                  <option value="today">Today</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="yearly">Yearly</option>
-                </select>
-              </div>
-            </div>
-            <div className="dashboard-card-content no-padding">
-              <div className="compact-table-wrapper scrollable-table-350">
-                <table className="compact-table">
-                  <thead>
-                    <tr>
-                      <th>Order #</th>
-                      <th>Product</th>
-                      <th>Status</th>
-                      <th className="text-right">Planned Qty</th>
-                      <th className="text-right">Actual Qty</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredOrdersLoading ? (
-                      <tr>
-                        <td colSpan="5" className="table-empty-cell">
-                          Loading orders...
-                        </td>
-                      </tr>
-                    ) : filteredOrders && filteredOrders.length > 0 ? (
-                      filteredOrders.map((order, idx) => (
-                        <tr key={idx}>
-                          <td>
-                            <strong>{order.DocNum}</strong>
-                          </td>
-                          <td>
-                            {(order.ProductName || "").substring(0, 25)}
-                          </td>
-                          <td>
-                            <span
-                              className={`status-badge ${order.Status === "L"
-                                  ? "success"
-                                  : order.Status === "R"
-                                    ? "warning"
-                                    : order.Status === "C"
-                                      ? "critical"
-                                      : "default"
-                                }`}
-                            >
-                              {order.Status === "L"
-                                ? "Completed"
-                                : order.Status === "R"
-                                  ? "Work In Progress"
-                                  : order.Status === "C"
-                                    ? "Cancelled"
-                                    : "Planned"}
-                            </span>
-                          </td>
-                          <td className="text-right">{order.PlannedQty?.toLocaleString()}</td>
-                          <td className="text-right">{order.ActualQty?.toLocaleString()}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="5" className="table-empty-cell">
-                          No orders found for the selected filters
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-col-1-3">
-          <div className="dashboard-card full-height">
-            <div className="dashboard-card-header header-flex-between">
-              <h3 className="no-margin">
-                <IconTrendingUp size={20} /> Order Volume (Created)
-              </h3>
-              <select
-                value={volumeDateFilter}
-                onChange={(e) => setVolumeDateFilter(e.target.value)}
-                className="select-filter-compact"
-              >
-                <option value="today">Today</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
-            <div className="dashboard-card-content donut-card-content">
-              <PieChart
-                data={[
-                  { name: 'Work In Progress', value: orderVolume.ReleasedCount || 0, color: '#10b981' },
-                  { name: 'Completed', value: orderVolume.ClosedCount || 0, color: '#3b82f6' },
-                  { name: 'Cancelled', value: orderVolume.CancelledCount || 0, color: '#ef4444' },
-                  { name: 'Planned', value: orderVolume.PlannedCount || 0, color: '#f59e0b' }
-                ]}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={60}
-                outerRadius={80}
-                showLegend={true}
-                showCenterLabel={true}
-                totalLabel="Total"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

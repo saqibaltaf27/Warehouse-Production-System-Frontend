@@ -42,7 +42,18 @@ export const API_ENDPOINTS = {
   },
 
   DASHBOARD: {
-    OVERVIEW: '/dashboard'
+    OVERVIEW: '/dashboard/overview',
+    ALERTS: '/dashboard/alerts',
+    PLAN_VS_ACTUAL: '/dashboard/plan-vs-actual',
+    COST_SUMMARY: '/dashboard/cost-summary',
+    COST_VARIANCE: '/dashboard/cost-variance',
+    MATERIAL_SHORTAGES: '/dashboard/material-shortages',
+    EFFICIENCY: '/dashboard/efficiency',
+    DOWNTIME: '/dashboard/downtime',
+    OEE: '/dashboard/oee',
+    QUALITY: '/dashboard/quality',
+    ORDER_SUMMARY: '/dashboard/order-summary',
+    WAREHOUSES: '/dashboard/warehouses'
   },
 
   PRODUCTION_ORDERS: {
