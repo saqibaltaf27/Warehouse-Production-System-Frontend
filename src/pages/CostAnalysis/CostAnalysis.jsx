@@ -233,7 +233,7 @@ const CostAnalysis = () => {
           {/* Charts Row */}
           <div className="cost-charts-row">
             {/* Monthly Trend Chart */}
-            <div className="pt-chart-card fade-in-up delay-200">
+            <div className="pt-chart-card dome-card-wrapper fade-in-up delay-200">
               <div className="pt-chart-header">
                 <h3 className="pt-chart-title"><IconChartLine size={20} className="title-icon" /> Monthly Cost Trend</h3>
               </div>
@@ -257,7 +257,7 @@ const CostAnalysis = () => {
             </div>
 
             {/* Cost Contribution Donut */}
-            <div className="pt-chart-card fade-in-up delay-200">
+            <div className="pt-chart-card dome-card-wrapper fade-in-up delay-200">
               <div className="pt-chart-header">
                 <h3 className="pt-chart-title"><IconCurrencyDollar size={20} className="title-icon" /> Cost Contribution (Actual)</h3>
               </div>
@@ -276,7 +276,7 @@ const CostAnalysis = () => {
           </div>
 
           {/* Orders Table */}
-          <div className="efficiency-table-wrapper fade-in-up delay-300">
+          <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">
             <h3 className="section-title">Recent Production Orders</h3>
             <Table
               data={paginatedOrders}

@@ -22,6 +22,7 @@ import PieChart from "../../global-components/Charts/PieChart";
 import BarChart from "../../global-components/Charts/BarChart";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
+import Card from "../../global-components/Card/Card";
 import "./Dashboard.css";
 
 const formatCurrency = (val) => {
@@ -53,56 +54,63 @@ const AlertsSection = ({ filters }) => {
     fetchAlerts();
   }, [filters]);
 
+  const alertItems = [
+    {
+        title: 'Orders Delayed',
+        description: 'Require immediate action',
+        icon: IconClock,
+        color: '#ef4444',
+        value: data.delayedOrders,
+        valueLabel: 'Count',
+        valueColor: '#ef4444'
+    },
+    {
+        title: 'Materials Shortage',
+        description: 'Affecting production',
+        icon: IconPackage,
+        color: '#ef4444',
+        value: data.materialShortages,
+        valueLabel: 'Count',
+        valueColor: '#ef4444'
+    },
+    {
+        title: 'Orders Over Standard Cost',
+        description: 'Variance > 5%',
+        icon: IconCurrencyDollar,
+        color: '#ef4444',
+        value: data.ordersOverCost,
+        valueLabel: 'Count',
+        valueColor: '#ef4444'
+    },
+    {
+        title: 'High Downtime',
+        description: 'Today',
+        icon: IconAlertTriangle,
+        color: '#f59e0b',
+        value: data.highDowntime,
+        valueLabel: 'Count',
+        valueColor: '#f59e0b'
+    },
+    {
+        title: 'Quality Issues',
+        description: 'Rejection > 2%',
+        icon: IconCheck,
+        color: '#f59e0b',
+        value: data.qualityIssues,
+        valueLabel: 'Count',
+        valueColor: '#f59e0b'
+    }
+  ];
+
   return (
     <div className="w-100 mb-4">
        <div className="d-flex align-center justify-between mb-2 alert-section-header">
            <span className="text-danger font-semibold text-uppercase alert-title">Attention Required</span>
            <span className="text-primary alert-link">View All Alerts →</span>
        </div>
-       <div className="d-flex gap-3 w-100 alert-container">
+       <div className="w-100 alert-container">
        {loading ? <div>Loading alerts...</div> : (
-           <>
-               <div className="dashboard-alert-card flex-1 alert-danger">
-                    <div className="alert-icon-wrapper danger-bg"><IconClock size={28} className="text-danger" /></div>
-                    <div className="d-flex flex-column justify-center">
-                        <h3 className="text-danger m-0 alert-value">{data.delayedOrders}</h3>
-                        <p className="m-0 font-semibold alert-label">Orders Delayed</p>
-                        <small className="text-muted alert-desc">Require immediate action</small>
-                    </div>
-               </div>
-               <div className="dashboard-alert-card flex-1 alert-danger">
-                    <div className="alert-icon-wrapper danger-bg"><IconPackage size={28} className="text-danger" /></div>
-                    <div className="d-flex flex-column justify-center">
-                        <h3 className="text-danger m-0 alert-value">{data.materialShortages}</h3>
-                        <p className="m-0 font-semibold alert-label">Materials Shortage</p>
-                        <small className="text-muted alert-desc">Affecting production</small>
-                    </div>
-               </div>
-               <div className="dashboard-alert-card flex-1 alert-danger">
-                    <div className="alert-icon-wrapper danger-bg"><IconCurrencyDollar size={28} className="text-danger" /></div>
-                    <div className="d-flex flex-column justify-center">
-                        <h3 className="text-danger m-0 alert-value">{data.ordersOverCost}</h3>
-                        <p className="m-0 font-semibold alert-label">Orders Over Standard Cost</p>
-                        <small className="text-muted alert-desc">Variance &gt; 5%</small>
-                    </div>
-               </div>
-               <div className="dashboard-alert-card flex-1 alert-warning">
-                    <div className="alert-icon-wrapper warning-bg"><IconAlertTriangle size={28} className="text-warning" /></div>
-                    <div className="d-flex flex-column justify-center">
-                        <h3 className="text-warning m-0 alert-value">{data.highDowntime}</h3>
-                        <p className="m-0 font-semibold alert-label">High Downtime</p>
-                        <small className="text-muted alert-desc">Today</small>
-                    </div>
-               </div>
-               <div className="dashboard-alert-card flex-1 alert-warning">
-                    <div className="alert-icon-wrapper warning-bg"><IconCheck size={28} className="text-warning" /></div>
-                    <div className="d-flex flex-column justify-center">
-                        <h3 className="text-warning m-0 alert-value">{data.qualityIssues}</h3>
-                        <p className="m-0 font-semibold alert-label">Quality Issues</p>
-                        <small className="text-muted alert-desc">Rejection &gt; 2%</small>
-                    </div>
-               </div>
-           </>
+           <Card items={alertItems} />
        )}
        </div>
     </div>
@@ -122,38 +130,60 @@ const KPIRow = ({ filters }) => {
         fetchOverview();
     }, [filters]);
 
+    const kpiItems = [
+        {
+            title: "Today's Plan",
+            description: "Units",
+            icon: IconCalendar,
+            color: "#3b82f6",
+            value: formatNumberCompact(data.plan),
+            valueLabel: "Value",
+        },
+        {
+            title: "Today's Actual",
+            description: "Units",
+            icon: IconCalendarEvent,
+            color: "#10b981",
+            value: formatNumberCompact(data.actual),
+            valueLabel: "Value",
+        },
+        {
+            title: "Achievement",
+            description: "vs Plan",
+            icon: IconTarget,
+            color: "#8b5cf6",
+            value: `${data.achievement}%`,
+            valueLabel: "Value",
+        },
+        {
+            title: "Daily Efficiency",
+            description: "vs Target 90%",
+            icon: IconActivity,
+            color: "#06b6d4",
+            value: "0.00%",
+            valueLabel: "Value",
+        },
+        {
+            title: "OEE",
+            description: "vs Target 85%",
+            icon: IconSettings,
+            color: "#f97316",
+            value: "0.00%",
+            valueLabel: "Value",
+        },
+        {
+            title: "Capacity Util",
+            description: "vs Available Capacity",
+            icon: IconGauge,
+            color: "#3b82f6",
+            value: "0.00%",
+            valueLabel: "Value",
+        }
+    ];
+
     return (
-        <div className="dashboard-kpi-grid mb-4 grid-cols-6">
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Today's Plan</span> <IconCalendar size={18} color="#3b82f6" /></div>
-                 <h2 title={data.plan?.toLocaleString()} className="kpi-value">{formatNumberCompact(data.plan)}</h2>
-                 <small className="text-muted">Units</small>
-             </div>
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Today's Actual</span> <IconCalendarEvent size={18} color="#10b981" /></div>
-                 <h2 title={data.actual?.toLocaleString()} className="kpi-value">{formatNumberCompact(data.actual)}</h2>
-                 <small className="text-muted">Units</small>
-             </div>
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Achievement</span> <IconTarget size={18} color="#8b5cf6" /></div>
-                 <h2 className="kpi-value">{data.achievement}%</h2>
-                 <small className="text-muted">vs Plan</small>
-             </div>
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Daily Efficiency</span> <IconActivity size={18} color="#06b6d4" /></div>
-                 <h2 className="kpi-value">0.00%</h2>
-                 <small className="text-muted">vs Target 90%</small>
-             </div>
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">OEE</span> <IconSettings size={18} color="#f97316" /></div>
-                 <h2 className="kpi-value">0.00%</h2>
-                 <small className="text-muted">vs Target 85%</small>
-             </div>
-             <div className="kpi-card shadow-sm kpi-card-compact">
-                 <div className="d-flex align-center justify-between mb-2"><span className="text-muted font-semibold kpi-label">Capacity Util</span> <IconGauge size={18} color="#3b82f6" /></div>
-                 <h2 className="kpi-value">0.00%</h2>
-                 <small className="text-muted">vs Available Capacity</small>
-             </div>
+        <div className="mb-4">
+             <Card items={kpiItems} />
         </div>
     );
 };
@@ -182,7 +212,7 @@ const PlanVsActualChart = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container card-no-border">
+        <div className="dashboard-card chart-card-container dome-card-wrapper card-no-border">
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Production Plan vs Actual</h3>
                 <select className="select-filter-compact text-sm"><option>Daily</option></select>
@@ -231,7 +261,7 @@ const CostSummary = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header">
                 <h3>Cost Summary (Today)</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View Details</span>
@@ -324,7 +354,7 @@ const TopOrdersCostVariance = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header">
                 <h3>Top Orders by Cost Variance</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
@@ -409,7 +439,7 @@ const CriticalMaterialShortages = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Critical Material Shortages</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
@@ -457,7 +487,7 @@ const DailyEfficiencyTrend = ({ filters }) => {
     const data = []; // No hardcoded data
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Daily Efficiency Trend (%)</h3>
                 <select className="select-filter-compact text-sm"><option>Daily</option></select>
@@ -480,7 +510,7 @@ const DowntimeSummary = ({ filters }) => {
     const downtimeReasons = []; // No hardcoded data
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Downtime Summary (Today)</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
@@ -523,7 +553,7 @@ const OEEBreakdown = ({ filters }) => {
     ];
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header">
                 <h3>OEE Breakdown (Today)</h3>
             </div>
@@ -560,7 +590,7 @@ const QualitySummary = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Quality Summary (Today)</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
@@ -613,7 +643,7 @@ const OrdersSummary = ({ filters }) => {
     }, [filters]);
 
     return (
-        <div className="dashboard-card chart-card-container">
+        <div className="dashboard-card chart-card-container dome-card-wrapper">
             <div className="dashboard-card-header">
                 <h3>Production Orders Summary</h3>
             </div>
