@@ -40,7 +40,7 @@ const ProductionOrderComponents = ({ componentsData, itemCode }) => {
                 <tr key={index}>
                   <td>{index + 1}</td>
                   <td className="po-icon-cell">
-                    {row.Type === 'Route Stage' ? <span style={{color: '#d32f2f', fontWeight: 'bold'}}>&rarr;</span> : <span style={{color: '#fbc02d', fontWeight: 'bold'}}>&rarr;</span>}
+                    {row.Type === 'Route Stage' ? <span className="po-route-arrow-red">&rarr;</span> : <span className="po-route-arrow-yellow">&rarr;</span>}
                     {row.Type}
                   </td>
                   <td>{row.No}</td>

@@ -31,7 +31,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
       <div className="po-header-col">
         <div className="po-field-row">
           <div className="po-field-label">Type</div>
-          <div className="po-field-value" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'block' } : {}}>
+          <div className={`po-field-value ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
                 value={{ value: headerData?.Type || 'Standard', label: headerData?.Type || 'Standard' }}
@@ -67,7 +67,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Product No.</div>
-          <div className="po-field-value highlight" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'block' } : {}}>
+          <div className={`po-field-value highlight ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
                 value={products?.find(p => p.Code === selectedItemCode) ? { value: selectedItemCode, label: `${selectedItemCode} - ${products?.find(p => p.Code === selectedItemCode).Name}` } : null}
@@ -108,24 +108,24 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Planned Quantity</div>
-          <div className="po-field-value" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent' } : {}}>
+          <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
                 type="number"
                 value={headerData?.PlannedQuantity || ''}
                 onChange={(e) => onPlannedQtyChange && onPlannedQtyChange(e.target.value)}
-                style={{ width: '100%', height: '100%', minHeight: '26px', padding: '2px 7px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', outline: 'none' }}
+                className="po-uom-input"
               />
             ) : (
               headerData?.PlannedQuantity || ''
             )}
           </div>
-          <div className="po-field-label" style={{width: 'auto', margin: '0 8px'}}>UoM Name</div>
+          <div className="po-field-label po-inline-label">UoM Name</div>
           <div className="po-field-value">{headerData?.UoMName || ''}</div>
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Warehouse</div>
-          <div className="po-field-value highlight" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'block' } : {}}>
+          <div className={`po-field-value highlight ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
                 value={warehouses?.find(w => w.WhsCode === headerData?.Warehouse) ? { value: headerData.Warehouse, label: `${headerData.Warehouse} - ${warehouses.find(w => w.WhsCode === headerData.Warehouse).WhsName}` } : null}
@@ -157,7 +157,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
               headerData?.Warehouse || ''
             )}
           </div>
-          <div className="po-field-label" style={{width: 'auto', margin: '0 8px'}}>Branch</div>
+          <div className="po-field-label po-inline-label">Branch</div>
           <div className="po-field-value">{headerData?.Branch || ''}</div>
         </div>
         <div className="po-field-row">
@@ -168,8 +168,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           <div className="po-field-label">Routing Date Calculation</div>
           <div className="po-field-value">{headerData?.RoutingDateCalculation || ''}</div>
         </div>
-        <div className="po-field-row" style={{marginTop: '4px'}}>
-          <input type="checkbox" checked={headerData?.ProcureItems === 'Yes'} readOnly style={{marginRight: '8px'}} />
+        <div className="po-field-row po-margin-top-4">
+          <input type="checkbox" checked={headerData?.ProcureItems === 'Yes'} readOnly className="po-margin-right-8" />
           <label className="po-field-label">Procure Items</label>
         </div>
       </div>
@@ -198,7 +198,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Linked To</div>
-          <div className="po-field-value" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'block' } : {}}>
+          <div className={`po-field-value ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
                 value={headerData?.LinkedTo ? { value: headerData.LinkedTo, label: headerData.LinkedTo } : null}
@@ -232,25 +232,14 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Linked Order</div>
-          <div className="po-field-value" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', gap: '4px' } : {}}>
+          <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-flex' : ''}`}>
             {isCreateMode ? (
               <input 
                 type="text"
                 value={headerData?.LinkedOrder || ''}
                 onChange={(e) => onHeaderChange && onHeaderChange('LinkedOrder', e.target.value)}
                 disabled={!headerData?.LinkedTo}
-                style={{ 
-                  flex: 1, 
-                  height: '100%', 
-                  minHeight: '26px', 
-                  padding: '2px 7px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '2px', 
-                  fontSize: '12px', 
-                  outline: 'none',
-                  backgroundColor: headerData?.LinkedTo ? '#fffde7' : '#f0f0f0',
-                  color: headerData?.LinkedTo ? '#000' : '#888'
-                }}
+                className={`po-linked-order-input ${headerData?.LinkedTo ? 'po-linked-order-input-active' : 'po-linked-order-input-inactive'}`}
               />
             ) : (
               headerData?.LinkedOrder || ''
@@ -267,22 +256,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                     setIsPoModalOpen(true);
                   }
                 }}
-                style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#4a90e2', 
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  color: '#fff',
-                  border: 'none',
-                  flexShrink: 0,
-                  padding: 0,
-                  marginLeft: '4px'
-                }} 
+                className="po-list-button" 
                 title="Choose from List"
               >
                 &#9776;
@@ -292,24 +266,13 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
         </div>
         <div className="po-field-row">
           <div className="po-field-label">Customer</div>
-          <div className="po-field-value" style={isCreateMode ? { padding: 0, border: 'none', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', gap: '4px' } : {}}>
+          <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-flex' : ''}`}>
             {isCreateMode ? (
               <input 
                 type="text"
                 value={headerData?.Customer || ''}
                 onChange={(e) => onHeaderChange && onHeaderChange('Customer', e.target.value)}
-                style={{ 
-                  flex: 1, 
-                  height: '100%', 
-                  minHeight: '26px', 
-                  padding: '2px 7px', 
-                  border: '1px solid #ccc', 
-                  borderRadius: '2px', 
-                  fontSize: '12px', 
-                  outline: 'none',
-                  backgroundColor: '#fffde7',
-                  color: '#000'
-                }}
+                className="po-customer-input"
               />
             ) : (
               headerData?.Customer || ''
@@ -322,22 +285,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                   e.stopPropagation();
                   setIsCustomerModalOpen(true);
                 }}
-                style={{ 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  width: '20px', 
-                  height: '20px', 
-                  backgroundColor: '#4a90e2', 
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                  color: '#fff',
-                  border: 'none',
-                  flexShrink: 0,
-                  padding: 0,
-                  marginLeft: '4px'
-                }} 
+                className="po-list-button" 
                 title="Choose from List"
               >
                 &#9776;

@@ -22,7 +22,7 @@ const ExpandableText = ({ text = '', maxLength = 30 }) => {
       {isExpanded ? text : `${text.substring(0, maxLength)}...`}
       <span 
         onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
-        style={{ color: '#0056b3', cursor: 'pointer', marginLeft: '5px', fontSize: '0.9em', fontWeight: 'bold' }}
+        className="expandable-text-toggle"
       >
         {isExpanded ? 'See Less' : 'See More'}
       </span>
@@ -269,10 +269,9 @@ const Complaints = () => {
       key: 'actions',
       render: (row) => (
         <button 
-          className="dome-table-action-btn dome-table-action-btn--edit"
+          className="dome-table-action-btn dome-table-action-btn--edit table-action-edit-btn"
           onClick={(e) => { e.stopPropagation(); handleEditClick(row); }}
           title="Edit"
-          style={{ cursor: 'pointer', background: 'transparent', border: 'none', color: '#666' }}
         >
           <IconEdit size={16} stroke={2} />
         </button>
@@ -336,19 +335,8 @@ const Complaints = () => {
                     value={selectedProduct}
                     onChange={handleProductChange}
                     placeholder="Search by Code or Name..."
-                    styles={{
-                      control: (base) => ({
-                        ...base,
-                        minHeight: '44px',
-                        background: 'transparent',
-                        borderColor: 'var(--dashboard-border)',
-                        borderRadius: '8px'
-                      }),
-                      menu: (base) => ({
-                        ...base,
-                        zIndex: 9999
-                      })
-                    }}
+                    className="custom-async-select"
+                    classNamePrefix="react-select"
                   />
                 </div>
 

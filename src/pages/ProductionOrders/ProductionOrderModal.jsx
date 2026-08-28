@@ -60,7 +60,7 @@ const ProductionOrderModal = ({ isOpen, onClose, onSelect }) => {
           {loading ? (
             <div>Loading...</div>
           ) : error ? (
-            <div style={{color: 'red'}}>{error}</div>
+            <div className="po-modal-error-text">{error}</div>
           ) : (
             <div className="so-table-container">
               <table className="so-table">
@@ -89,7 +89,7 @@ const ProductionOrderModal = ({ isOpen, onClose, onSelect }) => {
                   })}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan="5" style={{textAlign: 'center'}}>No open production orders found.</td>
+                      <td colSpan="5" className="po-text-center">No open production orders found.</td>
                     </tr>
                   )}
                 </tbody>
