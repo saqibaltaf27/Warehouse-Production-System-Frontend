@@ -206,9 +206,9 @@ const COA = () => {
 
         {/* Product Details Section */}
         <div className="coa-details-section">
-          <div className="coa-detail-row full-width" style={{ alignItems: 'center' }}>
+          <div className="coa-detail-row full-width coa-detail-row-centered">
             <label>PRODUCT:</label>
-            <div style={{ flex: 1, maxWidth: '500px' }}>
+            <div className="coa-item-select-container">
               <AsyncSelect
                 cacheOptions
                 defaultOptions
@@ -330,21 +330,21 @@ const COA = () => {
         <div className="coa-signatures-section">
           <div className="coa-signature-block">
             <div className="coa-sig-header">ANALYZED BY</div>
-            <input type="text" placeholder="Name" value={formData.analyzedBy.name} onChange={(e) => handleInputChange(e, 'analyzedBy', 'name')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Title" value={formData.analyzedBy.title} onChange={(e) => handleInputChange(e, 'analyzedBy', 'title')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Date" value={formData.analyzedBy.date} onChange={(e) => handleInputChange(e, 'analyzedBy', 'date')} style={{ color: 'grey', fontWeight: 'bold' }} />
+            <input type="text" placeholder="Name" value={formData.analyzedBy.name} onChange={(e) => handleInputChange(e, 'analyzedBy', 'name')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Title" value={formData.analyzedBy.title} onChange={(e) => handleInputChange(e, 'analyzedBy', 'title')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Date" value={formData.analyzedBy.date} onChange={(e) => handleInputChange(e, 'analyzedBy', 'date')} className="coa-sign-input-grey-bold" />
           </div>
           <div className="coa-signature-block">
             <div className="coa-sig-header">CHECKED BY</div>
-            <input type="text" placeholder="Name" value={formData.checkedBy.name} onChange={(e) => handleInputChange(e, 'checkedBy', 'name')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Title" value={formData.checkedBy.title} onChange={(e) => handleInputChange(e, 'checkedBy', 'title')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Date" value={formData.checkedBy.date} onChange={(e) => handleInputChange(e, 'checkedBy', 'date')} style={{ color: 'grey', fontWeight: 'bold' }} />
+            <input type="text" placeholder="Name" value={formData.checkedBy.name} onChange={(e) => handleInputChange(e, 'checkedBy', 'name')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Title" value={formData.checkedBy.title} onChange={(e) => handleInputChange(e, 'checkedBy', 'title')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Date" value={formData.checkedBy.date} onChange={(e) => handleInputChange(e, 'checkedBy', 'date')} className="coa-sign-input-grey-bold" />
           </div>
           <div className="coa-signature-block">
             <div className="coa-sig-header">APPROVED BY</div>
-            <input type="text" placeholder="Name" value={formData.approvedBy.name} onChange={(e) => handleInputChange(e, 'approvedBy', 'name')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Title" value={formData.approvedBy.title} onChange={(e) => handleInputChange(e, 'approvedBy', 'title')} style={{ fontWeight: 'bold' }} />
-            <input type="text" placeholder="Date" value={formData.approvedBy.date} onChange={(e) => handleInputChange(e, 'approvedBy', 'date')} style={{ color: 'grey', fontWeight: 'bold' }} />
+            <input type="text" placeholder="Name" value={formData.approvedBy.name} onChange={(e) => handleInputChange(e, 'approvedBy', 'name')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Title" value={formData.approvedBy.title} onChange={(e) => handleInputChange(e, 'approvedBy', 'title')} className="coa-sign-input-bold" />
+            <input type="text" placeholder="Date" value={formData.approvedBy.date} onChange={(e) => handleInputChange(e, 'approvedBy', 'date')} className="coa-sign-input-grey-bold" />
           </div>
         </div>
 

@@ -194,3 +194,129 @@
 .po-error {
   color: #e53935;
 }
+
+/* Inline styles replacements */
+.po-route-arrow-red {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.po-route-arrow-yellow {
+  color: #fbc02d;
+  font-weight: bold;
+}
+
+.po-field-value-create {
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  display: block !important;
+}
+
+.po-field-value-create-basic {
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.po-field-value-create-flex {
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+  display: flex !important;
+  align-items: center;
+  gap: 4px;
+}
+
+.po-uom-input {
+  width: 100%;
+  height: 100%;
+  min-height: 26px;
+  padding: 2px 7px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 12px;
+  outline: none;
+}
+
+.po-inline-label {
+  width: auto;
+  margin: 0 8px;
+}
+
+.po-margin-top-4 {
+  margin-top: 4px;
+}
+
+.po-margin-right-8 {
+  margin-right: 8px;
+}
+
+.po-linked-order-input {
+  flex: 1;
+  height: 100%;
+  min-height: 26px;
+  padding: 2px 7px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 12px;
+  outline: none;
+}
+
+.po-linked-order-input-active {
+  background-color: #fffde7;
+  color: #000;
+}
+
+.po-linked-order-input-inactive {
+  background-color: #f0f0f0;
+  color: #888;
+}
+
+.po-customer-input {
+  flex: 1;
+  height: 100%;
+  min-height: 26px;
+  padding: 2px 7px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 12px;
+  outline: none;
+  background-color: #fffde7;
+  color: #000;
+}
+
+.po-list-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #4a90e2;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #fff;
+  border: none;
+  flex-shrink: 0;
+  padding: 0;
+  margin-left: 4px;
+}
+
+.po-modal-error-text {
+  color: red;
+}
+
+.po-text-center {
+  text-align: center;
+}
+
+.po-search-container {
+  width: 400px;
+}
+
+.po-header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}

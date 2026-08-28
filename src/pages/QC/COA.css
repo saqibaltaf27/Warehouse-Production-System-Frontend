@@ -257,3 +257,22 @@
   padding: 5px 10px;
   font-size: 11px;
 }
+
+/* Inline styles replacements */
+.coa-detail-row-centered {
+  align-items: center;
+}
+
+.coa-item-select-container {
+  flex: 1;
+  max-width: 500px;
+}
+
+.coa-sign-input-bold {
+  font-weight: bold;
+}
+
+.coa-sign-input-grey-bold {
+  color: grey;
+  font-weight: bold;
+}

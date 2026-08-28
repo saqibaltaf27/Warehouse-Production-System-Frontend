@@ -127,7 +127,7 @@ const ProductionOrders = () => {
     <div className="po-container">
       <div className="po-search-bar">
         <label htmlFor="itemCodeSearch"><strong>View Past Order:</strong></label>
-        <div style={{ width: '400px' }}>
+        <div className="po-search-container">
           <Select
             id="itemCodeSearch"
             value={products.find(p => p.Code === itemCode) ? { value: itemCode, label: `${itemCode} - ${products.find(p => p.Code === itemCode).Name}` } : null}
@@ -168,7 +168,7 @@ const ProductionOrders = () => {
             }}
           />
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+        <div className="po-header-actions">
           <button type="button" onClick={handleClear} disabled={loading} className="po-clear-btn">
             Clear
           </button>
