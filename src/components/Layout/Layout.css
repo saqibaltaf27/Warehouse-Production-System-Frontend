@@ -13,7 +13,7 @@
 }
 
 .dribbble-top-header {
-  width: min(1600px, calc(100% - 48px));
+  width: min(1850px, calc(100% - 48px));
   min-height: 48px;
   margin: 0 auto;
   padding: 20px;
@@ -135,7 +135,7 @@
 
 .dribbble-content {
   flex: 1;
-  width: min(1600px, calc(100% - 48px));
+  width: min(1850px, calc(100% - 48px));
   margin: 0 auto;
   overflow-y: auto;
 }
