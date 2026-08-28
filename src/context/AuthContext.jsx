@@ -3,6 +3,8 @@ import { authApi } from "../apis/auth/auth";
 
 const AuthContext = createContext(null);
 
+const SUPER_ADMIN_IDS = ["2142", "1949"]; // List of EmpIDs to treat as super admins
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authApi.getMe();
       if (response.data.success) {
-        setUser(response.data.data);
+        const userData = response.data.data;
+        const empIdStr = String(userData.empId || userData.EmpID || userData.id || userData.emp_id);
+        const isSuperAdmin = SUPER_ADMIN_IDS.includes(empIdStr);
+        setUser({ ...userData, isSuperAdmin });
       }
     } catch (error) {
       console.error("Failed to fetch user profile:", error);
