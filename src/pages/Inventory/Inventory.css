@@ -248,8 +248,34 @@
 }
 
 .inventory-risk-table-scroll {
-  overflow-x: auto;
+  overflow: hidden;
+  max-height: none;
+}
+
+.inventory-risk-table-scroll .dome-table-wrapper {
   max-height: 350px;
+  overflow: auto;
+  border-radius: 8px;
+}
+
+.inventory-risk-table-scroll .dome-table {
+  min-width: 900px;
+}
+
+.inventory-risk-table-scroll .dome-table th,
+.inventory-risk-table-scroll .dome-table td {
+  height: 34px;
+  padding: 7px 9px;
+  font-size: 10px;
+}
+
+.inventory-risk-table-scroll .dome-table th {
+  font-size: 9px;
+}
+
+.inventory-risk-table-scroll .inventory-category-cell {
+  color: #1f334c;
+  font-weight: 700;
 }
 
 /* ── Category Table compact styles ── */
