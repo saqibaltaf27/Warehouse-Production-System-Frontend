@@ -55,8 +55,8 @@ axiosInstance.interceptors.request.use(
       }
     }
     
-    // Do not show global loading for background refresh calls
-    if (config.url !== API_ENDPOINTS.AUTH.REFRESH) {
+    // Do not show global loading for background refresh calls or if explicitly skipped
+    if (config.url !== API_ENDPOINTS.AUTH.REFRESH && !config.skipGlobalLoading) {
       startGlobalLoading();
     }
     
@@ -71,7 +71,7 @@ axiosInstance.interceptors.request.use(
 // --- RESPONSE INTERCEPTOR ---
 axiosInstance.interceptors.response.use(
   (response) => {
-    if (response.config.url !== API_ENDPOINTS.AUTH.REFRESH) {
+    if (response.config.url !== API_ENDPOINTS.AUTH.REFRESH && !response.config.skipGlobalLoading) {
       stopGlobalLoading();
     }
     return response;
@@ -80,9 +80,9 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     // We make sure to stop loading if it's an error and not retrying yet
-    if (originalRequest && originalRequest.url !== API_ENDPOINTS.AUTH.REFRESH && error.response?.status !== 401) {
+    if (originalRequest && originalRequest.url !== API_ENDPOINTS.AUTH.REFRESH && !originalRequest.skipGlobalLoading && error.response?.status !== 401) {
       stopGlobalLoading();
-    } else if (originalRequest && originalRequest._retry) {
+    } else if (originalRequest && originalRequest._retry && !originalRequest.skipGlobalLoading) {
       // If we are already retrying and it fails, stop loading
       stopGlobalLoading();
     }

@@ -72,5 +72,13 @@ export const API_ENDPOINTS = {
     GET_COMPLAINTS: '/complain',
     UPDATE_COMPLAINT: '/complain',
     COA_PRODUCT_DETAILS: (itemCode) => `/complain/coa/product-details/${encodeURIComponent(itemCode)}`,
+  },
+  
+  ACL: {
+    EMPLOYEES: '/acl/employees',
+    EMPLOYEE_BY_ID: (id) => `/acl/employees/${id}`,
+    PERMISSIONS: '/acl/permissions',
+    PERMISSION_BY_ID: (id) => `/acl/permissions/${id}`,
+    USER_PERMISSIONS: (id) => `/acl/user-permissions/${id}`
   }
 };

@@ -14,16 +14,20 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const menuItems = [
-    { title: 'Dashboard', path: '/dashboard' },
-    //{ title: 'Analytics', path: '/analytics' },
-    { title: 'Cost Analysis', path: '/cost-analysis' },
-    { title: 'Inventory', path: '/inventory' },
-    { title: 'Machine Efficiency', path: '/machine-efficiency' },
-    { title: 'Production Planning', path: '/production-planning' },
-    { title: 'Production Trend', path: '/production-trend' },
-    { title: 'Production Orders', path: '/production-orders' },
-    { title: 'QC', path: '/qc' },
+    { title: 'Dashboard', path: '/dashboard', main_module: 'Production Dashboard' },
+    //{ title: 'Analytics', path: '/analytics', main_module: 'Analytics' },
+    { title: 'Cost Analysis', path: '/cost-analysis', main_module: 'Cost Analysis' },
+    { title: 'Inventory', path: '/inventory', main_module: 'Inventory' },
+    { title: 'Machine Efficiency', path: '/machine-efficiency', main_module: 'Machine Efficiency' },
+    { title: 'Production Planning', path: '/production-planning', main_module: 'Production Planning' },
+    { title: 'Production Trend', path: '/production-trend', main_module: 'Production Trend' },
+    { title: 'Production Orders', path: '/production-orders', main_module: 'Production Orders' },
+    { title: 'QC', path: '/qc', main_module: 'QC' },
   ];
+
+  if (user?.isSuperAdmin) {
+    menuItems.push({ title: 'Access Control', path: '/access-control', main_module: 'Access Control' });
+  }
 
   const firstName = user?.FirstName || "";
   const middleName = user?.MiddleName || "";

@@ -1,0 +1,279 @@
+.permission-control-page {
+  padding: 24px;
+  background-color: var(--background-color, #ffffff);
+  color: var(--text-color, #333);
+}
+
+/* Top Section */
+.pc-top-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.pc-header-text h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--heading-color, #111);
+}
+
+.pc-header-text p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.pc-action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.pc-btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pc-btn-outline:hover {
+  background: #f9fafb;
+}
+
+.pc-btn-solid {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #023e25;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.pc-btn-solid:hover {
+  background: #012b1a;
+}
+
+/* Controls bar */
+.pc-controls-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.pc-dropdown {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 200px;
+  outline: none;
+  background: white;
+}
+
+.pc-breadcrumb-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pc-breadcrumb {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.pc-btn-up {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.pc-btn-up:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+.pc-btn-up:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modules Grid */
+.pc-modules-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+.pc-module-card {
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.pc-module-card:hover {
+  border-color: #023e25;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.pc-module-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111;
+}
+
+.pc-module-subtitle {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Leaves / Final Permissions */
+.pc-permissions-list {
+  padding: 24px 0;
+}
+
+.pc-leaves-header {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #374151;
+}
+
+.pc-leaves-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.pc-permission-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  background: white;
+  transition: box-shadow 0.2s;
+}
+
+.pc-permission-card:hover {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.pc-perm-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.pc-perm-card-header h4 {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+}
+
+.pc-perm-card-path {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.pc-perm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.pc-icon-btn {
+  background: none;
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pc-edit-btn {
+  border-color: #10b981;
+  color: #10b981;
+}
+.pc-edit-btn:hover {
+  background: #ecfdf5;
+}
+
+.pc-delete-btn {
+  border-color: #ef4444;
+  background: #ef4444;
+  color: white;
+}
+.pc-delete-btn:hover {
+  background: #dc2626;
+}
+
+.pc-perm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.pc-perm-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.pc-perm-row label {
+  color: #6b7280;
+}
+
+.pc-perm-row span {
+  color: #111;
+  font-weight: 500;
+}
+
+.pc-perm-val-bold {
+  font-weight: 700;
+}
+
+.pc-perm-row-group {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #9ca3af;
+  font-size: 11px;
+}

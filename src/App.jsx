@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Toaster } from 'react-hot-toast';
 import { authApi } from './apis/auth/auth';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
@@ -14,6 +15,9 @@ import ProductionPlanning from './pages/ProductionPlanning/ProductionPlanning.js
 import ProductionOrders from './pages/ProductionOrders/ProductionOrders.jsx';
 import Complaints from './pages/Complaints/Complaints.jsx';
 import QC from './pages/QC/QC.jsx';
+import AccessControl from './pages/AccessControl/AccessControl.jsx';
+import PermissionControl from './pages/AccessControl/PermissionControl.jsx';
+import AccessPermission from './pages/AccessControl/AccessPermission.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -48,6 +52,11 @@ function AppContent() {
           <Route path="cost-analysis" element={<CostAnalysis />} />
           <Route path="production-planning" element={<ProductionPlanning />} />
           <Route path="qc" element={<QC />} />
+          <Route path="access-control">
+            <Route index element={<AccessControl />} />
+            <Route path="permission-control" element={<PermissionControl />} />
+            <Route path="access-permission/:empid" element={<AccessPermission />} />
+          </Route>
           <Route path="settings" element={<SimplePlaceholder title="Settings" />} />
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -60,6 +69,7 @@ function App() {
   return (
     <LoadingProvider>
       <AuthProvider>
+        <Toaster position="top-right" />
         <AppContent />
       </AuthProvider>
     </LoadingProvider>
