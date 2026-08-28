@@ -66,15 +66,15 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
         {/* Action Controls (Right side) */}
         <div className="menu-bar-actions">
           <div className="menu-notification-wrap">
-            <button
+            {/* <button
               className="menu-action-btn"
               aria-label="Notifications"
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <IconBell size={18} />
               <span className="notification-dot"></span>
-            </button>
-            {showNotifications && (
+            </button> */}
+            {/* {showNotifications && (
               <div className="header-popover notification-popover">
                 <div className="notification-popover-header">
                   <div>
@@ -98,7 +98,7 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           <div className="menu-profile-wrap">

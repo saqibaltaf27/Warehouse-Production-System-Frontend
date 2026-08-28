@@ -23,6 +23,7 @@ import BarChart from "../../global-components/Charts/BarChart";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
 import Card from "../../global-components/Card/Card";
+import Table from "../../global-components/Table/Table";
 import "./Dashboard.css";
 
 const formatCurrency = (val) => {
@@ -119,7 +120,7 @@ const AlertsSection = ({ filters }) => {
 
 // 2. KPI Cards Row
 const KPIRow = ({ filters }) => {
-    const [data, setData] = useState({ plan: 0, actual: 0, achievement: 0 });
+    const [data, setData] = useState({ plan: 0, actual: 0, achievement: 0, dailyEfficiency: 0, oee: 0, capacityUtil: 0 });
     useEffect(() => {
         const fetchOverview = async () => {
             try {
@@ -160,7 +161,7 @@ const KPIRow = ({ filters }) => {
             description: "vs Target 90%",
             icon: IconActivity,
             color: "#06b6d4",
-            value: "0.00%",
+            value: `${data.dailyEfficiency || '0.00'}%`,
             valueLabel: "Value",
         },
         {
@@ -168,7 +169,7 @@ const KPIRow = ({ filters }) => {
             description: "vs Target 85%",
             icon: IconSettings,
             color: "#f97316",
-            value: "0.00%",
+            value: `${data.oee || '0.00'}%`,
             valueLabel: "Value",
         },
         {
@@ -176,7 +177,7 @@ const KPIRow = ({ filters }) => {
             description: "vs Available Capacity",
             icon: IconGauge,
             color: "#3b82f6",
-            value: "0.00%",
+            value: `${data.capacityUtil || '0.00'}%`,
             valueLabel: "Value",
         }
     ];
@@ -484,20 +485,79 @@ const CriticalMaterialShortages = ({ filters }) => {
 
 // 7. Daily Efficiency Trend
 const DailyEfficiencyTrend = ({ filters }) => {
-    const data = []; // No hardcoded data
+    const [chartData, setChartData] = useState([]);
+    const [tableData, setTableData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [totalEntries, setTotalEntries] = useState(0);
+
+    const fetchEfficiency = async (page = 1, size = 10) => {
+        setLoading(true);
+        try {
+            const params = { ...filters, page, pageSize: size };
+            const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.EFFICIENCY, { params });
+            if (res.data?.success) {
+                setChartData(res.data.data.chartData);
+                setTableData(res.data.data.tableData);
+                if (res.data.data.pagination) {
+                    setTotalEntries(res.data.data.pagination.totalRecords);
+                }
+            }
+        } catch (err) { console.error(err); }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        setCurrentPage(1); // Reset page on filter change
+        fetchEfficiency(1, pageSize);
+    }, [filters]);
+
+    useEffect(() => {
+        if (currentPage !== 1 || !loading) {
+            fetchEfficiency(currentPage, pageSize);
+        }
+    }, [currentPage, pageSize]);
+
+    const columns = [
+        { header: 'Date', key: 'date' },
+        { header: 'Planned Qty', key: 'plannedQty', render: row => formatNumberCompact(row.plannedQty) },
+        { header: 'Completed Qty', key: 'completedQty', render: row => formatNumberCompact(row.completedQty) },
+        { header: 'Efficiency %', key: 'efficiency', render: row => `${row.efficiency?.toFixed(2) || '0.00'}%` }
+    ];
 
     return (
-        <div className="dashboard-card chart-card-container dome-card-wrapper">
+        <div className="dashboard-card chart-card-container dome-card-wrapper" style={{ display: 'flex', flexDirection: 'column' }}>
             <div className="dashboard-card-header d-flex justify-between">
                 <h3>Daily Efficiency Trend (%)</h3>
                 <select className="select-filter-compact text-sm"><option>Daily</option></select>
             </div>
-            <div className="dashboard-card-content p-4 d-flex">
-                <div className="chart-content flex-2 w-100 chart-fixed-height">
-                    {data.length > 0 ? (
-                        <LineChart data={data} xAxisKey="date" series={[{ key: "efficiency", name: "Efficiency %", color: "#10b981" }]} showLegend={false} />
+            <div className="dashboard-card-content p-4" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div className="chart-content w-100 chart-fixed-height mb-4">
+                    {loading && chartData.length === 0 ? (
+                        <div className="dashboard-state w-100"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                    ) : chartData.length > 0 ? (
+                        <LineChart data={chartData} xAxisKey="date" series={[{ key: "efficiency", name: "Efficiency %", color: "#10b981" }]} showLegend={false} />
                     ) : (
                         <div className="d-flex align-center justify-center w-100 h-100 text-muted">No data available</div>
+                    )}
+                </div>
+                
+                <div className="w-100" style={{ flex: 1, overflow: 'auto' }}>
+                    {tableData.length > 0 && (
+                        <Table
+                            data={tableData}
+                            columns={columns}
+                            showPagination={true}
+                            currentPage={currentPage}
+                            pageSize={pageSize}
+                            totalEntries={totalEntries}
+                            onPageChange={setCurrentPage}
+                            onItemsPerPageChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                            showActions={false}
+                        />
                     )}
                 </div>
             </div>
@@ -507,7 +567,20 @@ const DailyEfficiencyTrend = ({ filters }) => {
 
 // 8. Downtime Summary
 const DowntimeSummary = ({ filters }) => {
-    const downtimeReasons = []; // No hardcoded data
+    const [downtimeReasons, setDowntimeReasons] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDowntime = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.DOWNTIME, { params: filters });
+                if (res.data?.success) setDowntimeReasons(res.data.data.reasons || []);
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchDowntime();
+    }, [filters]);
 
     return (
         <div className="dashboard-card chart-card-container dome-card-wrapper">
@@ -515,17 +588,19 @@ const DowntimeSummary = ({ filters }) => {
                 <h3>Downtime Summary (Today)</h3>
                 <span className="text-primary text-sm" style={{ cursor: 'pointer' }}>View All</span>
             </div>
-            <div className="dashboard-card-content p-3 d-flex align-center justify-center">
-                 {downtimeReasons.length > 0 ? (
+            <div className="dashboard-card-content p-3 d-flex flex-column">
+                 {loading ? (
+                     <div className="dashboard-state w-100"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                 ) : downtimeReasons.length > 0 ? (
                      <>
-                         <div className="flex-1 donut-fixed-height">
+                         <div className="flex-1 donut-fixed-height w-100">
                              <PieChart data={downtimeReasons} dataKey="value" nameKey="name" showLegend={false} innerRadius={50} outerRadius={70} />
                          </div>
                          <div className="flex-1">
                              <table className="downtime-legend-table w-100">
                                  <tbody>
-                                     {downtimeReasons.map(r => (
-                                         <tr key={r.name}>
+                                     {downtimeReasons.map((r, idx) => (
+                                         <tr key={idx}>
                                              <td><span className="legend-dot" style={{ backgroundColor: r.color }}></span>{r.name}</td>
                                              <td className="text-right">{r.value} hrs</td>
                                          </tr>
@@ -544,12 +619,26 @@ const DowntimeSummary = ({ filters }) => {
 
 // 9. OEE Breakdown
 const OEEBreakdown = ({ filters }) => {
-    // Zeroed out metrics to avoid hardcoding
+    const [data, setData] = useState({ availability: 0, performance: 0, quality: 0, oee: 0 });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchOEE = async () => {
+            setLoading(true);
+            try {
+                const res = await axiosInstance.get(API_ENDPOINTS.DASHBOARD.OEE, { params: filters });
+                if (res.data?.success) setData(res.data.data);
+            } catch (err) { console.error(err); }
+            setLoading(false);
+        };
+        fetchOEE();
+    }, [filters]);
+
     const metrics = [
-        { name: 'Availability', value: 0, color: '#10b981' },
-        { name: 'Performance', value: 0, color: '#3b82f6' },
-        { name: 'Quality', value: 0, color: '#8b5cf6' },
-        { name: 'OEE', value: 0, color: '#f97316' }
+        { name: 'Availability', value: data.availability, color: '#10b981' },
+        { name: 'Performance', value: data.performance, color: '#3b82f6' },
+        { name: 'Quality', value: data.quality, color: '#8b5cf6' },
+        { name: 'OEE', value: data.oee, color: '#f97316' }
     ];
 
     return (
@@ -558,19 +647,23 @@ const OEEBreakdown = ({ filters }) => {
                 <h3>OEE Breakdown (Today)</h3>
             </div>
             <div className="dashboard-card-content p-4 d-flex justify-between align-center flex-row oee-breakdown-container">
-                 {metrics.map(m => (
-                     <div key={m.name} className="d-flex flex-column align-center flex-1">
-                          <p className="font-semibold text-muted mb-3 text-center oee-label">{m.name}</p>
-                          <div className="oee-arc-container">
-                              <div className="oee-arc-wrapper">
-                                 <div className="oee-arc-border" style={{ borderColor: m.color }}></div>
+                 {loading ? (
+                     <div className="dashboard-state w-100"><IconRefresh className="spin" size={32} color="var(--primary)" /></div>
+                 ) : (
+                     metrics.map(m => (
+                         <div key={m.name} className="d-flex flex-column align-center flex-1">
+                              <p className="font-semibold text-muted mb-3 text-center oee-label">{m.name}</p>
+                              <div className="oee-arc-container">
+                                  <div className="oee-arc-wrapper">
+                                     <div className="oee-arc-border" style={{ borderColor: m.color }}></div>
+                                  </div>
+                                  <div className="oee-arc-value">
+                                      <h3 className="m-0 text-bold text-dark">{(m.value || 0).toFixed(2)}%</h3>
+                                  </div>
                               </div>
-                              <div className="oee-arc-value">
-                                  <h3 className="m-0 text-bold text-dark">{m.value.toFixed(2)}%</h3>
-                              </div>
-                          </div>
-                     </div>
-                 ))}
+                         </div>
+                     ))
+                 )}
             </div>
         </div>
     );
