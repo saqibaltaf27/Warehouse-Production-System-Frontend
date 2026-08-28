@@ -1048,3 +1048,31 @@
   border-radius: 8px !important;
   box-shadow: none !important;
 }
+
+/* Downtime Summary specific styles */
+.donut-fixed-height {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.downtime-legend-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.downtime-legend-table td {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.85rem;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
