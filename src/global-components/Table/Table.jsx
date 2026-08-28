@@ -23,6 +23,12 @@ const Table = ({
     }
   };
 
+  const getColumnAlign = (column) => {
+    if (column.align) return column.align;
+    const sample = data.find((row) => row?.[column.key] !== null && row?.[column.key] !== undefined)?.[column.key];
+    return typeof sample === 'number' ? 'right' : 'left';
+  };
+
   return (
     <div className="dome-table-container">
       <div className="dome-table-wrapper">
@@ -30,7 +36,13 @@ const Table = ({
           <thead>
             <tr>
               {columns.map((col, index) => (
-                <th key={index}>{col.header}</th>
+                <th
+                  key={index}
+                  className={col.className}
+                  style={{ textAlign: getColumnAlign(col), width: col.width }}
+                >
+                  {col.header}
+                </th>
               ))}
               {showActions && <th className="dome-table-actions-header">Actions</th>}
             </tr>
@@ -47,7 +59,11 @@ const Table = ({
                   }}
                 >
                   {columns.map((col, colIndex) => (
-                    <td key={colIndex}>
+                    <td
+                      key={colIndex}
+                      className={col.className}
+                      style={{ textAlign: getColumnAlign(col), width: col.width }}
+                    >
                       {col.render ? col.render(rowItem) : rowItem[col.key]}
                     </td>
                   ))}

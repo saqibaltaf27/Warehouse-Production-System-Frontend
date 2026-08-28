@@ -225,6 +225,24 @@ const Inventory = () => {
     { header: 'QUANTITY', key: 'Stock', render: (r) => <span className="text-right tabular-nums">{fmt(r.Stock)}</span> },
   ];
 
+  const categoryRiskColumns = [
+    { key: 'Category', header: 'Category', width: '150px', className: 'inventory-category-cell' },
+    {
+      key: 'tracking',
+      header: 'Lots & Tracking',
+      width: '175px',
+      render: (row) => `${fmt(row.BatchCount)} Batches - ${fmt(row.SerialCount)} Serials`,
+    },
+    { key: 'ExpiredQty', header: 'Expired', align: 'right', render: (row) => <strong className="text-danger">{row.ExpiredQty > 0 ? fmt(row.ExpiredQty) : '-'}</strong> },
+    { key: 'Days0To30Qty', header: '0-30d', align: 'right', render: (row) => <span className="text-warning">{row.Days0To30Qty > 0 ? fmt(row.Days0To30Qty) : '-'}</span> },
+    { key: 'Days31To60Qty', header: '31-60d', align: 'right', render: (row) => <span className="text-warning">{row.Days31To60Qty > 0 ? fmt(row.Days31To60Qty) : '-'}</span> },
+    { key: 'Days61To90Qty', header: '61-90d', align: 'right', render: (row) => <span className="text-blue">{row.Days61To90Qty > 0 ? fmt(row.Days61To90Qty) : '-'}</span> },
+    { key: 'Days91To180Qty', header: '91-180d', align: 'right', render: (row) => <span className="text-green">{row.Days91To180Qty > 0 ? fmt(row.Days91To180Qty) : '-'}</span> },
+    { key: 'Days180PlusQty', header: '180+d', align: 'right', render: (row) => row.Days180PlusQty > 0 ? fmt(row.Days180PlusQty) : '-' },
+    { key: 'TotalRiskStockQty', header: 'Total Risk', align: 'right', render: (row) => <strong className="text-danger">{fmt(row.TotalRiskStockQty)}</strong> },
+    { key: 'TotalStockQty', header: 'Total Stock', align: 'right', render: (row) => <strong>{fmt(row.TotalStockQty)}</strong> },
+  ];
+
   return (
     <div className="inventory-page fade-in-up">
       {/* Filters */}
@@ -387,38 +405,13 @@ const Inventory = () => {
               <div className="chart-section">
                 <h3>Overall Expiry & Category Risk Breakdown</h3>
                 <div className="inventory-risk-table-scroll">
-                  <table className="category-risk-table">
-                    <thead>
-                      <tr>
-                        <th>Category</th>
-                        <th>Lots & Tracking</th>
-                        <th className="text-right">Expired</th>
-                        <th className="text-right">0-30d</th>
-                        <th className="text-right">31-60d</th>
-                        <th className="text-right">61-90d</th>
-                        <th className="text-right">91-180d</th>
-                        <th className="text-right">180+d</th>
-                        <th className="text-right">Total Risk</th>
-                        <th className="text-right">Total Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {categorySummary.map((cat, i) => (
-                        <tr key={i}>
-                          <td className="font-bold">{cat.Category}</td>
-                          <td>{cat.BatchCount} Batches - {cat.SerialCount} Serials</td>
-                          <td className="text-right text-danger font-bold">{cat.ExpiredQty > 0 ? fmt(cat.ExpiredQty) : '-'}</td>
-                          <td className="text-right text-warning">{cat.Days0To30Qty > 0 ? fmt(cat.Days0To30Qty) : '-'}</td>
-                          <td className="text-right text-warning">{cat.Days31To60Qty > 0 ? fmt(cat.Days31To60Qty) : '-'}</td>
-                          <td className="text-right text-blue">{cat.Days61To90Qty > 0 ? fmt(cat.Days61To90Qty) : '-'}</td>
-                          <td className="text-right text-green">{cat.Days91To180Qty > 0 ? fmt(cat.Days91To180Qty) : '-'}</td>
-                          <td className="text-right">{cat.Days180PlusQty > 0 ? fmt(cat.Days180PlusQty) : '-'}</td>
-                          <td className="text-right text-danger font-bold">{fmt(cat.TotalRiskStockQty)}</td>
-                          <td className="text-right font-bold">{fmt(cat.TotalStockQty)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  <Table
+                    data={categorySummary}
+                    columns={categoryRiskColumns}
+                    totalEntries={categorySummary.length}
+                    showActions={false}
+                    showPagination={false}
+                  />
                 </div>
               </div>
             </div>
