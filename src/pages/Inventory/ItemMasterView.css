@@ -242,3 +242,58 @@
   padding-top: 6px;
   padding-bottom: 6px;
 }
+
+/* Extracted styles from ItemMasterView.jsx */
+.audit-history-header {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.audit-chart-stats {
+  padding: 24px;
+  background-color: #ffffff;
+}
+
+.audit-stat-list {
+  gap: 32px;
+}
+
+.audit-stat-item {
+  align-items: center;
+  text-align: center;
+}
+
+.audit-stat-value {
+  font-size: 1.5rem;
+}
+
+.audit-stat-label.is-stock-in {
+  color: #10b981;
+}
+
+.audit-stat-label.is-stock-out {
+  color: #ef4444;
+}
+
+.audit-stat-label.is-stock-available {
+  color: #3b82f6;
+}
+
+.audit-chart-section {
+  position: relative;
+}
+
+.audit-chart-loading {
+  min-height: 200px;
+}
+
+.audit-chart-wrapper {
+  width: 100%;
+  height: 350px;
+}
+
+.audit-chart-wrapper .recharts-default-tooltip {
+  border: 0 !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%);
+}
