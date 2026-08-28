@@ -1254,6 +1254,105 @@
   }
 }
 
+/* Extracted component styles (no inline CSS in Dashboard.jsx) */
+.expandable-text-toggle {
+  cursor: pointer;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.cost-total-row {
+  font-weight: 700;
+  border-top: 2px solid #e2e8f0;
+}
+
+.legacy-cost-unit-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.25rem;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.legacy-cost-unit-label {
+  font-size: 0.8rem;
+}
+
+.legacy-quality-rates {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.legacy-quality-tile {
+  border-radius: 8px;
+}
+
+.legacy-quality-label {
+  font-size: 0.85rem;
+}
+
+.is-muted {
+  opacity: 0.6;
+}
+
+.legend-dot-svg {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 0.55rem;
+  vertical-align: 1px;
+}
+
+.quality-progress-native,
+.orders-progress-native {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+}
+
+.quality-progress-native {
+  height: 7px;
+  color: #10b981;
+  background: #ccefe0;
+}
+
+.orders-progress-native {
+  height: 8px;
+  color: #10b981;
+  background: #dce5ef;
+}
+
+.quality-progress-native::-webkit-progress-bar,
+.orders-progress-native::-webkit-progress-bar {
+  background: inherit;
+  border-radius: inherit;
+}
+
+.quality-progress-native::-webkit-progress-value {
+  background: #10b981;
+  border-radius: inherit;
+}
+
+.orders-progress-native::-webkit-progress-value {
+  background: linear-gradient(90deg, #34d399, #10b981);
+  border-radius: inherit;
+}
+
+.quality-progress-native::-moz-progress-bar {
+  background: #10b981;
+  border-radius: inherit;
+}
+
+.orders-progress-native::-moz-progress-bar {
+  background: linear-gradient(90deg, #34d399, #10b981);
+  border-radius: inherit;
+}
+
 /* Operational detail cards */
 .summary-header-actions {
   display: flex;

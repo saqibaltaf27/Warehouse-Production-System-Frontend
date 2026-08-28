@@ -278,9 +278,7 @@ const CostSummary = ({ filters }) => {
                             <IconCheck size={18} stroke={2.2} />
                         </div>
                         <strong className="quality-yield-value">{firstPassYield.toFixed(2)}%</strong>
-                        <div className="quality-progress-track" aria-label={`First pass yield ${firstPassYield.toFixed(2)} percent`}>
-                            <span style={{ width: `${Math.min(Math.max(firstPassYield, 0), 100)}%` }} />
-                        </div>
+                        <progress className="quality-progress-native" value={Math.min(Math.max(firstPassYield, 0), 100)} max="100" aria-label={`First pass yield ${firstPassYield.toFixed(2)} percent`} />
                         <small>Good units produced without rework</small>
                     </div>
                     <div className="quality-rate-grid">
@@ -380,7 +378,7 @@ const CostSummary = ({ filters }) => {
                                             <td className="text-right text-muted">—</td>
                                             <td className="text-right text-muted">—</td>
                                         </tr>
-                                        <tr style={{ fontWeight: 'bold', borderTop: '2px solid #e2e8f0' }}>
+                                        <tr className="cost-total-row">
                                             <td>Total Cost</td>
                                             <td className="text-right" title={data.total.standard}>{formatNumberCompact(data.total.standard)}</td>
                                             <td className="text-right" title={data.total.actual}>{formatNumberCompact(data.total.actual)}</td>
@@ -392,16 +390,16 @@ const CostSummary = ({ filters }) => {
                             </div>
 
                             <div className="d-flex gap-3 mt-4">
-                                <div className="flex-1 text-center" style={{ padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <p className="m-0 text-muted font-semibold mb-2" style={{ fontSize: '0.8rem' }}>Cost per Unit (Standard)</p>
+                                <div className="flex-1 text-center legacy-cost-unit-card">
+                                    <p className="m-0 text-muted font-semibold mb-2 legacy-cost-unit-label">Cost per Unit (Standard)</p>
                                     <h4 className="m-0">{formatCurrency(data.perUnit.standard)}</h4>
                                 </div>
-                                <div className="flex-1 text-center" style={{ padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <p className="m-0 text-muted font-semibold mb-2" style={{ fontSize: '0.8rem' }}>Cost per Unit (Actual)</p>
+                                <div className="flex-1 text-center legacy-cost-unit-card">
+                                    <p className="m-0 text-muted font-semibold mb-2 legacy-cost-unit-label">Cost per Unit (Actual)</p>
                                     <h4 className="m-0">{formatCurrency(data.perUnit.actual)}</h4>
                                 </div>
-                                <div className={`flex-1 text-center ${data.perUnit.variance > 0 ? 'bg-danger-light' : 'bg-success-light'}`} style={{ padding: '1.25rem', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <p className={`m-0 font-semibold mb-2 ${data.perUnit.variance > 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: '0.8rem' }}>Variance per Unit</p>
+                                <div className={`flex-1 text-center legacy-cost-unit-card ${data.perUnit.variance > 0 ? 'bg-danger-light' : 'bg-success-light'}`}>
+                                    <p className={`m-0 font-semibold mb-2 legacy-cost-unit-label ${data.perUnit.variance > 0 ? 'text-danger' : 'text-success'}`}>Variance per Unit</p>
                                     <h4 className={`m-0 ${data.perUnit.variance > 0 ? 'text-danger' : 'text-success'}`}>{formatCurrency(data.perUnit.variance)}</h4>
                                 </div>
                             </div>
@@ -477,9 +475,7 @@ const TopOrdersCostVariance = ({ filters }) => {
                     </div>
                     <span className="orders-completion-badge">{completionRate.toFixed(0)}% completed</span>
                 </div>
-                <div className="orders-progress-track" aria-label={`${completionRate.toFixed(0)} percent of orders completed`}>
-                    <span style={{ width: `${Math.min(Math.max(completionRate, 0), 100)}%` }} />
-                </div>
+                <progress className="orders-progress-native" value={Math.min(Math.max(completionRate, 0), 100)} max="100" aria-label={`${completionRate.toFixed(0)} percent of orders completed`} />
                 <div className="orders-status-grid">
                     {orderStatuses.map((status) => (
                         <div key={status.label} className={`orders-status-tile is-${status.tone}`}>
@@ -520,8 +516,7 @@ const ExpandableText = ({ text, maxLength = 15 }) => {
             {isExpanded ? text : `${text.substring(0, maxLength)}...`}
             <span
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="text-primary font-semibold ms-1"
-                style={{ cursor: 'pointer', fontSize: '0.75rem', whiteSpace: 'nowrap' }}
+                className="expandable-text-toggle text-primary font-semibold ms-1"
             >
                 {isExpanded ? ' See Less' : ' See More'}
             </span>
@@ -731,7 +726,12 @@ const DowntimeSummary = ({ filters }) => {
                                 <tbody>
                                     {downtimeReasons.map((r, idx) => (
                                         <tr key={idx}>
-                                            <td><span className="legend-dot" style={{ backgroundColor: r.color }}></span>{r.name}</td>
+                                            <td>
+                                                <svg className="legend-dot-svg" viewBox="0 0 8 8" aria-hidden="true">
+                                                    <circle cx="4" cy="4" r="4" fill={r.color} />
+                                                </svg>
+                                                {r.name}
+                                            </td>
                                             <td className="text-right">{r.value} hrs</td>
                                         </tr>
                                     ))}
@@ -825,9 +825,7 @@ const QualitySummary = ({ filters }) => {
                     <div className="quality-yield-panel">
                         <div className="quality-yield-heading"><span>First Pass Yield</span><IconCheck size={18} stroke={2.2} /></div>
                         <strong className="quality-yield-value">{firstPassYield.toFixed(2)}%</strong>
-                        <div className="quality-progress-track" aria-label={`First pass yield ${firstPassYield.toFixed(2)} percent`}>
-                            <span style={{ width: `${Math.min(Math.max(firstPassYield, 0), 100)}%` }} />
-                        </div>
+                        <progress className="quality-progress-native" value={Math.min(Math.max(firstPassYield, 0), 100)} max="100" aria-label={`First pass yield ${firstPassYield.toFixed(2)} percent`} />
                         <small>Good units produced without rework</small>
                     </div>
                     <div className="quality-rate-grid">
@@ -841,31 +839,31 @@ const QualitySummary = ({ filters }) => {
                     <div><span>Total Produced</span><strong>{formatNumberCompact(data.totalProduced)}</strong></div>
                 </div>
                 <div className="quality-summary-legacy">
-                    <div className="d-flex justify-between text-center gap-4 mb-4" style={{ borderBottom: '1px solid #eee', paddingBottom: '15px' }}>
-                        <div className="flex-1 bg-light p-3" style={{ borderRadius: '8px' }}>
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>Rejection %</p>
+                    <div className="d-flex justify-between text-center gap-4 mb-4 legacy-quality-rates">
+                        <div className="flex-1 bg-light p-3 legacy-quality-tile">
+                            <p className="m-0 text-muted legacy-quality-label">Rejection %</p>
                             <h3 className="text-danger m-0 mt-1">{data.rejectionPercent}%</h3>
                         </div>
-                        <div className="flex-1 bg-light p-3" style={{ borderRadius: '8px', opacity: 0.6 }}>
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>Rework %</p>
+                        <div className="flex-1 bg-light p-3 legacy-quality-tile is-muted">
+                            <p className="m-0 text-muted legacy-quality-label">Rework %</p>
                             <h3 className="text-warning m-0 mt-1">—</h3>
                         </div>
-                        <div className="flex-1 bg-light p-3" style={{ borderRadius: '8px' }}>
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>First Pass Yield %</p>
+                        <div className="flex-1 bg-light p-3 legacy-quality-tile">
+                            <p className="m-0 text-muted legacy-quality-label">First Pass Yield %</p>
                             <h3 className="text-success m-0 mt-1">{data.firstPassYield}%</h3>
                         </div>
                     </div>
                     <div className="d-flex justify-between text-center gap-4">
                         <div className="flex-1">
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>Rejected Qty</p>
+                            <p className="m-0 text-muted legacy-quality-label">Rejected Qty</p>
                             <h4 className="m-0 text-danger">{formatNumberCompact(data.rejectedQty)}</h4>
                         </div>
-                        <div className="flex-1" style={{ opacity: 0.6 }}>
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>Reworked Qty</p>
+                        <div className="flex-1 is-muted">
+                            <p className="m-0 text-muted legacy-quality-label">Reworked Qty</p>
                             <h4 className="m-0 text-warning">—</h4>
                         </div>
                         <div className="flex-1">
-                            <p className="m-0 text-muted" style={{ fontSize: '0.85rem' }}>Total Produced</p>
+                            <p className="m-0 text-muted legacy-quality-label">Total Produced</p>
                             <h4 className="m-0">{formatNumberCompact(data.totalProduced)}</h4>
                         </div>
                     </div>
@@ -907,9 +905,7 @@ const OrdersSummary = ({ filters }) => {
                     <div><span className="orders-overview-label">Total Orders</span><strong>{formatNumberCompact(data.totalOrders)}</strong></div>
                     <span className="orders-completion-badge">{completionRate.toFixed(0)}% completed</span>
                 </div>
-                <div className="orders-progress-track" aria-label={`${completionRate.toFixed(0)} percent of orders completed`}>
-                    <span style={{ width: `${Math.min(Math.max(completionRate, 0), 100)}%` }} />
-                </div>
+                <progress className="orders-progress-native" value={Math.min(Math.max(completionRate, 0), 100)} max="100" aria-label={`${completionRate.toFixed(0)} percent of orders completed`} />
                 <div className="orders-status-grid">
                     {orderStatuses.map((status) => (
                         <div key={status.label} className={`orders-status-tile is-${status.tone}`}>

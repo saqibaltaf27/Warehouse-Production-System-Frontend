@@ -260,7 +260,7 @@ const ItemMasterView = () => {
 
         {/* INVENTORY AUDIT MOVEMENT HISTORY */}
         <div className="detail-card mt-6 relative">
-          <div className="detail-card-header flex-between border-b" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="detail-card-header flex-between border-b audit-history-header">
             <div><span className="icon">🕒</span> Inventory Audit Movement History & Transaction Log</div>
             <Tabs 
               tabs={[
@@ -287,33 +287,33 @@ const ItemMasterView = () => {
             </div>
           )}
 
-          <div className="chart-stats border-b flex-between" style={{ padding: '24px', backgroundColor: '#fff' }}>
+          <div className="chart-stats border-b flex-between audit-chart-stats">
             <div className="text-sm font-semibold text-gray-600"></div>
-            <div className="flex" style={{ gap: '32px' }}>
-              <div className="stat-item text-green" style={{ textAlign: 'center', alignItems: 'center' }}>
-                <span className="stat-val" style={{ fontSize: '1.5rem' }}>{fmt(stats.in)}</span>
-                <span className="stat-lbl" style={{ color: '#10b981' }}>TOTAL STOCK IN</span>
+            <div className="flex audit-stat-list">
+              <div className="stat-item text-green audit-stat-item">
+                <span className="stat-val audit-stat-value">{fmt(stats.in)}</span>
+                <span className="stat-lbl audit-stat-label is-stock-in">TOTAL STOCK IN</span>
               </div>
-              <div className="stat-item text-red" style={{ textAlign: 'center', alignItems: 'center' }}>
-                <span className="stat-val" style={{ fontSize: '1.5rem' }}>{fmt(stats.out)}</span>
-                <span className="stat-lbl" style={{ color: '#ef4444' }}>TOTAL STOCK OUT</span>
+              <div className="stat-item text-red audit-stat-item">
+                <span className="stat-val audit-stat-value">{fmt(stats.out)}</span>
+                <span className="stat-lbl audit-stat-label is-stock-out">TOTAL STOCK OUT</span>
               </div>
-              <div className="stat-item text-blue" style={{ textAlign: 'center', alignItems: 'center' }}>
-                <span className="stat-val" style={{ fontSize: '1.5rem' }}>{fmt(stats.available)}</span>
-                <span className="stat-lbl" style={{ color: '#3b82f6' }}>STOCK AVAILABLE</span>
+              <div className="stat-item text-blue audit-stat-item">
+                <span className="stat-val audit-stat-value">{fmt(stats.available)}</span>
+                <span className="stat-lbl audit-stat-label is-stock-available">STOCK AVAILABLE</span>
               </div>
             </div>
           </div>
 
-          <div style={{ position: 'relative' }}>
+          <div className="audit-chart-section">
              {historyLoading && (
-                <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center" style={{ minHeight: '200px' }}>
+                <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center audit-chart-loading">
                    <div className="loader"></div>
                 </div>
              )}
 
              {chartData.length > 0 && !historyLoading ? (
-               <div className="chart-wrapper p-6" style={{ height: '350px', width: '100%' }}>
+               <div className="chart-wrapper p-6 audit-chart-wrapper">
                  <ResponsiveContainer width="100%" height="100%">
                    <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                      <defs>
@@ -333,7 +333,7 @@ const ItemMasterView = () => {
                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
                      <XAxis dataKey="date" tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
                      <YAxis tickFormatter={(val) => val >= 1000 ? `${(val/1000).toFixed(1)}K` : val} tick={{fontSize: 12, fill: '#6b7280'}} axisLine={false} tickLine={false} />
-                     <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                     <Tooltip />
                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
                      <Area type="monotone" dataKey="stockIn" name="Stock In" stroke="#10b981" fillOpacity={1} fill="url(#colorIn)" strokeWidth={2} />
                      <Area type="monotone" dataKey="stockOut" name="Stock Out" stroke="#ef4444" fillOpacity={1} fill="url(#colorOut)" strokeWidth={2} />
