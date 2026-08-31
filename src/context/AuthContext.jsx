@@ -3,7 +3,7 @@ import { authApi } from "../apis/auth/auth";
 
 const AuthContext = createContext(null);
 
-const SUPER_ADMIN_IDS = ["2142", "1949"]; // List of EmpIDs to treat as super admins
+const SUPER_ADMIN_IDS = ["2142", "1949","2134"]; // L  ist of EmpIDs to treat as super admins
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
