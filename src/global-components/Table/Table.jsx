@@ -1,6 +1,7 @@
 import { IconInfoCircle, IconListDetails, IconCheck, IconTrash } from '@tabler/icons-react';
 import Pagination from '../Pagination/Pagination';
 import './Table.css';
+import './TableLoader.css';
 
 const Table = ({
   data = [],
@@ -14,6 +15,7 @@ const Table = ({
   onPageChange,
   onItemsPerPageChange,
   onRowClick,
+  isLoading = false,
 }) => {
   const totalPages = Math.ceil(totalEntries / pageSize) || 1;
 
@@ -48,7 +50,14 @@ const Table = ({
             </tr>
           </thead>
           <tbody>
-            {data.length > 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan={columns.length + (showActions ? 1 : 0)} className="dome-table-empty">
+                  <div className="table-loader-spinner"></div>
+                  Loading data...
+                </td>
+              </tr>
+            ) : data.length > 0 ? (
               data.map((rowItem, rowIndex) => (
                 <tr 
                   key={rowIndex}

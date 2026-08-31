@@ -19,6 +19,7 @@ import AccessControl from './pages/AccessControl/AccessControl.jsx';
 import PermissionControl from './pages/AccessControl/PermissionControl.jsx';
 import AccessPermission from './pages/AccessControl/AccessPermission.jsx';
 import UnauthorizedPage from './pages/Unauthorized/UnauthorizedPage.jsx';
+import ProductionTemplate from './pages/ProductionTemplate/ProductionTemplate.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -49,6 +50,7 @@ const DefaultRedirect = () => {
     { path: '/production-planning', main_module: 'Production Planning' },
     { path: '/production-trend', main_module: 'Production Trend' },
     { path: '/production-orders', main_module: 'Production Orders' },
+    { path: '/production-template', main_module: 'Production Template' },
     { path: '/qc', main_module: 'QC' },
   ];
 
@@ -87,6 +89,7 @@ function AppContent() {
             <Route path="machine-efficiency" element={<ProtectedRoute requiredRoute="/machine-efficiency"><MachineEfficiency /></ProtectedRoute>} />
             <Route path="cost-analysis" element={<ProtectedRoute requiredRoute="/cost-analysis"><CostAnalysis /></ProtectedRoute>} />
             <Route path="production-planning" element={<ProtectedRoute requiredRoute="/production-planning"><ProductionPlanning /></ProtectedRoute>} />
+            <Route path="production-template" element={<ProtectedRoute requiredRoute="/production-template"><ProductionTemplate /></ProtectedRoute>} />
             <Route path="qc" element={<ProtectedRoute requiredRoute="/qc"><QC /></ProtectedRoute>} />
             <Route path="access-control">
               <Route index element={<AccessControl />} />

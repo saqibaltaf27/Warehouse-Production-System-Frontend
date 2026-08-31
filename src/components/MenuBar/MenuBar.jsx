@@ -24,6 +24,7 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
     { title: 'Production Planning', path: '/production-planning', main_module: 'Production Planning' },
     { title: 'Production Trend', path: '/production-trend', main_module: 'Production Trend' },
     { title: 'Production Orders', path: '/production-orders', main_module: 'Production Orders' },
+    { title: 'Production Template', path: '/production-template', main_module: 'Production Template' },
     { title: 'QC', path: '/qc', main_module: 'QC' },
   ];
 

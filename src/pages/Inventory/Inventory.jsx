@@ -53,7 +53,19 @@ const Inventory = () => {
   const [itemGroup, setItemGroup] = useState('');
   const [category, setCategory] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [agingBucket, setAgingBucket] = useState('ALL');
+
+  // Debounce search
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+  const [isMasterLoading, setIsMasterLoading] = useState(false);
 
   // Overview Tab Data
   const [dashboardCards, setDashboardCards] = useState(null);
@@ -83,7 +95,7 @@ const Inventory = () => {
   const fetchDashboardCards = useCallback(async () => {
     try {
       const params = { company, warehouse, group: itemGroup, category };
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_CARDS, { params });
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_CARDS, { params, skipGlobalLoading: true });
       if (res.data?.success) setDashboardCards(res.data.data.kpiTotals);
     } catch (err) {
       console.error('Dashboard cards error:', err);
@@ -92,11 +104,12 @@ const Inventory = () => {
 
   const fetchDashboardItems = useCallback(async () => {
     try {
+      setIsDashboardLoading(true);
       const params = { 
-        company, warehouse, group: itemGroup, category, search, agingBucket,
+        company, warehouse, group: itemGroup, category, search: debouncedSearch, agingBucket,
         page: dashboardPage, limit: dashboardPageSize 
       };
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_ITEMS, { params });
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_ITEMS, { params, skipGlobalLoading: true });
       if (res.data?.success) {
         setDashboardItems(res.data.data.shortExpiryItemsTable || []);
         setDashboardTotal(res.data.data.totalRecords || 0);
@@ -105,39 +118,50 @@ const Inventory = () => {
       }
     } catch (err) {
       console.error('Dashboard items error:', err);
+    } finally {
+      setIsDashboardLoading(false);
     }
-  }, [company, warehouse, itemGroup, category, search, agingBucket, dashboardPage, dashboardPageSize]);
+  }, [company, warehouse, itemGroup, category, debouncedSearch, agingBucket, dashboardPage, dashboardPageSize]);
 
   const fetchItemMaster = useCallback(async () => {
     try {
+      setIsMasterLoading(true);
       const params = { 
-        company, warehouse, group: itemGroup, category, search, 
+        company, warehouse, group: itemGroup, category, search: debouncedSearch, 
         page: masterPage, limit: masterPageSize 
       };
-      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEMS, { params });
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEMS, { params, skipGlobalLoading: true });
       if (res.data?.success) {
         setItemMasterData(res.data.data.items || []);
         setMasterTotal(res.data.data.total || 0);
       }
     } catch (err) {
       console.error('Item master error:', err);
+    } finally {
+      setIsMasterLoading(false);
     }
-  }, [company, warehouse, itemGroup, category, search, masterPage, masterPageSize]);
+  }, [company, warehouse, itemGroup, category, debouncedSearch, masterPage, masterPageSize]);
 
   // ── Effects ────────────────────────────────────────
   useEffect(() => { fetchFilters(); }, [fetchFilters]);
 
+  // Fetch cards
   useEffect(() => {
-    if (activeTab === 'overview') {
-      fetchDashboardCards();
-      fetchDashboardItems();
-    } else if (activeTab === 'master') {
-      fetchItemMaster();
-    }
-  }, [activeTab, fetchDashboardCards, fetchDashboardItems, fetchItemMaster]);
+    if (activeTab === 'overview') fetchDashboardCards();
+  }, [activeTab, fetchDashboardCards]);
+
+  // Fetch items
+  useEffect(() => {
+    if (activeTab === 'overview') fetchDashboardItems();
+  }, [activeTab, fetchDashboardItems]);
+
+  // Fetch master
+  useEffect(() => {
+    if (activeTab === 'master') fetchItemMaster();
+  }, [activeTab, fetchItemMaster]);
 
   // Reset page when filters change
-  useEffect(() => { setDashboardPage(1); setMasterPage(1); }, [company, warehouse, itemGroup, category, search, agingBucket]);
+  useEffect(() => { setDashboardPage(1); setMasterPage(1); }, [company, warehouse, itemGroup, category, debouncedSearch, agingBucket]);
 
   // ── Overview Cards items ───────────────────────────
   const overviewCards = dashboardCards
@@ -467,6 +491,7 @@ const Inventory = () => {
               onPageChange={setDashboardPage}
               onItemsPerPageChange={(size) => { setDashboardPageSize(size); setDashboardPage(1); }}
               onRowClick={(row) => navigate(`/inventory/item-master/${encodeURIComponent(row.ItemCode)}?company=${company}`)}
+              isLoading={isDashboardLoading}
             />
           </div>
         </div>
@@ -487,6 +512,7 @@ const Inventory = () => {
             onPageChange={setMasterPage}
             onItemsPerPageChange={(size) => { setMasterPageSize(size); setMasterPage(1); }}
             onRowClick={(row) => navigate(`/inventory/item-master/${encodeURIComponent(row.ItemCode)}?company=${company}`)}
+            isLoading={isMasterLoading}
           />
         </div>
       )}

@@ -8,44 +8,7 @@
   margin-bottom: 15px;
 }
 
-.qc-tabs {
-  display: flex;
-  gap: 10px;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
-}
 
-.qc-tab {
-  padding: 10px 20px;
-  border: none;
-  background: none;
-  font-size: 16px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  position: relative;
-  transition: color 0.3s ease;
-}
-
-.qc-tab:hover {
-  color: #007bff;
-}
-
-.qc-tab.active {
-  color: #007bff;
-  font-weight: 600;
-}
-
-.qc-tab.active::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background-color: #007bff;
-  border-radius: 3px 3px 0 0;
-}
 
 .qc-content {
   background-color: white;
