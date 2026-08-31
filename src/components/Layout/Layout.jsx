@@ -28,7 +28,10 @@ const Layout = () => {
     "/delivery": "Delivery",
     "/cost-analysis": "Cost Analysis",
     "/production-planning": "Production Planning",
-    "/settings": "Settings",
+    "/production-orders": "Production Orders",
+    "/production-template": "Production Template",
+    "/qc": "QC",
+    "/access-control": "Access Control",
   };
 
   let breadcrumbItems = [];
@@ -39,8 +42,33 @@ const Layout = () => {
       { label: 'Inventory', href: '/inventory' },
       { label: itemCode, current: true }
     ];
+  } else if (pathname.startsWith('/access-control/')) {
+    const isPermissionControl = pathname.includes('/permission-control');
+    const isAccessPermission = pathname.includes('/access-permission');
+    
+    breadcrumbItems = [
+      { label: 'Access Control', href: '/access-control' }
+    ];
+    
+    if (isPermissionControl) {
+      breadcrumbItems.push({ label: 'Permission Control', current: true });
+    } else if (isAccessPermission) {
+      breadcrumbItems.push({ label: 'User Permissions', current: true });
+    }
   } else {
-    const pageTitle = moduleTitles[pathname] || "Dashboard";
+    let pageTitle = "Dashboard";
+    
+    // Exact match
+    if (moduleTitles[pathname]) {
+      pageTitle = moduleTitles[pathname];
+    } else {
+      // Find matching base path for sub-routes
+      const matchedPath = Object.keys(moduleTitles).find(key => pathname.startsWith(key + '/'));
+      if (matchedPath) {
+        pageTitle = moduleTitles[matchedPath];
+      }
+    }
+    
     breadcrumbItems = [{ label: pageTitle, current: true }];
   }
 
