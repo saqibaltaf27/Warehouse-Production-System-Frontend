@@ -56,6 +56,10 @@ export const API_ENDPOINTS = {
     WAREHOUSES: '/dashboard/warehouses'
   },
 
+  PRODUCTION_TEMPLATE: {
+    ORDERS: '/production-template/orders',
+  },
+
   PRODUCTION_ORDERS: {
     PRODUCTS: '/production-orders/products',
     WAREHOUSES: '/production-orders/warehouses',

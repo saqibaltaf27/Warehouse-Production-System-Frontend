@@ -149,7 +149,7 @@ const Complaints = () => {
   const loadOptions = async (inputValue) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.LOOKUP_ITEMS}?search=${inputValue}&limit=100`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.LOOKUP_ITEMS}?search=${inputValue}&limit=100&type=ALL`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

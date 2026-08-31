@@ -9,7 +9,7 @@
 }
 
 .top-menu-bar {
-  width: min(1600px, 100%);
+  width: min(1850px, 100%);
   min-height: 64px;
   margin: 0 auto;
   display: flex;

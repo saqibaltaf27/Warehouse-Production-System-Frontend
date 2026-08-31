@@ -8,10 +8,12 @@ import {
 } from '@tabler/icons-react';
 import BrandLogo from '../../global-components/BrandLogo/BrandLogo';
 import './MenuBar.css';
+import { usePermission } from '../../context/permissioncheck';
 
 const MenuBar = ({ onLogout, onNavigate, user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { allowedModules, loadingPermissions } = usePermission();
 
   const menuItems = [
     { title: 'Dashboard', path: '/dashboard', main_module: 'Production Dashboard' },
@@ -22,11 +24,19 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
     { title: 'Production Planning', path: '/production-planning', main_module: 'Production Planning' },
     { title: 'Production Trend', path: '/production-trend', main_module: 'Production Trend' },
     { title: 'Production Orders', path: '/production-orders', main_module: 'Production Orders' },
+    { title: 'Production Template', path: '/production-template', main_module: 'Production Template' },
     { title: 'QC', path: '/qc', main_module: 'QC' },
   ];
 
+  let visibleMenuItems = menuItems;
+
   if (user?.isSuperAdmin) {
-    menuItems.push({ title: 'Access Control', path: '/access-control', main_module: 'Access Control' });
+    visibleMenuItems.push({ title: 'Access Control', path: '/access-control', main_module: 'Access Control' });
+  } else if (!loadingPermissions) {
+    visibleMenuItems = menuItems.filter(item => allowedModules.has(item.main_module));
+  } else {
+    // While loading permissions, maybe show nothing or just what they have
+    visibleMenuItems = [];
   }
 
   const firstName = user?.FirstName || "";
@@ -55,7 +65,7 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
 
         {/* Horizontal Navigation Menu Items */}
         <nav className="menu-bar-nav">
-          {menuItems.map((item, index) => (
+          {visibleMenuItems.map((item, index) => (
             <NavLink
               key={index}
               to={item.path}

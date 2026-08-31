@@ -4,7 +4,7 @@ import Button from '../../global-components/Button/Button';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import Input from '../../global-components/Input/Input';
 import { IconUsers } from '@tabler/icons-react';
-import { productionPlanningApi } from '../../apis/production-planning/production-planning';
+import { productionTemplateApi } from '../../apis/production-template/production-template';
 import { useAuth } from '../../context/AuthContext';
 import './ManpowerProductivity.css';
 
@@ -60,7 +60,7 @@ const ManpowerProductivity = () => {
   const fetchData = async (page = currentPage, size = pageSize) => {
     try {
       setIsLoading(true);
-      const response = await productionPlanningApi.getManpowerProductivity(page, size);
+      const response = await productionTemplateApi.getManpowerProductivity(page, size);
       if (response.data.success) {
         setData(response.data.data);
         if (response.data.pagination) {
@@ -136,7 +136,7 @@ const ManpowerProductivity = () => {
         createdBy: user?.EmpID 
       };
 
-      const response = await productionPlanningApi.addManpowerProductivity(payload);
+      const response = await productionTemplateApi.addManpowerProductivity(payload);
       if (response.data.success) {
         setShowModal(false);
         // Reset form
@@ -195,7 +195,7 @@ const ManpowerProductivity = () => {
       <Table
         data={data}
         columns={columns}
-        showPagination={totalEntries >= 10}
+        showPagination={true}
         currentPage={currentPage}
         pageSize={pageSize}
         totalEntries={totalEntries}

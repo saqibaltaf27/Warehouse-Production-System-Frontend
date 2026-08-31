@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Complaints from '../Complaints/Complaints';
 import COA from './COA';
+import Tabs from '../../global-components/Tabs/Tabs';
+import { IconAlertTriangle, IconFileCertificate } from '@tabler/icons-react';
 import './QC.css';
 
 const QC = () => {
@@ -10,19 +12,15 @@ const QC = () => {
     <div>
       <div className="qc-header">
         
-        <div className="qc-tabs">
-          <button 
-            className={`qc-tab ${activeTab === 'complaints' ? 'active' : ''}`}
-            onClick={() => setActiveTab('complaints')}
-          >
-            Complaints
-          </button>
-          <button 
-            className={`qc-tab ${activeTab === 'coa' ? 'active' : ''}`}
-            onClick={() => setActiveTab('coa')}
-          >
-            COA
-          </button>
+        <div style={{ marginBottom: '20px' }}>
+          <Tabs
+            tabs={[
+              { key: 'complaints', label: 'Complaints', icon: <IconAlertTriangle size={18} /> },
+              { key: 'coa', label: 'COA', icon: <IconFileCertificate size={18} /> }
+            ]}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
         </div>
       </div>
       

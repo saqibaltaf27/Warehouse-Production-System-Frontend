@@ -6,7 +6,6 @@ import Pagination from '../../global-components/Pagination/Pagination';
 import ProductionHistory from './ProductionHistory';
 import ProductionTrend from './ProductionTrend';
 import ProductionRecommendation from './ProductionRecommendation';
-import ManpowerProductivity from './ManpowerProductivity';
 import Table from '../../global-components/Table/Table';
 import Tabs from '../../global-components/Tabs/Tabs';
 import {
@@ -17,8 +16,7 @@ import {
   IconCalendarEvent,
   IconHistory,
   IconChartBar,
-  IconBulb,
-  IconUsers
+  IconBulb
 } from '@tabler/icons-react';
 import './ProductionPlanning.css';
 
@@ -263,8 +261,7 @@ const ProductionPlanning = () => {
             { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
             { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
             { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
-            { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> },
-            { key: 'manpower', label: 'Manpower Productivity', icon: <IconUsers size={18} /> }
+            { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
           ]}
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -328,7 +325,6 @@ const ProductionPlanning = () => {
         {activeTab === 'history' && <ProductionHistory />}
         {activeTab === 'trend' && <ProductionTrend />}
         {activeTab === 'recommendation' && <ProductionRecommendation />}
-        {activeTab === 'manpower' && <ManpowerProductivity />}
       </div>
     </div>
   );
