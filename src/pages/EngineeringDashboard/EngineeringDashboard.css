@@ -1,6 +1,4 @@
-.engineering-dashboard-container {
-  padding: 20px;
-}
+
 
 .tabs-header {
   display: flex;
@@ -29,12 +27,6 @@
   color: white;
 }
 
-.tab-content {
-  padding: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
 
 /* PM Modal UI Styles */
 
