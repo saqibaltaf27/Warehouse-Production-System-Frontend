@@ -40,6 +40,7 @@
   background: var(--bg-card);
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--border-radius-lg);
+  margin-top: 20px;
 }
 
 .machine-efficiency-section-heading h2 {

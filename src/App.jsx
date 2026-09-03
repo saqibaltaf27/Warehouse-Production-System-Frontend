@@ -20,6 +20,7 @@ import PermissionControl from './pages/AccessControl/PermissionControl.jsx';
 import AccessPermission from './pages/AccessControl/AccessPermission.jsx';
 import UnauthorizedPage from './pages/Unauthorized/UnauthorizedPage.jsx';
 import ProductionTemplate from './pages/ProductionTemplate/ProductionTemplate.jsx';
+import EngineeringDashboard from './pages/EngineeringDashboard/EngineeringDashboard.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -44,6 +45,7 @@ const DefaultRedirect = () => {
 
   const menuItems = [
     { path: '/dashboard', main_module: 'Production Dashboard' },
+    { path: '/engineering-dashboard', main_module: 'Engineering Dashboard' },
     { path: '/cost-analysis', main_module: 'Cost Analysis' },
     { path: '/inventory', main_module: 'Inventory' },
     { path: '/machine-efficiency', main_module: 'Machine Efficiency' },
@@ -79,6 +81,7 @@ function AppContent() {
             <Route path="login" element={<DefaultRedirect />} />
 
             <Route path="dashboard" element={<ProtectedRoute requiredRoute="/dashboard"><Dashboard /></ProtectedRoute>} />
+            <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
             <Route path="production-trend" element={<ProtectedRoute requiredRoute="/production-trend"><ProductionTrend /></ProtectedRoute>} />
             <Route path="inventory" element={<ProtectedRoute requiredRoute="/inventory"><Inventory /></ProtectedRoute>} />

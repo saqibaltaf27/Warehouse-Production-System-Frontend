@@ -226,11 +226,17 @@ const AccessPermission = () => {
     <div className="access-permission-page">
       {/* Header */}
       <div className="ap-header">
-        <div className="ap-header-left">
-       
+        <div className="ap-header-left" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <button 
+             onClick={() => navigate(-1)} 
+             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#1e40af', padding: 0 }}
+             title="Go Back"
+           >
+             <IconArrowLeft size={28} />
+           </button>
           <div className="ap-header-info">
-            <h1>Permissions</h1>
-            <p>{employee?.FirstName} {employee?.LastName || ''} • EmpID: {employee?.EmpID}</p>
+            <h1 style={{ margin: 0 }}>Permissions</h1>
+            <p style={{ margin: 0 }}>{employee?.FirstName} {employee?.LastName || ''} • EmpID: {employee?.EmpID}</p>
           </div>
         </div>
         

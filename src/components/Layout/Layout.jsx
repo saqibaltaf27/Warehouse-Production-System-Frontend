@@ -20,6 +20,7 @@ const Layout = () => {
   }, [pathname, fetchUser]);
   const moduleTitles = {
     "/dashboard": "Dashboard",
+    "/engineering-dashboard": "Engineering Dashboard",
     "/analytics": "Analytics",
     "/production-trend": "Production Trend",
     "/machine-efficiency": "Machine Efficiency",
@@ -117,9 +118,6 @@ const Layout = () => {
             >
               <IconMenu2 size={22} />
             </button>
-            <div>
-              <Breadcrumb items={breadcrumbItems} />
-            </div>
           </div>
         </header>
         <main className="dribbble-content">

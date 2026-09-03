@@ -250,7 +250,7 @@ const CostSummary = ({ filters }) => {
   return (
     <div className="dashboard-card chart-card-container dome-card-wrapper cost-summary-card">
       <div className="dashboard-card-header">
-        <h3>Cost Summary (Today)</h3>
+        <h3>Cost Summary</h3>
       </div>
       <div className="dashboard-card-content quality-summary-content">
         <div className="quality-summary-main">
@@ -951,7 +951,7 @@ const DowntimeSummary = ({ filters }) => {
   return (
     <div className="dashboard-card chart-card-container dome-card-wrapper downtime-summary-card">
       <div className="dashboard-card-header d-flex justify-between">
-        <h3>Downtime Summary (Today)</h3>
+        <h3>Downtime Summary</h3>
         <div className="summary-header-actions">
           {!loading && (
             <span className="summary-count-badge is-warning">
@@ -1042,7 +1042,7 @@ const OEEBreakdown = ({ filters }) => {
   return (
     <div className="dashboard-card chart-card-container dome-card-wrapper">
       <div className="dashboard-card-header">
-        <h3>OEE Breakdown (Today)</h3>
+        <h3>OEE Breakdown</h3>
       </div>
       <div className="dashboard-card-content p-4 d-flex flex-column justify-center align-center">
         {loading ? (
@@ -1102,7 +1102,7 @@ const QualitySummary = ({ filters }) => {
   return (
     <div className="dashboard-card chart-card-container dome-card-wrapper summary-card quality-summary-card">
       <div className="dashboard-card-header d-flex justify-between">
-        <h3>Quality Summary (Today)</h3>
+        <h3>Quality Summary</h3>
       </div>
       <div className="dashboard-card-content quality-summary-content">
         <div className="quality-summary-main">
@@ -1343,7 +1343,7 @@ export default function Dashboard() {
   return (
     <div className="executive-dashboard bg-light">
       {/* Filters */}
-      <div className="dashboard-filters-bar mb-4">
+      <div className="dashboard-filters-bar">
         <div className="d-flex flex-column">
           <label>Start Date</label>
           <input
@@ -1382,7 +1382,7 @@ export default function Dashboard() {
       {/* Section 1: Alerts */}
       <AlertsSection filters={filters} />
 
-      <div className="mb-4"></div>
+
 
       {/* Section 2: KPIs */}
       <KPIRow filters={filters} />
