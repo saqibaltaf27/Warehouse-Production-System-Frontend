@@ -1,4 +1,5 @@
-import { IconInfoCircle, IconListDetails, IconCheck, IconTrash } from '@tabler/icons-react';
+import React, { useState, useMemo } from 'react';
+import { IconInfoCircle, IconListDetails, IconCheck, IconTrash, IconChevronUp, IconChevronDown, IconSelector } from '@tabler/icons-react';
 import Pagination from '../Pagination/Pagination';
 import './Table.css';
 import './TableLoader.css';
@@ -17,7 +18,61 @@ const Table = ({
   onRowClick,
   isLoading = false,
 }) => {
+  const [sortConfig, setSortConfig] = useState(null);
+
   const totalPages = Math.ceil(totalEntries / pageSize) || 1;
+
+  const sortedData = useMemo(() => {
+    let sortableItems = [...data];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+        
+        if (valA === valB) return 0;
+        if (valA == null) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (valB == null) return sortConfig.direction === 'ascending' ? 1 : -1;
+
+        const parseValue = (val) => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') {
+            const cleanStr = val.replace(/[%$,]/g, '').trim();
+            const num = Number(cleanStr);
+            if (!isNaN(num) && cleanStr !== '') return num;
+          }
+          return val;
+        };
+
+        const parsedA = parseValue(valA);
+        const parsedB = parseValue(valB);
+
+        if (typeof parsedA === 'number' && typeof parsedB === 'number') {
+           return sortConfig.direction === 'ascending' ? parsedA - parsedB : parsedB - parsedA;
+        }
+        
+        const strA = String(valA).toLowerCase();
+        const strB = String(valB).toLowerCase();
+        
+        if (strA < strB) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (strA > strB) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [data, sortConfig]);
+
+  const requestSort = (key) => {
+    if (!key) return;
+    let direction = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleAction = (action, row) => {
     if (onActionClick) {
@@ -40,10 +95,27 @@ const Table = ({
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={col.className}
-                  style={{ textAlign: getColumnAlign(col), width: col.width }}
+                  className={`${col.className || ''}`}
+                  style={{ textAlign: getColumnAlign(col), width: col.width, cursor: col.key ? 'pointer' : 'default', userSelect: 'none' }}
+                  onClick={() => col.key && requestSort(col.key)}
                 >
-                  {col.header}
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: getColumnAlign(col) === 'right' ? 'flex-end' : getColumnAlign(col) === 'center' ? 'center' : 'flex-start',
+                    gap: '4px'
+                  }}>
+                    {col.header}
+                    {col.key && (
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        {sortConfig?.key === col.key ? (
+                          sortConfig.direction === 'ascending' ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />
+                        ) : (
+                          <IconSelector size={16} style={{ opacity: 0.3 }} />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </th>
               ))}
               {showActions && <th className="dome-table-actions-header">Actions</th>}
@@ -57,8 +129,8 @@ const Table = ({
                   Loading data...
                 </td>
               </tr>
-            ) : data.length > 0 ? (
-              data.map((rowItem, rowIndex) => (
+            ) : sortedData.length > 0 ? (
+              sortedData.map((rowItem, rowIndex) => (
                 <tr 
                   key={rowIndex}
                   className={onRowClick ? 'dome-table-row--clickable' : ''}

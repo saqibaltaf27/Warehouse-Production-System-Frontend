@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -17,7 +17,6 @@ const Pagination = ({
   onPageChange,
   onPageSizeChange,
 }) => {
-  const [jumpValue, setJumpValue] = useState('');
   const safeTotalPages = Math.max(1, totalPages);
   const safeCurrentPage = Math.min(Math.max(1, currentPage), safeTotalPages);
 
@@ -33,12 +32,6 @@ const Pagination = ({
 
   const goToPage = (page) => {
     if (onPageChange) onPageChange(Math.min(Math.max(1, page), safeTotalPages));
-  };
-
-  const handleJump = (event) => {
-    if (event.key !== 'Enter' || !jumpValue) return;
-    goToPage(Number(jumpValue));
-    setJumpValue('');
   };
 
   const handlePageSizeChange = (event) => {
@@ -86,19 +79,6 @@ const Pagination = ({
           <select value={pageSize} onChange={handlePageSizeChange} aria-label="Rows per page">
             {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
-        </label>
-
-        <label className="global-pagination-jump">
-          <span>Go to</span>
-          <input
-            type="number"
-            min="1"
-            max={safeTotalPages}
-            value={jumpValue}
-            onChange={(event) => setJumpValue(event.target.value)}
-            onKeyDown={handleJump}
-            aria-label="Go to page"
-          />
         </label>
       </div>
     </footer>

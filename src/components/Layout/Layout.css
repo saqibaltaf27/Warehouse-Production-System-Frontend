@@ -12,18 +12,6 @@
   min-width: 0;
 }
 
-.dribbble-top-header {
-  width: min(1850px, calc(100% - 48px));
-  min-height: 48px;
-  margin: 0 auto;
-  padding: 20px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  z-index: 50;
-}
 
 .header-left {
   display: flex;
@@ -301,11 +289,6 @@
     display: inline-flex;
   }
 
-  .dribbble-top-header {
-    width: calc(100% - 32px);
-    min-height: 48px;
-    padding: 10px 0 2px;
-  }
 
   .header-left {
     gap: var(--margin-default);

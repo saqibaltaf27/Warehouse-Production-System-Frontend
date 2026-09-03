@@ -2,6 +2,7 @@
     display: inline-flex;
     flex-wrap: wrap;
     gap: 6px;
+    margin-top: 20px;
     padding: 6px;
     background: var(--bg-main, #f8fafc);
     border: 1px solid var(--border-color, #e2e8f0);

@@ -148,7 +148,8 @@ const COA = () => {
     control: (base) => ({
       ...base,
       background: 'transparent',
-      border: 'none',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
       boxShadow: 'none',
       minHeight: '24px',
     }),
@@ -177,8 +178,8 @@ const COA = () => {
       <div className="coa-document-container">
         {/* Top Header Outside Document */}
         <div className="coa-top-header">
-          <div className="coa-top-logo">
-            <span className="logo-lds">LDS</span>
+          <div className="coa-top-logo" style={{ border: 'none', gap: '10px' }}>
+            <img src="/images/ldslogo.png" alt="LDS Logo" style={{ height: '80px', objectFit: 'contain' }} />
             <span className="logo-text">Lab Diagnostic Systems<br/>(SMC) Pvt Ltd</span>
           </div>
           <div className="coa-top-title">{formData.productLine || ''}</div>
@@ -188,8 +189,8 @@ const COA = () => {
           
           {/* Header Section */}
         <div className="coa-header">
-          <div className="coa-logo-section">
-            <div className="coa-logo-placeholder">LDS</div>
+          <div className="coa-logo-section" style={{ padding: '10px' }}>
+            <img src="/images/ldslogo.png" alt="LDS Logo" style={{ maxWidth: '100%', maxHeight: '110px', objectFit: 'contain' }} />
           </div>
           <div className="coa-title-section">
             <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PVT LTD.</h2>

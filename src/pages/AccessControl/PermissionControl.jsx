@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IconRefresh, IconPlus, IconArrowLeft, IconEdit, IconTrash } from '@tabler/icons-react';
 import { aclApi } from '../../apis/acl/acl';
 import toast from 'react-hot-toast';
@@ -6,6 +7,7 @@ import AddPermissionModal from './AddPermissionModal';
 import './PermissionControl.css';
 
 const PermissionControl = () => {
+  const navigate = useNavigate();
   const [permissions, setPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -146,9 +148,18 @@ const PermissionControl = () => {
   return (
     <div className="permission-control-page">
       <div className="pc-top-section">
-        <div className="pc-header-text">
-          <h1>Permissions</h1>
-          <p>Browse modules by clicking cards. Permissions appear at the selected node.</p>
+        <div className="pc-header-text" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <button 
+             onClick={() => navigate(-1)} 
+             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#1e40af', padding: 0 }}
+             title="Go Back"
+           >
+             <IconArrowLeft size={28} />
+           </button>
+          <div>
+            <h1 style={{ margin: 0 }}>Permissions</h1>
+            <p style={{ margin: 0 }}>Browse modules by clicking cards. Permissions appear at the selected node.</p>
+          </div>
         </div>
         <div className="pc-action-buttons">
           <button className="pc-btn-outline" onClick={fetchPermissions}>

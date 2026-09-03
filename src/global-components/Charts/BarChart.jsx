@@ -95,7 +95,11 @@ const BarChart = ({
   height = '100%',
   className = '',
   secondaryYAxis = false,
-  yAxisWidth = 80
+  yAxisWidth = 80,
+  xAxisInterval = 'preserveEnd',
+  xAxisAngle = 0,
+  bottomMargin = null,
+  chartMargin = null
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
@@ -144,9 +148,9 @@ const BarChart = ({
             data={data}
             layout={layout}
             margin={
-              layout === 'vertical'
+              chartMargin || (layout === 'vertical'
                 ? { top: 12, right: 28, left: 10, bottom: 8 }
-                : { top: shouldShowLabels ? 24 : 14, right: 16, left: 0, bottom: 12 }
+                : { top: shouldShowLabels ? 24 : 14, right: 16, left: 0, bottom: bottomMargin || 12 })
             }
             barCategoryGap="22%"
           >
@@ -164,8 +168,12 @@ const BarChart = ({
                   dataKey={xAxisKey}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'var(--text-secondary, #798089)', fontSize: 12, fontWeight: 500 }}
+                  tick={{ fill: 'var(--text-secondary, #798089)', fontSize: 11, fontWeight: 500 }}
                   dy={10}
+                  interval={xAxisInterval}
+                  angle={xAxisAngle}
+                  textAnchor={xAxisAngle ? 'end' : 'middle'}
+                  height={xAxisAngle ? (bottomMargin ? bottomMargin + 20 : 60) : 30}
                 />
                 <YAxis
                   yAxisId="left"

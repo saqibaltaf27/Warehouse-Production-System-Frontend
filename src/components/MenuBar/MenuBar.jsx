@@ -17,6 +17,7 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
 
   const menuItems = [
     { title: 'Dashboard', path: '/dashboard', main_module: 'Production Dashboard' },
+    { title: 'Engineering Dashboard', path: '/engineering-dashboard', main_module: 'Engineering Dashboard' },
     //{ title: 'Analytics', path: '/analytics', main_module: 'Analytics' },
     { title: 'Cost Analysis', path: '/cost-analysis', main_module: 'Cost Analysis' },
     { title: 'Inventory', path: '/inventory', main_module: 'Inventory' },

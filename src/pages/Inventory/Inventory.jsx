@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Card from '../../global-components/Card/Card';
@@ -43,8 +43,15 @@ const AGING_TABS = [
 const Inventory = () => {
   const navigate = useNavigate();
 
-  // ── State ──────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
+  const setActiveTab = (tab) => {
+    setSearchParams(prev => {
+      prev.set('tab', tab);
+      return prev;
+    }, { replace: true });
+  };
+
   const [filterOptions, setFilterOptions] = useState(null);
 
   // Filters

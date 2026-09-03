@@ -87,8 +87,8 @@ const MachineEfficiency = () => {
       header: 'Machine',
       render: (row) => <span className="machine-name" title={row.machineCode}>{row.machineCode}</span>
     },
-    { key: 'availableHrs', header: 'Avail Hr' },
-    { key: 'consumedHrs', header: 'Used Hr' },
+    { key: 'availableHrs', header: 'Available hrs' },
+    { key: 'consumedHrs', header: 'Used hrs' },
     {
       key: 'utilization',
       header: 'Util %',

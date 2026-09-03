@@ -84,5 +84,14 @@ export const API_ENDPOINTS = {
     PERMISSIONS: '/acl/permissions',
     PERMISSION_BY_ID: (id) => `/acl/permissions/${id}`,
     USER_PERMISSIONS: (id) => `/acl/user-permissions/${id}`
+  },
+
+  PREVENTIVE_MAINTENANCE: {
+    FILTERS: '/pms/filters',
+    SUMMARY: '/pms/summary',
+    CHARTS: '/pms/charts',
+    UPCOMING: '/pms/upcoming',
+    YEARLY_SCHEDULE: '/pms/yearly-schedule',
+    INSTRUMENT_CRUD: '/pms/instrument'
   }
 };
