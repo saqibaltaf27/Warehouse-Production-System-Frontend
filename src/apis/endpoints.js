@@ -39,6 +39,11 @@ export const API_ENDPOINTS = {
     HISTORY: '/production-planning/history',
     TREND: '/production-planning/trend',
     RECOMMENDATIONS: '/production-planning/recommendations',
+    OPEN_ORDERS: '/production-planning/open-orders',
+    GET_MACHINES: '/production-planning/machines',
+    GET_PLANS: '/production-planning/plans',
+    CREATE_PLAN: '/production-planning/plan',
+    UPDATE_PLAN: '/production-planning/plan',
   },
 
   DASHBOARD: {
@@ -93,5 +98,14 @@ export const API_ENDPOINTS = {
     UPCOMING: '/pms/upcoming',
     YEARLY_SCHEDULE: '/pms/yearly-schedule',
     INSTRUMENT_CRUD: '/pms/instrument'
+  },
+
+  MACHINE: {
+    GET_MACHINES_LIST: '/machine'
+  },
+
+  PURCHASE_ORDER: {
+    REQUESTS: '/purchase-order/requests',
+    DETAILS: (docEntry) => `/purchase-order/requests/${docEntry}`,
   }
 };

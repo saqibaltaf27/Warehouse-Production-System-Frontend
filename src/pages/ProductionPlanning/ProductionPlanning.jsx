@@ -8,6 +8,9 @@ import ProductionTrend from './ProductionTrend';
 import ProductionRecommendation from './ProductionRecommendation';
 import Table from '../../global-components/Table/Table';
 import Tabs from '../../global-components/Tabs/Tabs';
+import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
+import Button from '../../global-components/Button/Button';
+import Select from 'react-select';
 import {
   IconChecklist,
   IconClock,
@@ -16,9 +19,81 @@ import {
   IconCalendarEvent,
   IconHistory,
   IconChartBar,
-  IconBulb
+  IconBulb,
+  IconPlus,
+  IconEdit
 } from '@tabler/icons-react';
 import './ProductionPlanning.css';
+
+const ExpandableMachineCell = ({ machineStr }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!machineStr) return <span>-</span>;
+  
+  let machines = [];
+  try {
+    const parsed = JSON.parse(machineStr);
+    machines = Array.isArray(parsed) ? parsed : [];
+  } catch(e) {
+    machines = machineStr.split(', ');
+  }
+
+  if (machines.length === 0) return <span>-</span>;
+  
+  if (machines.length === 1) {
+    return <span>{machines[0]}</span>;
+  }
+  
+  return (
+    <div>
+      <div 
+        style={{ cursor: 'pointer', color: '#2563eb', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }} 
+        onClick={() => setExpanded(!expanded)}
+      >
+        {machines.length} Machines {expanded ? '▲' : '▼'}
+      </div>
+      {expanded && (
+        <div className="plan-employee-list" style={{ marginTop: '6px' }}>
+          {machines.map((m, idx) => (
+            <div key={idx} className="plan-employee-item">
+              {m}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ExpandableEmployeeCell = ({ jdItems }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!jdItems || jdItems.length === 0) return <span>-</span>;
+  
+  if (jdItems.length === 1) {
+    return <span>{jdItems[0].name} - {jdItems[0].jd}</span>;
+  }
+  
+  return (
+    <div>
+      <div 
+        style={{ cursor: 'pointer', color: '#2563eb', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }} 
+        onClick={() => setExpanded(!expanded)}
+      >
+        {jdItems.length} Employees {expanded ? '▲' : '▼'}
+      </div>
+      {expanded && (
+        <div className="plan-employee-list" style={{ marginTop: '6px' }}>
+          {jdItems.map((i, idx) => (
+            <div key={idx} className="plan-employee-item">
+              {i.name} - <span style={{ color: '#6b7280', fontSize: '0.85em' }}>{i.jd}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /* ── Formatters ── */
 const fmt = (n) => {
@@ -75,6 +150,113 @@ const ProductionPlanning = () => {
   const [batchPageSize, setBatchPageSize] = useState(20);
   const [batchTotal, setBatchTotal] = useState(0);
 
+  // Production Planning (New Tab) State
+  const [planData, setPlanData] = useState([]);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
+  const [openPOs, setOpenPOs] = useState([]);
+  const [machines, setMachines] = useState([]);
+  const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+  const [editingPlanId, setEditingPlanId] = useState(null);
+  const [planFormData, setPlanFormData] = useState({
+    date: getTodayDate(),
+    line: 'R-Test Line',
+    machine: '[]',
+    supervisor: '',
+    po: '',
+    jdItems: [{ name: '', jd: '' }]
+  });
+
+  const handleJdItemChange = (idx, field, val) => {
+    const newItems = [...planFormData.jdItems];
+    newItems[idx][field] = val;
+    setPlanFormData({ ...planFormData, jdItems: newItems });
+  };
+
+  const handleAddJdItem = () => {
+    setPlanFormData({ ...planFormData, jdItems: [...planFormData.jdItems, { name: '', jd: '' }] });
+  };
+
+  const handleRemoveJdItem = (idx) => {
+    const newItems = planFormData.jdItems.filter((_, i) => i !== idx);
+    setPlanFormData({ ...planFormData, jdItems: newItems });
+  };
+
+  const handleSavePlan = async () => {
+    try {
+      const payload = {
+        ...planFormData,
+        jdItems: planFormData.jdItems.filter(item => item.name.trim() !== '' || item.jd.trim() !== '')
+      };
+      
+      let res;
+      if (editingPlanId) {
+        res = await axiosInstance.put(`${API_ENDPOINTS.PRODUCTION_PLANNING.UPDATE_PLAN}/${editingPlanId}`, payload);
+      } else {
+        res = await axiosInstance.post(API_ENDPOINTS.PRODUCTION_PLANNING.CREATE_PLAN, payload);
+      }
+
+      if (res.data?.success) {
+        setIsPlanModalOpen(false);
+        setEditingPlanId(null);
+        setPlanFormData({ date: getTodayDate(), line: 'R-Test Line', machine: '[]', supervisor: '', po: '', jdItems: [{ name: '', jd: '' }] });
+        fetchProductionPlans(); // Refresh the list
+      } else {
+        alert(res.data?.message || 'Failed to save plan');
+      }
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      alert('Error saving plan');
+    }
+  };
+
+  const handleEditPlan = (plan) => {
+    setEditingPlanId(plan.Id);
+    
+    let machineVal = '[]';
+    if (plan.Machine) {
+      try {
+        const parsed = JSON.parse(plan.Machine);
+        machineVal = Array.isArray(parsed) ? plan.Machine : '[]';
+      } catch (e) {
+        // Fallback for old comma-separated values
+        machineVal = JSON.stringify(plan.Machine.split(', '));
+      }
+    }
+
+    setPlanFormData({
+      date: plan.PlanDate ? plan.PlanDate.split('T')[0] : getTodayDate(),
+      line: plan.Line || 'R-Test Line',
+      machine: machineVal,
+      supervisor: plan.Supervisor || '',
+      po: plan.PO || '',
+      jdItems: plan.jdItems && plan.jdItems.length > 0 ? plan.jdItems : [{ name: '', jd: '' }]
+    });
+    setIsPlanModalOpen(true);
+  };
+
+  const fetchProductionPlans = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.GET_PLANS);
+      if (res.data?.success) {
+        setPlanData(res.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch Production Plans error:', err);
+    }
+  }, []);
+
+  const fetchMachines = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.GET_MACHINES);
+      if (res.data?.success) {
+        setMachines(res.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch Machines error:', err);
+    }
+  }, []);
+
   const fetchKpisAndOrders = useCallback(async () => {
     try {
       const params = { page: ordersPage, pageSize: ordersPageSize, search: debouncedSearch, status, warehouse };
@@ -115,6 +297,17 @@ const ProductionPlanning = () => {
     }
   }, [batchPage, batchPageSize, debouncedSearch, warehouse, bucket]);
 
+  const fetchOpenPOs = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.OPEN_ORDERS);
+      if (res.data?.success) {
+        setOpenPOs(res.data.data);
+      }
+    } catch (err) {
+      console.error('Fetch Open POs error:', err);
+    }
+  }, []);
+
   // Reset pagination on filter change
   useEffect(() => {
     setOrdersPage(1);
@@ -129,10 +322,13 @@ const ProductionPlanning = () => {
     else if (activeTab === 'expiry') fetchBatchExpiry();
   }, [activeTab, fetchKpisAndOrders, fetchShortages, fetchBatchExpiry]);
 
-  // Always fetch KPIs on mount so cards populate
+  // Always fetch KPIs, Open POs, Production Plans, and Machines on mount
   useEffect(() => {
     if (activeTab !== 'orders') fetchKpisAndOrders();
-  }, [fetchKpisAndOrders]);
+    fetchOpenPOs();
+    fetchProductionPlans();
+    fetchMachines();
+  }, [fetchKpisAndOrders, fetchOpenPOs, fetchProductionPlans, fetchMachines]);
 
   // ── Tables Columns ──
   const ordersColumns = [
@@ -179,6 +375,22 @@ const ProductionPlanning = () => {
         return <span className={`status-badge ${cls}`}>{bucketVal.substring(3)}</span>;
       }
     },
+  ];
+
+  const planColumns = [
+    { header: 'Date', key: 'PlanDate', render: (r) => fmtDate(r.PlanDate) },
+    { header: 'Line', key: 'Line' },
+    { header: 'PO', key: 'PO' },
+    { header: 'Planned Qty', key: 'PlannedQty', render: (r) => fmt(r.PlannedQty) },
+    { header: 'Completed Qty', key: 'CmpltQty', render: (r) => fmt(r.CmpltQty) },
+    { header: 'Machine', key: 'Machine', render: (r) => <ExpandableMachineCell machineStr={r.Machine} /> },
+    { header: 'Supervisor', key: 'Supervisor' },
+    { header: 'Assign Employee', key: 'employees', render: (r) => <ExpandableEmployeeCell jdItems={r.jdItems} /> },
+    { header: 'Action', key: 'action', render: (r) => (
+      <Button variant="outline" size="sm" onClick={() => handleEditPlan(r)} icon={<IconEdit size={16} />}>
+        Edit
+      </Button>
+    )}
   ];
 
   return (
@@ -257,6 +469,7 @@ const ProductionPlanning = () => {
         <Tabs
           tabs={[
             { key: 'orders', label: 'Daily Execution', icon: <IconCalendarEvent size={18} /> },
+            { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
             { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
             { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
             { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
@@ -283,6 +496,175 @@ const ProductionPlanning = () => {
               onPageChange={setOrdersPage}
               onItemsPerPageChange={(size) => { setOrdersPageSize(size); setOrdersPage(1); }}
             />
+          </div>
+        )}
+
+        {activeTab === 'production-order' && (
+          <div className="planning-section">
+            <div className="planning-section-header">
+              <h3>Production Planning</h3>
+              <Button variant="primary" icon={<IconPlus size={16} />} onClick={() => setIsPlanModalOpen(true)}>
+                Add today plan
+              </Button>
+            </div>
+            <Table
+              data={planData}
+              columns={planColumns}
+              totalEntries={planData.length}
+              showActions={false}
+              showPagination={true}
+              currentPage={1}
+              pageSize={10}
+              onPageChange={() => {}}
+              onItemsPerPageChange={() => {}}
+            />
+
+            {isPlanModalOpen && (
+              <GlobalPopup isOpen={isPlanModalOpen} onClose={() => {
+                setIsPlanModalOpen(false);
+                setEditingPlanId(null);
+                setPlanFormData({ date: getTodayDate(), line: 'R-Test Line', machine: '', supervisor: '', po: '', jdItems: [{ name: '', jd: '' }] });
+              }} title="" showClose={false}>
+                <div className="plan-modal-content">
+                  <div className="plan-modal-header">
+                    <h2 className="plan-modal-title">{editingPlanId ? 'Edit Today Plan' : 'Add Today Plan'}</h2>
+                  </div>
+                  
+                  <div className="plan-modal-body">
+                    {/* Grid for top fields */}
+                    <div className="plan-form-grid">
+                      <div className="form-group">
+                        <label className="plan-form-label">Date</label>
+                        <input type="date" className="plan-form-input" value={planFormData.date} onChange={(e) => setPlanFormData({...planFormData, date: e.target.value})} />
+                      </div>
+                      <div className="form-group">
+                        <label className="plan-form-label">Line</label>
+                        <select className="plan-form-input" value={planFormData.line} onChange={(e) => setPlanFormData({...planFormData, line: e.target.value})}>
+                          <option value="R-Test Line">R-Test Line</option>
+                          <option value="Vacutainer Line">Vacutainer Line</option>
+                          <option value="Packing Line">Packing Line</option>
+                          <option value="Extraction Line">Extraction Line</option>
+                          <option value="Printing Line">Printing Line</option>
+                          <option value="I-Sugar Line">I-Sugar Line</option>
+                          <option value="PCR & Filling Line">PCR & Filling Line</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="plan-form-label">Supervisor</label>
+                        <input type="text" className="plan-form-input" value={planFormData.supervisor} onChange={(e) => setPlanFormData({...planFormData, supervisor: e.target.value})} placeholder="Enter supervisor name" />
+                      </div>
+                      <div className="form-group">
+                        <label className="plan-form-label">PO</label>
+                        <Select
+                          options={openPOs.map(po => ({ value: po.DocNum, label: po.DocNum.toString() }))}
+                          value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
+                          onChange={(selected) => setPlanFormData({...planFormData, po: selected ? selected.value : ''})}
+                          placeholder="Select PO"
+                          isClearable
+                          isSearchable
+                          menuPortalTarget={document.body}
+                          menuPosition="fixed"
+                          styles={{
+                            control: (base, state) => ({
+                              ...base,
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              padding: '2px',
+                              fontSize: '0.875rem',
+                              boxShadow: 'none',
+                              '&:hover': {
+                                border: '1px solid #d1d5db'
+                              }
+                            }),
+                            menuPortal: base => ({ ...base, zIndex: 9999 })
+                          }}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label className="plan-form-label">Machine</label>
+                        <Select
+                          isMulti
+                          options={machines.map(m => ({ value: m.ItemName, label: m.ItemName }))}
+                          value={(() => {
+                            try {
+                              const parsed = JSON.parse(planFormData.machine || '[]');
+                              return Array.isArray(parsed) ? parsed.map(m => ({ value: m, label: m })) : [];
+                            } catch (e) {
+                              return [];
+                            }
+                          })()}
+                          onChange={(selected) => setPlanFormData({...planFormData, machine: JSON.stringify(selected ? selected.map(s => s.value) : [])})}
+                          placeholder="Select Machines"
+                          isClearable
+                          isSearchable
+                          menuPortalTarget={document.body}
+                          menuPosition="fixed"
+                          styles={{
+                            control: (base, state) => ({
+                              ...base,
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              padding: '2px',
+                              fontSize: '0.875rem',
+                              boxShadow: 'none',
+                              '&:hover': {
+                                border: '1px solid #d1d5db'
+                              }
+                            }),
+                            menuPortal: base => ({ ...base, zIndex: 9999 })
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Assign Employee Section */}
+                    <div>
+                      <h3 className="plan-items-title">Assign Employee</h3>
+                      <div className="plan-items-container">
+                        <table className="plan-items-table">
+                          <thead className="plan-items-thead">
+                            <tr>
+                              <th className="plan-items-th col-name">Name</th>
+                              <th className="plan-items-th col-jd">J.D</th>
+                              <th className="plan-items-th col-action">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {planFormData.jdItems.map((item, idx) => (
+                              <tr key={idx} className="plan-items-tr">
+                                <td className="plan-items-td">
+                                  <input type="text" className="plan-item-input" value={item.name} onChange={(e) => handleJdItemChange(idx, 'name', e.target.value)} placeholder="Enter name" />
+                                </td>
+                                <td className="plan-items-td">
+                                  <input type="text" className="plan-item-input" value={item.jd} onChange={(e) => handleJdItemChange(idx, 'jd', e.target.value)} placeholder="Enter J.D" />
+                                </td>
+                                <td className="plan-items-td center">
+                                  <Button variant="danger" size="sm" onClick={() => handleRemoveJdItem(idx)}>Remove</Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="plan-items-footer">
+                          <Button variant="secondary" size="sm" onClick={handleAddJdItem}>+ Add employee</Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Actions */}
+                  <div className="plan-modal-actions">
+                    <Button variant="secondary" onClick={() => {
+                      setIsPlanModalOpen(false);
+                      setEditingPlanId(null);
+                      setPlanFormData({ date: getTodayDate(), line: 'R-Test Line', machine: '', supervisor: '', po: '', jdItems: [{ name: '', jd: '' }] });
+                    }}>Cancel</Button>
+                    <Button variant="primary" onClick={handleSavePlan}>{editingPlanId ? 'Update' : 'Save'}</Button>
+                  </div>
+                </div>
+              </GlobalPopup>
+            )}
           </div>
         )}
 

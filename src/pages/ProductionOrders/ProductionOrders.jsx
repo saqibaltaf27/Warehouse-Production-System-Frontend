@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
+import Button from '../../global-components/Button/Button';
 import ProductionOrderHeader from './ProductionOrderHeader';
 import ProductionOrderComponents from './ProductionOrderComponents';
 import './ProductionOrders.css';
@@ -125,56 +126,6 @@ const ProductionOrders = () => {
 
   return (
     <div className="po-container">
-      <div className="po-search-bar">
-        <label htmlFor="itemCodeSearch"><strong>View Past Order:</strong></label>
-        <div className="po-search-container">
-          <Select
-            id="itemCodeSearch"
-            value={products.find(p => p.Code === itemCode) ? { value: itemCode, label: `${itemCode} - ${products.find(p => p.Code === itemCode).Name}` } : null}
-            onChange={(selectedOption) => {
-              const newCode = selectedOption ? selectedOption.value : '';
-              setItemCode(newCode);
-              if (newCode) {
-                fetchProductionOrder(newCode);
-              } else {
-                handleClear();
-              }
-            }}
-            options={products.map(p => ({ value: p.Code, label: `${p.Code} - ${p.Name}` }))}
-            placeholder="Select or search a product..."
-            isClearable
-            isSearchable
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '32px',
-                fontSize: '13px',
-                borderRadius: '3px',
-                borderColor: '#ccc',
-              }),
-              dropdownIndicator: (base) => ({
-                ...base,
-                padding: '4px',
-              }),
-              clearIndicator: (base) => ({
-                ...base,
-                padding: '4px',
-              }),
-              menu: (base) => ({
-                ...base,
-                fontSize: '13px',
-                zIndex: 9999
-              })
-            }}
-          />
-        </div>
-        <div className="po-header-actions">
-          <button type="button" onClick={handleClear} disabled={loading} className="po-clear-btn">
-            Clear
-          </button>
-        </div>
-      </div>
-
       {error && <div className="po-error">{error}</div>}
 
       <div className="po-form">
@@ -194,6 +145,15 @@ const ProductionOrders = () => {
           componentsData={componentsData} 
           itemCode={itemCode} 
         />
+      </div>
+
+      <div className="po-footer-actions">
+        <Button variant="primary" disabled={loading}>
+          Add PO
+        </Button>
+        <Button variant="danger" onClick={handleClear} disabled={loading}>
+          Clear
+        </Button>
       </div>
     </div>
   );

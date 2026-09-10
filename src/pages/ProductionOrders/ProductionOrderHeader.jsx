@@ -82,20 +82,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                 placeholder="Select a product..."
                 isClearable
                 isSearchable
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  clearIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select-container"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.ProductNo || ''
