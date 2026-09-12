@@ -12,7 +12,8 @@ import {
   IconCurrencyDollar,
   IconPercentage,
   IconCalculator,
-  IconChartLine
+  IconChartLine,
+  IconSearch
 } from '@tabler/icons-react';
 import './CostAnalysis.css';
 
@@ -312,13 +313,16 @@ const CostAnalysis = () => {
           <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">
             <div className="section-header-flex">
               <h3 className="section-title">Production Orders</h3>
-              <input 
-                type="text" 
-                placeholder="Search PO or Product..." 
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="dome-input search-input-wps"
-              />
+              <div className="purchase-order-search-wrapper">
+                <IconSearch size={18} className="purchase-order-search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search PO or Product..." 
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="purchase-order-search-input"
+                />
+              </div>
             </div>
             <Table
               data={orders}

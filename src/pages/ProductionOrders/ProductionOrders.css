@@ -353,3 +353,34 @@
   font-size: 12px;
   z-index: 9999 !important;
 }
+
+/* Table Section */
+.po-table-section {
+  padding: 0 20px;
+}
+
+.po-table-section-margin {
+  margin-top: 40px;
+}
+
+.po-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.po-table-title {
+  margin: 0;
+}
+
+.po-table-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.po-table-search-input {
+  width: 300px;
+  margin-bottom: 0 !important;
+}

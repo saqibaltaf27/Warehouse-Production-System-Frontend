@@ -106,7 +106,7 @@ function App() {
   return (
     <LoadingProvider>
       <AuthProvider>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" containerStyle={{ zIndex: 99999 }} />
         <AppContent />
       </AuthProvider>
     </LoadingProvider>

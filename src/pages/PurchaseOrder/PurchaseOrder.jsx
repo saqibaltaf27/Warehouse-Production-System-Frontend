@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { useLoading } from '../../context/LoadingContext';
 import { IconSearch } from '@tabler/icons-react';
 import PurchaseOrderModal from './PurchaseOrderModal';
+import CreatePurchaseRequestModal from './CreatePurchaseRequestModal';
 import './PurchaseOrder.css';
 
 const PurchaseOrder = () => {
@@ -20,6 +21,7 @@ const PurchaseOrder = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedPO, setSelectedPO] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { showLoading, hideLoading } = useLoading();
 
@@ -112,7 +114,7 @@ const PurchaseOrder = () => {
   return (
     <div className="purchase-order-page">
       <div className="purchase-order-header">
-        <h1>Purchase Order</h1>
+        <h1></h1>
         <div className="purchase-order-header-actions">
           <div className="purchase-order-search-wrapper">
             <IconSearch size={18} className="purchase-order-search-icon" />
@@ -126,7 +128,7 @@ const PurchaseOrder = () => {
           </div>
           <Button 
             variant="primary" 
-            onClick={() => toast('New Purchase Request Clicked')}
+            onClick={() => setIsCreateModalOpen(true)}
           >
             New purchase request
           </Button>
@@ -149,10 +151,17 @@ const PurchaseOrder = () => {
         />
       </div>
 
-      <PurchaseOrderModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        data={selectedPO} 
+      <PurchaseOrderModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedPO(null);
+        }}
+        poDetails={selectedPO}
+      />
+      <CreatePurchaseRequestModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
       />
     </div>
   );

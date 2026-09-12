@@ -22,9 +22,9 @@ const PurchaseOrderModal = ({ isOpen, onClose, data }) => {
     { key: 'ItemCode', header: 'Item Code', width: 150 },
     { key: 'Dscription', header: 'Item Description', width: 250 },
     { key: 'Quantity', header: 'Req Qty', width: 100 },
-    { key: 'WhsCode', header: 'Warehouse', width: 100 },
-    { key: 'Vendor', header: 'Preferred Vendor', width: 150, render: (row) => row.LineVendor || '-' },
-    { key: 'Price', header: 'Est. Price', width: 120, render: (row) => row.Price ? `$${parseFloat(row.Price).toLocaleString()}` : '$0.00' }
+    { key: 'WhsCode', header: 'Warehouse', width: 200, render: (row) => row.WarehouseName ? `${row.WhsCode} - ${row.WarehouseName}` : row.WhsCode },
+    { key: 'Vendor', header: 'Preferred Vendor', width: 150, render: (row) => row.VendorName || row.LineVendor || '-' },
+    { key: 'Price', header: 'Est. Price', width: 120, render: (row) => row.Price ? `${parseFloat(row.Price).toLocaleString()}` : '0.00' }
   ];
 
   const totalQty = lines.reduce((sum, line) => sum + (line.Quantity || 0), 0);
@@ -113,7 +113,7 @@ const PurchaseOrderModal = ({ isOpen, onClose, data }) => {
               </div>
               <div className="po-summary-item po-summary-total">
                 <span>Est. Total Value:</span>
-                <span className="po-total-value">${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                <span className="po-total-value">{totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
               </div>
             </div>
           </div>
