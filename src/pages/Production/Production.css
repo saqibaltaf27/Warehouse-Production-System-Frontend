@@ -1,0 +1,16 @@
+.production-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 64px);
+}
+
+.production-tabs-wrapper {
+  padding: 16px 24px 0 24px;
+
+}
+
+.production-tab-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

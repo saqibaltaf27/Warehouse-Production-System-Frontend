@@ -400,7 +400,7 @@ const Inventory = () => {
                 <div className="inventory-chart-container">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      layout="vertical"
+                      layout="horizontal"
                       data={[
                         { name: '91-180 Days', value: summaryBuckets['91-180']?.stockQty || 0, color: '#10B981' },
                         { name: '61-90 Days', value: summaryBuckets['61-90']?.stockQty || 0, color: '#3B82F6' },
@@ -408,13 +408,13 @@ const Inventory = () => {
                         { name: '0-30 Days', value: summaryBuckets['0-30']?.stockQty || 0, color: '#F97316' },
                         { name: 'Expired', value: summaryBuckets['EXPIRED']?.stockQty || 0, color: '#EF4444' }
                       ]}
-                      margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
+                      margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} />
-                      <XAxis type="number" tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} />
-                      <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11, fill: '#798089' }} />
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                      <XAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#798089' }} />
+                      <YAxis type="number" tickFormatter={(v) => `${(v/1000).toFixed(0)}k`} width={60} />
                       <Tooltip formatter={(value) => [fmt(value), 'Qty']} />
-                      <Bar dataKey="value" barSize={12} radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="value" barSize={40} radius={[4, 4, 0, 0]}>
                         {
                           [
                             { color: '#10B981' },

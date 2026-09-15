@@ -30,6 +30,9 @@ export const API_ENDPOINTS = {
     ITEMS: '/inventory/items',
     ITEM_DETAIL: (itemCode) => `/inventory/items/${encodeURIComponent(itemCode)}/details`,
     ITEM_HISTORY: (itemCode) => `/inventory/items/${encodeURIComponent(itemCode)}/history`,
+    LOOKUP_BRANCHES: '/inventory/lookup/branches',
+    LOOKUP_WAREHOUSES: '/inventory/lookup/warehouses',
+    LOOKUP_BUSINESS_SEGMENTS: '/inventory/lookup/business-segments',
   },
   
   PRODUCTION_PLANNING: {
@@ -39,6 +42,11 @@ export const API_ENDPOINTS = {
     HISTORY: '/production-planning/history',
     TREND: '/production-planning/trend',
     RECOMMENDATIONS: '/production-planning/recommendations',
+    OPEN_ORDERS: '/production-planning/open-orders',
+    GET_MACHINES: '/production-planning/machines',
+    GET_PLANS: '/production-planning/plans',
+    CREATE_PLAN: '/production-planning/plan',
+    UPDATE_PLAN: '/production-planning/plan',
   },
 
   DASHBOARD: {
@@ -61,12 +69,17 @@ export const API_ENDPOINTS = {
   },
 
   PRODUCTION_ORDERS: {
+    CREATE_ORDER: '/production-orders/create',
     PRODUCTS: '/production-orders/products',
     WAREHOUSES: '/production-orders/warehouses',
+    BRANCHES: '/production-orders/branches',
+    PROJECTS: '/production-orders/projects',
     SALES_ORDERS: '/production-orders/sales-orders',
     OPEN_PRODUCTION_ORDERS: '/production-orders/open',
     CUSTOMERS: '/production-orders/customers',
+    PAGINATED_ORDERS: (page, limit, search = '') => `/production-orders/paginated?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`,
     DETAILS: (itemCode) => `/production-orders/${encodeURIComponent(itemCode)}`,
+    DETAILS_BY_DOCNUM: (docNum) => `/production-orders/details-by-docnum/${docNum}`,
     BOM_DETAILS: (itemCode) => `/production-orders/bom/${encodeURIComponent(itemCode)}`,
   },
 
@@ -93,5 +106,15 @@ export const API_ENDPOINTS = {
     UPCOMING: '/pms/upcoming',
     YEARLY_SCHEDULE: '/pms/yearly-schedule',
     INSTRUMENT_CRUD: '/pms/instrument'
+  },
+
+  MACHINE: {
+    GET_MACHINES_LIST: '/machine'
+  },
+
+  PURCHASE_ORDER: {
+    REQUESTS: '/purchase-order/requests',
+    DETAILS: (docEntry) => `/purchase-order/requests/${docEntry}`,
+    CREATE_REQUEST: '/purchase-order/requests/create',
   }
 };

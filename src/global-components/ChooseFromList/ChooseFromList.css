@@ -1,0 +1,202 @@
+.cfl-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.cfl-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.cfl-input-group {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cfl-input-group:focus-within, .cfl-input-group:hover {
+  border-color: #3b82f6;
+}
+
+.cfl-input-group.disabled {
+  background: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.cfl-display-input {
+  flex: 1;
+  border: none;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.cfl-input-group.disabled .cfl-display-input {
+  cursor: not-allowed;
+}
+
+.cfl-action-btn {
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.cfl-action-btn:hover {
+  color: #3b82f6;
+}
+
+.cfl-action-btn.clear:hover {
+  color: #ef4444;
+}
+
+/* Modal Styles */
+.cfl-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.cfl-modal-content {
+  background: white;
+  width: 90vw;
+  max-width: 700px;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+.cfl-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cfl-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.cfl-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.cfl-close-btn:hover {
+  color: #ef4444;
+}
+
+.cfl-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+  min-height: 0;
+  flex: 1;
+}
+
+.cfl-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.cfl-search-bar input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.cfl-table-container {
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.cfl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cfl-table th {
+  background: #f8fafc;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+
+.cfl-table td {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cfl-table tbody tr {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cfl-table tbody tr:hover {
+  background: #f1f5f9;
+}
+
+.cfl-loading, .cfl-empty {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.cfl-pagination-wrapper {
+  flex-shrink: 0;
+  margin-top: 4px;
+}

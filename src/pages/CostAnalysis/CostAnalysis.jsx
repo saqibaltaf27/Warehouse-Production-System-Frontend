@@ -12,7 +12,8 @@ import {
   IconCurrencyDollar,
   IconPercentage,
   IconCalculator,
-  IconChartLine
+  IconChartLine,
+  IconSearch
 } from '@tabler/icons-react';
 import './CostAnalysis.css';
 
@@ -21,8 +22,11 @@ const CostAnalysis = () => {
   const [summary, setSummary] = useState(null);
   const [trendData, setTrendData] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
 
   // Drill-down Modal State
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -53,20 +57,48 @@ const CostAnalysis = () => {
     fetchDashboardData();
   }, []);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (search !== searchInput) {
+        setSearch(searchInput);
+        setPage(1);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [page, limit, search]);
+
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [summaryRes, trendRes, ordersRes] = await Promise.all([
+      const [summaryRes, trendRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/summary`),
-        axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/trend`),
-        axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders`)
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/trend`)
       ]);
 
       if (summaryRes.data?.success) setSummary(summaryRes.data.data);
       if (trendRes.data?.success) setTrendData(trendRes.data.data);
-      if (ordersRes.data?.success) setOrders(ordersRes.data.data);
     } catch (error) {
       console.error("Error fetching cost analysis data", error);
+    }
+    setLoading(false);
+  };
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const ordersRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders`, {
+        params: { page, limit, search }
+      });
+      if (ordersRes.data?.success) {
+        setOrders(ordersRes.data.data);
+        if (ordersRes.data.pagination) setTotalOrders(ordersRes.data.pagination.total);
+      }
+    } catch (error) {
+      console.error("Error fetching orders data", error);
     }
     setLoading(false);
   };
@@ -90,9 +122,14 @@ const CostAnalysis = () => {
     { key: 'DocNum', header: 'PO No', render: (row) => row.DocNum },
     { key: 'FGItemCode', header: 'Product', render: (row) => row.FGItemCode },
     {
-      key: 'Status', header: 'Status', render: (row) => (
-        <span className={`status-badge status-${row.Status?.toLowerCase() || 'unknown'}`}>{row.Status}</span>
-      )
+      key: 'Status', header: 'Status', render: (row) => {
+        let text = row.Status;
+        let cls = 'unknown';
+        if (row.Status === 'R') { text = 'Released'; cls = 'open'; }
+        if (row.Status === 'P') { text = 'Planned'; cls = 'open'; }
+        if (row.Status === 'L' || row.Status === 'C') { text = 'Closed'; cls = 'closed'; }
+        return <span className={`status-badge po-badge-${cls}`}>{text}</span>;
+      }
     },
     {
       key: 'PlannedFGQty',
@@ -105,29 +142,26 @@ const CostAnalysis = () => {
       render: (row) => Number(row.ActualFGQty || 0).toLocaleString()
     },
     {
-      key: 'YieldPercent',
-      header: 'Yield %',
-      render: (row) => {
-        const val = row.YieldPercent || 0;
-        const colorClass = val < 90 ? 'yield-red' : (val > 105 ? 'yield-orange' : 'yield-green');
-        return <span className={`yield-badge ${colorClass}`}>{val.toFixed(2)}%</span>;
-      }
-    },
-    {
       key: 'PlannedCost',
       header: 'Planned Cost',
-      render: (row) => `${Number(row.PlannedCost || 0).toFixed(2)}`
+      render: (row) => `${Number(row.PlannedMaterialCost || 0).toFixed(2)}`
     },
     {
       key: 'ActualCost',
       header: 'Actual Cost',
-      render: (row) => `${Number(row.ActualCost || 0).toFixed(2)}`
+      render: (row) => `${Number(row.ActualMaterialCost || 0).toFixed(2)}`
+    },
+    {
+      key: 'HR', header: 'HR', render: () => '-'
+    },
+    {
+      key: 'Capex', header: 'Capex', render: () => '-'
     },
     {
       key: 'TotalVariance',
       header: 'Variance',
       render: (row) => {
-        const variance = row.TotalVariance || 0;
+        const variance = (row.ActualMaterialCost || 0) - (row.PlannedMaterialCost || 0);
         const colorClass = variance > 0 ? 'variance-positive' : 'variance-negative';
         return <span className={`variance-text ${colorClass}`}>{variance.toFixed(2)}</span>;
       }
@@ -277,11 +311,23 @@ const CostAnalysis = () => {
 
           {/* Orders Table */}
           <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">
-            <h3 className="section-title">Recent Production Orders</h3>
+            <div className="section-header-flex">
+              <h3 className="section-title">Production Orders</h3>
+              <div className="purchase-order-search-wrapper">
+                <IconSearch size={18} className="purchase-order-search-icon" />
+                <input 
+                  type="text" 
+                  placeholder="Search PO or Product..." 
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="purchase-order-search-input"
+                />
+              </div>
+            </div>
             <Table
-              data={paginatedOrders}
+              data={orders}
               columns={columns}
-              totalEntries={orders.length}
+              totalEntries={totalOrders}
               currentPage={page}
               pageSize={limit}
               onPageChange={setPage}

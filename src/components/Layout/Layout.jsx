@@ -27,7 +27,7 @@ const Layout = () => {
     "/inventory": "Inventory",
     "/orders": "Orders",
     "/delivery": "Delivery",
-    "/cost-analysis": "Cost Analysis",
+    // "/cost-analysis": "Cost Analysis",
     "/production-planning": "Production Planning",
     "/production-orders": "Production Orders",
     "/production-template": "Production Template",

@@ -1,0 +1,149 @@
+.po-modal {
+  width: 900px;
+  max-width: 95vw;
+}
+
+.po-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 20px;
+}
+
+.po-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #ffffff;
+}
+
+.po-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.po-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.po-section-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.po-item-count {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.po-status {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.po-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.po-badge-open {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.po-badge-closed {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.po-badge-default {
+  background-color: #e2e8f0;
+  color: #334155;
+}
+
+.po-info-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+.po-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.po-info-item label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.po-info-item span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.po-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #f1f5f9;
+  border-radius: 6px;
+}
+
+.po-bottom-grid {
+  display: flex;
+  gap: 16px;
+}
+
+.po-flex-1 {
+  flex: 1;
+}
+
+.po-remarks {
+  font-size: 14px;
+  color: #334155;
+  min-height: 80px;
+  padding-top: 12px;
+}
+
+.po-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.po-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.po-summary-total {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.po-total-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}

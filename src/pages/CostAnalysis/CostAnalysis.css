@@ -86,3 +86,18 @@
 .variance-positive { color: #B26552; }
 .variance-negative { color: #10B981; }
 .variance-bold { font-weight: 700; }
+
+.section-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header-flex .section-title {
+  margin: 0;
+}
+
+.search-input-wps {
+  width: 250px;
+}

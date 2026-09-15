@@ -1,0 +1,312 @@
+.cpr-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.cpr-modal-content {
+  background: #f8fafc;
+  width: 90vw;
+  max-width: 1200px;
+  height: 90vh;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.cpr-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cpr-modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.cpr-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+  line-height: 1;
+}
+
+.cpr-modal-close:hover {
+  color: #ef4444;
+}
+
+.cpr-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header Form Section */
+.cpr-form-header {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.cpr-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cpr-form-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+}
+
+.cpr-input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  outline: none;
+  background: white;
+}
+
+.cpr-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Items Table Section */
+.cpr-items-section {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cpr-items-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cpr-items-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.cpr-add-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+}
+
+.cpr-add-row-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.cpr-table-container {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 350px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.cpr-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.cpr-table th {
+  background: #f8fafc;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.cpr-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cpr-table-row:last-child td {
+  border-bottom: none;
+}
+
+.cpr-row-index {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  width: 30px;
+}
+
+.cpr-table-input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.cpr-table-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  outline: none;
+}
+
+.cpr-table-input:focus {
+  border-color: #3b82f6;
+}
+
+.cpr-table-input.with-icon {
+  padding-right: 32px;
+}
+
+.cpr-input-icon-btn {
+  position: absolute;
+  right: 4px;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.cpr-input-icon-btn:hover {
+  color: #3b82f6;
+}
+
+.cpr-delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.cpr-delete-btn:hover {
+  background: #fee2e2;
+}
+
+.cpr-modal-footer {
+  padding: 16px 24px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cpr-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+
+.cpr-btn-cancel {
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+}
+
+.cpr-btn-cancel:hover {
+  background: #f1f5f9;
+}
+
+.cpr-btn-submit {
+  background: #3b82f6;
+  color: white;
+}
+
+.cpr-btn-submit:hover {
+  background: #2563eb;
+}
+
+/* Replacements for inline CSS */
+.cpr-custom-modal {
+  max-width: 1600px !important;
+  width: 95vw !important;
+}
+
+.cpr-modal-body-layout {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 24px !important;
+}
+
+.cpr-qty-input {
+  width: 80px;
+}
+
+.cpr-warehouse-input {
+  width: 250px;
+}
+
+.cpr-remarks-container {
+  background: white;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.cpr-remarks-textarea {
+  min-height: 80px;
+  resize: vertical;
+}

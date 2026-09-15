@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState } from "react";
+import { NavLink } from "react-router-dom";
 import {
   IconBell,
   IconCircleCheck,
   IconPackage,
-  IconAlertCircle
-} from '@tabler/icons-react';
-import BrandLogo from '../../global-components/BrandLogo/BrandLogo';
-import './MenuBar.css';
-import { usePermission } from '../../context/permissioncheck';
+  IconAlertCircle,
+} from "@tabler/icons-react";
+import BrandLogo from "../../global-components/BrandLogo/BrandLogo";
+import "./MenuBar.css";
+import { usePermission } from "../../context/permissioncheck";
 
 const MenuBar = ({ onLogout, onNavigate, user }) => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -16,25 +16,57 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
   const { allowedModules, loadingPermissions } = usePermission();
 
   const menuItems = [
-    { title: 'Dashboard', path: '/dashboard', main_module: 'Production Dashboard' },
-    { title: 'Engineering Dashboard', path: '/engineering-dashboard', main_module: 'Engineering Dashboard' },
+    {
+      title: "Dashboard",
+      path: "/dashboard",
+      main_module: "Production Dashboard",
+    },
+    {
+      title: "Engineering",
+      path: "/engineering-dashboard",
+      main_module: "Engineering Dashboard",
+    },
     //{ title: 'Analytics', path: '/analytics', main_module: 'Analytics' },
     { title: 'Cost Analysis', path: '/cost-analysis', main_module: 'Cost Analysis' },
-    { title: 'Inventory', path: '/inventory', main_module: 'Inventory' },
-    { title: 'Machine Efficiency', path: '/machine-efficiency', main_module: 'Machine Efficiency' },
-    { title: 'Production Planning', path: '/production-planning', main_module: 'Production Planning' },
-    { title: 'Production Trend', path: '/production-trend', main_module: 'Production Trend' },
-    { title: 'Production Orders', path: '/production-orders', main_module: 'Production Orders' },
-    { title: 'Production Template', path: '/production-template', main_module: 'Production Template' },
-    { title: 'QC', path: '/qc', main_module: 'QC' },
+
+    { title: "Inventory", 
+      path: "/inventory", 
+      main_module: "Inventory" 
+    },
+    // {
+    //   title: "Machine Efficiency",
+    //   path: "/machine-efficiency",
+    //   main_module: "Machine Efficiency",
+    // },
+    {
+      title: "Machine",
+      path: "/machine", 
+      main_module: "Machine",
+    },
+    {
+      title: "Production",
+      path: "/production",
+      main_module: "Production",
+    },
+    { 
+      title: "QC",
+      path: "/qc", 
+      main_module: "QC" 
+    },
   ];
 
   let visibleMenuItems = menuItems;
 
   if (user?.isSuperAdmin) {
-    visibleMenuItems.push({ title: 'Access Control', path: '/access-control', main_module: 'Access Control' });
+    visibleMenuItems.push({
+      title: "Access Control",
+      path: "/access-control",
+      main_module: "Access Control",
+    });
   } else if (!loadingPermissions) {
-    visibleMenuItems = menuItems.filter(item => allowedModules.has(item.main_module));
+    visibleMenuItems = menuItems.filter((item) =>
+      allowedModules.has(item.main_module),
+    );
   } else {
     // While loading permissions, maybe show nothing or just what they have
     visibleMenuItems = [];
@@ -44,7 +76,8 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
   const middleName = user?.MiddleName || "";
   const lastName = user?.LastName || "";
   const fullName = `${firstName} ${middleName}`.trim() || "Admin User";
-  const roleName = user?.DesignationName || user?.RoleName || "Warehouse Manager";
+  const roleName =
+    user?.DesignationName || user?.RoleName || "Warehouse Manager";
 
   let initials = "AD";
   if (firstName) {
@@ -70,7 +103,9 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
             <NavLink
               key={index}
               to={item.path}
-              className={({ isActive }) => `menu-bar-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `menu-bar-item ${isActive ? "active" : ""}`
+              }
               onClick={onNavigate}
             >
               <span className="menu-bar-text">{item.title}</span>
@@ -132,7 +167,9 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
                   <span>{roleName}</span>
                 </div>
                 <div className="profile-popover-actions">
-                  <button onClick={onLogout} className="logout-action">Logout</button>
+                  <button onClick={onLogout} className="logout-action">
+                    Logout
+                  </button>
                 </div>
               </div>
             )}
