@@ -6,6 +6,8 @@ import Pagination from '../../global-components/Pagination/Pagination';
 import ProductionHistory from './ProductionHistory';
 import ProductionTrend from './ProductionTrend';
 import ProductionRecommendation from './ProductionRecommendation';
+import ManEfficiencyTab from './ManEfficiencyTab';
+import MachineEfficiencyTab from './MachineEfficiencyTab';
 import Table from '../../global-components/Table/Table';
 import Tabs from '../../global-components/Tabs/Tabs';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
@@ -21,7 +23,9 @@ import {
   IconChartBar,
   IconBulb,
   IconPlus,
-  IconEdit
+  IconEdit,
+  IconUsers,
+  IconSettings
 } from '@tabler/icons-react';
 import './ProductionPlanning.css';
 
@@ -46,14 +50,15 @@ const ExpandableMachineCell = ({ machineStr }) => {
   
   return (
     <div>
-      <div 
-        style={{ cursor: 'pointer', color: '#2563eb', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }} 
-        onClick={() => setExpanded(!expanded)}
-      >
-        {machines.length} Machines {expanded ? '▲' : '▼'}
+      <div onClick={() => setExpanded(!expanded)} className="expandable-cell-trigger">
+        <IconSettings size={16} />
+        {machines[0]}
+        {machines.length > 1 && (
+          <span className="badge">+{machines.length - 1}</span>
+        )}
       </div>
-      {expanded && (
-        <div className="plan-employee-list" style={{ marginTop: '6px' }}>
+      {expanded && machines.length > 1 && (
+        <div className="plan-employee-list expandable-cell-list">
           {machines.map((m, idx) => (
             <div key={idx} className="plan-employee-item">
               {m}
@@ -76,17 +81,18 @@ const ExpandableEmployeeCell = ({ jdItems }) => {
   
   return (
     <div>
-      <div 
-        style={{ cursor: 'pointer', color: '#2563eb', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px' }} 
-        onClick={() => setExpanded(!expanded)}
-      >
-        {jdItems.length} Employees {expanded ? '▲' : '▼'}
+      <div onClick={() => setExpanded(!expanded)} className="expandable-cell-trigger">
+        <IconUsers size={16} />
+        {jdItems[0]?.name || 'Unassigned'}
+        {jdItems.length > 1 && (
+          <span className="badge">+{jdItems.length - 1}</span>
+        )}
       </div>
-      {expanded && (
-        <div className="plan-employee-list" style={{ marginTop: '6px' }}>
-          {jdItems.map((i, idx) => (
+      {expanded && jdItems.length > 1 && (
+        <div className="plan-employee-list expandable-cell-list">
+          {jdItems.slice(1).map((i, idx) => (
             <div key={idx} className="plan-employee-item">
-              {i.name} - <span style={{ color: '#6b7280', fontSize: '0.85em' }}>{i.jd}</span>
+              {i.name} - <span className="expandable-cell-jd-text">{i.jd}</span>
             </div>
           ))}
         </div>
@@ -434,54 +440,29 @@ const ProductionPlanning = () => {
         )}
       </div>
 
-      {kpiData && (
-        <div className="fade-in-up mb-6">
-          <Card items={[
-            {
-              title: "Open Orders",
-              value: fmt(kpiData.totalOpen),
-              trendText: "Released & Planned",
-              icon: IconChecklist
-            },
-            {
-              title: "Delayed Orders",
-              value: fmt(kpiData.delayedOrders),
-              trendText: "Past Due Date",
-              icon: IconClock
-            },
-            {
-              title: "Material Shortages",
-              value: fmt(shortagesTotal),
-              trendText: "Missing Components",
-              icon: IconAlertTriangle
-            },
-            {
-              title: "Production Completion",
-              value: `${kpiData.completionPct}%`,
-              trendText: "Overall Backlog Yield",
-              icon: IconReportAnalytics
-            }
-          ]} />
+   
+
+      <div className="vertical-tabs-layout">
+        <div className="planning-tabs vertical-tabs-container">
+          <Tabs
+            tabs={[
+              { key: 'orders', label: 'Daily Execution', icon: <IconCalendarEvent size={18} /> },
+              { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
+              { key: 'man-effiency', label: 'Man Effiency', icon: <IconUsers size={18} /> },
+              { key: 'machine-efficiency', label: 'Machine Efficiency', icon: <IconSettings size={18} /> },
+              { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
+              { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
+              { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
+              { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
+              { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
+            ]}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            className="vertical-tabs"
+          />
         </div>
-      )}
 
-      <div className="planning-tabs">
-        <Tabs
-          tabs={[
-            { key: 'orders', label: 'Daily Execution', icon: <IconCalendarEvent size={18} /> },
-            { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
-            { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
-            { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
-            { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
-            { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
-            { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
-
-      <div className="planning-content fade-in-up delay-100">
+        <div className="planning-content vertical-tabs-content fade-in-up delay-100">
         {activeTab === 'orders' && (
           <div className="planning-section">
             <h3>Open Production Orders</h3>
@@ -539,16 +520,16 @@ const ProductionPlanning = () => {
                       </div>
                       <div className="form-group">
                         <label className="plan-form-label">Line</label>
-                        <select className="plan-form-input" value={planFormData.line} onChange={(e) => setPlanFormData({...planFormData, line: e.target.value})}>
-                          <option value="R-Test Line">R-Test Line</option>
-                          <option value="Vacutainer Line">Vacutainer Line</option>
-                          <option value="Packing Line">Packing Line</option>
-                          <option value="Extraction Line">Extraction Line</option>
-                          <option value="Printing Line">Printing Line</option>
-                          <option value="I-Sugar Line">I-Sugar Line</option>
-                          <option value="PCR & Filling Line">PCR & Filling Line</option>
-                          <option value="Other">Other</option>
-                        </select>
+                        <Select
+                          options={lineOptions}
+                          value={lineOptions.find(o => o.value === planFormData.line) || null}
+                          onChange={(selected) => setPlanFormData({ ...planFormData, line: selected ? selected.value : '' })}
+                          placeholder="Select Line"
+                          isClearable
+                          className="react-select-container"
+                          classNamePrefix="react-select"
+                          menuPortalTarget={document.body}
+                        />
                       </div>
                       <div className="form-group">
                         <label className="plan-form-label">Supervisor</label>
@@ -563,22 +544,9 @@ const ProductionPlanning = () => {
                           placeholder="Select PO"
                           isClearable
                           isSearchable
+                          className="react-select-container"
+                          classNamePrefix="react-select"
                           menuPortalTarget={document.body}
-                          menuPosition="fixed"
-                          styles={{
-                            control: (base, state) => ({
-                              ...base,
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              padding: '2px',
-                              fontSize: '0.875rem',
-                              boxShadow: 'none',
-                              '&:hover': {
-                                border: '1px solid #d1d5db'
-                              }
-                            }),
-                            menuPortal: base => ({ ...base, zIndex: 9999 })
-                          }}
                         />
                       </div>
                       <div className="form-group">
@@ -598,22 +566,9 @@ const ProductionPlanning = () => {
                           placeholder="Select Machines"
                           isClearable
                           isSearchable
+                          className="react-select-container"
+                          classNamePrefix="react-select"
                           menuPortalTarget={document.body}
-                          menuPosition="fixed"
-                          styles={{
-                            control: (base, state) => ({
-                              ...base,
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              padding: '2px',
-                              fontSize: '0.875rem',
-                              boxShadow: 'none',
-                              '&:hover': {
-                                border: '1px solid #d1d5db'
-                              }
-                            }),
-                            menuPortal: base => ({ ...base, zIndex: 9999 })
-                          }}
                         />
                       </div>
                     </div>
@@ -668,6 +623,9 @@ const ProductionPlanning = () => {
           </div>
         )}
 
+        {activeTab === 'man-effiency' && <ManEfficiencyTab />}
+        {activeTab === 'machine-efficiency' && <MachineEfficiencyTab />}
+
         {activeTab === 'shortages' && (
           <div className="planning-section">
             <h3>Critical Material Shortages</h3>
@@ -709,6 +667,7 @@ const ProductionPlanning = () => {
         {activeTab === 'recommendation' && <ProductionRecommendation />}
       </div>
     </div>
+  </div>
   );
 };
 

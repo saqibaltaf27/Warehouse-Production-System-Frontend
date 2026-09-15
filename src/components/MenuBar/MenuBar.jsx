@@ -16,18 +16,22 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
   const { allowedModules, loadingPermissions } = usePermission();
 
   const menuItems = [
-    {
-      title: "Dashboard",
-      path: "/dashboard",
-      main_module: "Production Dashboard",
+        {
+      title: "Production",
+      path: "/production",
+      main_module: "Production",
     },
-    {
+     { 
+      title: "QC",
+      path: "/qc", 
+      main_module: "QC" 
+    },
+      {
       title: "Engineering",
       path: "/engineering-dashboard",
       main_module: "Engineering Dashboard",
     },
     //{ title: 'Analytics', path: '/analytics', main_module: 'Analytics' },
-    { title: 'Cost Analysis', path: '/cost-analysis', main_module: 'Cost Analysis' },
 
     { title: "Inventory", 
       path: "/inventory", 
@@ -43,16 +47,8 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
       path: "/machine", 
       main_module: "Machine",
     },
-    {
-      title: "Production",
-      path: "/production",
-      main_module: "Production",
-    },
-    { 
-      title: "QC",
-      path: "/qc", 
-      main_module: "QC" 
-    },
+
+   
   ];
 
   let visibleMenuItems = menuItems;

@@ -227,6 +227,14 @@ const ProductionOrders = () => {
       Type: headerData.Type === 'Standard' ? 'Standard' : headerData.Type
     };
 
+    if (headerData.LinkedTo === 'Sales Order' && headerData.LinkedOrder) {
+      payload.LinkToObj = 17;
+      payload.OriginNum = parseInt(headerData.LinkedOrder, 10) || null;
+    } else if (headerData.LinkedTo === 'Production Order' && headerData.LinkedOrder) {
+      payload.LinkToObj = 202;
+      payload.OriginNum = parseInt(headerData.LinkedOrder, 10) || null;
+    }
+
     setLoading(true);
     try {
       const response = await axiosInstance.post(API_ENDPOINTS.PRODUCTION_ORDERS.CREATE_ORDER, payload);

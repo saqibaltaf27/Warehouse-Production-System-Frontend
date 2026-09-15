@@ -21,6 +21,7 @@ import ProductionTemplate from './pages/ProductionTemplate/ProductionTemplate.js
 import EngineeringDashboard from './pages/EngineeringDashboard/EngineeringDashboard.jsx';
 import Machine from './pages/Machine/Machine';
 import Production from './pages/Production/Production.jsx';
+import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -80,6 +81,8 @@ function AppContent() {
             <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
+            <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
+            <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="inventory" element={<ProtectedRoute requiredRoute="/inventory"><Inventory /></ProtectedRoute>} />
             <Route path="inventory/item-master/:itemCode" element={<ProtectedRoute requiredRoute="/inventory"><ItemMasterView /></ProtectedRoute>} />
             <Route path="orders" element={<SimplePlaceholder title="Orders" />} />

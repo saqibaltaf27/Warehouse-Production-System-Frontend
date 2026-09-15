@@ -143,25 +143,44 @@ const CostAnalysis = () => {
     },
     {
       key: 'PlannedCost',
-      header: 'Planned Cost',
-      render: (row) => `${Number(row.PlannedMaterialCost || 0).toFixed(2)}`
+      header: 'Planned Total',
+      render: (row) => `${Number(row.PlannedCost || row.PlannedMaterialCost || 0).toFixed(2)}`
     },
     {
       key: 'ActualCost',
-      header: 'Actual Cost',
+      header: 'Actual Total',
+      render: (row) => `${Number(row.ActualCost || row.ActualMaterialCost || 0).toFixed(2)}`
+    },
+    {
+      key: 'MaterialCost', 
+      header: 'Material (Act)', 
       render: (row) => `${Number(row.ActualMaterialCost || 0).toFixed(2)}`
     },
     {
-      key: 'HR', header: 'HR', render: () => '-'
+      key: 'LabourCost', 
+      header: 'Labour (Act)', 
+      render: (row) => `${Number(row.ActualLabourCost || 0).toFixed(2)}`
     },
     {
-      key: 'Capex', header: 'Capex', render: () => '-'
+      key: 'FOHCost', 
+      header: 'FOH (Act)', 
+      render: (row) => `${Number(row.ActualFOHCost || 0).toFixed(2)}`
+    },
+    {
+      key: 'HR',
+      header: 'HR',
+      render: () => '-'
+    },
+    {
+      key: 'Capex',
+      header: 'Capex',
+      render: () => '-'
     },
     {
       key: 'TotalVariance',
       header: 'Variance',
       render: (row) => {
-        const variance = (row.ActualMaterialCost || 0) - (row.PlannedMaterialCost || 0);
+        const variance = (row.ActualCost || row.ActualMaterialCost || 0) - (row.PlannedCost || row.PlannedMaterialCost || 0);
         const colorClass = variance > 0 ? 'variance-positive' : 'variance-negative';
         return <span className={`variance-text ${colorClass}`}>{variance.toFixed(2)}</span>;
       }
@@ -235,7 +254,7 @@ const CostAnalysis = () => {
       ) : (
         <>
           {/* KPI Cards Layer 1 */}
-          <div className="fade-in-up delay-100 mb-6">
+          {/* <div className="fade-in-up delay-100 mb-6">
             <Card items={[
               {
                 title: "Total Actual Cost",
@@ -262,11 +281,10 @@ const CostAnalysis = () => {
                 icon: IconClipboardList
               }
             ]} />
-          </div>
+          </div> */}
 
           {/* Charts Row */}
-          <div className="cost-charts-row">
-            {/* Monthly Trend Chart */}
+          {/* <div className="cost-charts-row">
             <div className="pt-chart-card dome-card-wrapper fade-in-up delay-200">
               <div className="pt-chart-header">
                 <h3 className="pt-chart-title"><IconChartLine size={20} className="title-icon" /> Monthly Cost Trend</h3>
@@ -290,7 +308,7 @@ const CostAnalysis = () => {
               </div>
             </div>
 
-            {/* Cost Contribution Donut */}
+      
             <div className="pt-chart-card dome-card-wrapper fade-in-up delay-200">
               <div className="pt-chart-header">
                 <h3 className="pt-chart-title"><IconCurrencyDollar size={20} className="title-icon" /> Cost Contribution (Actual)</h3>
@@ -307,7 +325,7 @@ const CostAnalysis = () => {
                 )}
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Orders Table */}
           <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">

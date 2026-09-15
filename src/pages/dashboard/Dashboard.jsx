@@ -97,6 +97,74 @@ const KPIRow = ({ filters }) => {
     fetchOverview();
   }, [filters]);
 
+const CustomDashboardCard = ({ items = [] }) => {
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className="dome-card-grid">
+      {items.map((item, index) => {
+        const hasTrend = item.trend !== undefined && item.trend !== null;
+        const isPositive = hasTrend && item.trend >= 0;
+        const themeColor = item.color || '#06588D';
+
+        return (
+          <div key={index} className="dome-card-wrapper">
+            <div className={`dome-card-premium ${item.isDark ? 'is-dark' : ''} ${item.active ? 'is-active' : ''}`} style={{ '--theme-color': themeColor }}>
+              <div className="card-top-section">
+                {item.icon && (
+                  <div className="card-icon-wrapper" style={{ color: themeColor, backgroundColor: `color-mix(in srgb, ${themeColor} 12%, transparent)` }}>
+                    <item.icon size={20} stroke={2} />
+                  </div>
+                )}
+                {hasTrend && (
+                  <div className={`trend-badge ${isPositive ? 'positive' : 'negative'}`}>
+                    {isPositive ? <IconTrendingUp size={14} stroke={2.5} /> : <IconTrendingDown size={14} stroke={2.5} />}
+                    <span>{Math.abs(item.trend)}%</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="card-middle-section">
+                <div className="card-title-wrap">
+                  <span className="card-title-text">{item.title}</span>
+                </div>
+                {(item.description || item.trendText) && (
+                  <div className="card-desc-text">{item.description || item.trendText}</div>
+                )}
+              </div>
+
+              {item.value !== undefined && (
+                <div className="card-bottom-stats">
+                  <div className="stat-block">
+                    <div className="stat-label">{item.valueLabel || 'Total Count'}</div>
+                    <div className="stat-value" style={{ color: item.valueColor || '#1e293b' }}>{item.value}</div>
+                  </div>
+                </div>
+              )}
+
+              {item.poBreakdown && item.poBreakdown.length > 0 && (
+                <div className="dashboard-po-breakdown-container">
+                  <div className="dashboard-po-breakdown-title">PO Breakdown</div>
+                  <div className="dashboard-po-breakdown-list">
+                    {item.poBreakdown.map((poItem, i) => (
+                      <div className="dashboard-po-breakdown-item" key={i}>
+                        <div className="dashboard-po-breakdown-label">PO {poItem.po}</div>
+                        <div className="dashboard-po-breakdown-val">
+                          {item.breakdownKey === 'plan' ? poItem.plan : item.breakdownKey === 'actual' ? poItem.actual : poItem.achievement + '%'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
   const kpiItems = [
     {
       title: "Today's Plan",
@@ -105,6 +173,8 @@ const KPIRow = ({ filters }) => {
       color: "#3b82f6",
       value: formatNumberCompact(data.plan),
       valueLabel: "Value",
+      poBreakdown: data.poBreakdown,
+      breakdownKey: 'plan'
     },
     {
       title: "Today's Actual",
@@ -113,6 +183,8 @@ const KPIRow = ({ filters }) => {
       color: "#10b981",
       value: formatNumberCompact(data.actual),
       valueLabel: "Value",
+      poBreakdown: data.poBreakdown,
+      breakdownKey: 'actual'
     },
     {
       title: "Achievement",
@@ -121,6 +193,8 @@ const KPIRow = ({ filters }) => {
       color: "#8b5cf6",
       value: `${data.achievement}%`,
       valueLabel: "Value",
+      poBreakdown: data.poBreakdown,
+      breakdownKey: 'achievement'
     },
     {
       title: "Daily Efficiency",
@@ -150,12 +224,13 @@ const KPIRow = ({ filters }) => {
 
   return (
     <div className="mb-4">
-      <Card items={kpiItems} />
+      <CustomDashboardCard items={kpiItems} />
     </div>
   );
 };
 
 // 3. Plan vs Actual Chart
+
 const PlanVsActualChart = ({ filters }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,6 +249,7 @@ const PlanVsActualChart = ({ filters }) => {
             date: new Date(item.date).toLocaleDateString(undefined, {
               month: "short",
               day: "numeric",
+
             }),
           }));
           setData(formattedData);
@@ -192,6 +268,7 @@ const PlanVsActualChart = ({ filters }) => {
         <h3>Production Plan vs Actual</h3>
       </div>
       <div className="dashboard-card-content plan-actual-content">
+        
         {loading ? (
           <div className="dashboard-state">
             <IconRefresh className="spin" size={32} color="var(--primary)" />
@@ -1428,3 +1505,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
