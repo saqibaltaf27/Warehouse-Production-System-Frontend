@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Complaints from '../Complaints/Complaints';
 import COA from './COA';
+import COATemplates from './COATemplates';
 import Tabs from '../../global-components/Tabs/Tabs';
 import { IconAlertTriangle, IconFileCertificate } from '@tabler/icons-react';
 import './QC.css';
@@ -16,7 +17,8 @@ const QC = () => {
           <Tabs
             tabs={[
               { key: 'complaints', label: 'Complaints', icon: <IconAlertTriangle size={18} /> },
-              { key: 'coa', label: 'COA', icon: <IconFileCertificate size={18} /> }
+              { key: 'coa', label: 'COA', icon: <IconFileCertificate size={18} /> },
+              {key: 'template', label: 'COA Templates', icon: <IconFileCertificate size={18} />}
             ]}
             activeTab={activeTab}
             onTabChange={setActiveTab}
@@ -27,6 +29,7 @@ const QC = () => {
       <div className="qc-content">
         {activeTab === 'complaints' && <Complaints />}
         {activeTab === 'coa' && <COA />}
+        {activeTab === 'template' && <COATemplates />}
       </div>
     </div>
   );

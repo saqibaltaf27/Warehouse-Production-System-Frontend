@@ -204,6 +204,24 @@ const ProductionOrders = () => {
 
   const handleHeaderFieldChange = (field, value) => {
     setHeaderData(prev => ({ ...(prev || {}), [field]: value }));
+    
+    // If the user clears the "Linked To" field, restore the original BOM
+    if (field === 'LinkedTo' && !value && itemCode) {
+      fetchBOMOrder(itemCode);
+    }
+  };
+
+  const handleRemoveComponent = (index) => {
+    setComponentsData(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleComponentChange = (index, field, value) => {
+    setComponentsData(prev => prev.map((comp, i) => {
+      if (i === index) {
+        return { ...comp, [field]: value };
+      }
+      return comp;
+    }));
   };
 
   const handleAddPO = async () => {
@@ -300,6 +318,9 @@ const ProductionOrders = () => {
             <ProductionOrderComponents 
               componentsData={componentsData} 
               itemCode={itemCode} 
+              onRemoveRow={handleRemoveComponent}
+              onRowChange={handleComponentChange}
+              isLinked={!!headerData?.LinkedTo}
             />
           </div>
 

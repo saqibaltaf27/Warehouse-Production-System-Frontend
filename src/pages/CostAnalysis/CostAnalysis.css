@@ -101,3 +101,34 @@
 .search-input-wps {
   width: 250px;
 }
+
+.cost-summary-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 32px;
+  padding: 16px 24px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 8px 8px;
+  margin-top: 16px;
+}
+
+.cost-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cost-summary-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.cost-summary-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+}

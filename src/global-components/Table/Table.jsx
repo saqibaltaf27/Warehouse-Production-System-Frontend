@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { IconInfoCircle, IconListDetails, IconCheck, IconTrash, IconChevronUp, IconChevronDown, IconSelector } from '@tabler/icons-react';
+import { IconInfoCircle, IconListDetails, IconCheck, IconTrash, IconChevronUp, IconChevronDown, IconChevronRight, IconSelector } from '@tabler/icons-react';
 import Pagination from '../Pagination/Pagination';
 import './Table.css';
 import './TableLoader.css';
@@ -17,8 +17,15 @@ const Table = ({
   onItemsPerPageChange,
   onRowClick,
   isLoading = false,
+  expandedRowRender,
+  rowHasSubComponent,
 }) => {
   const [sortConfig, setSortConfig] = useState(null);
+  const [expandedRows, setExpandedRows] = useState({});
+
+  const toggleRow = (rowIndex) => {
+    setExpandedRows(prev => ({ ...prev, [rowIndex]: !prev[rowIndex] }));
+  };
 
   const totalPages = Math.ceil(totalEntries / pageSize) || 1;
 
@@ -131,56 +138,71 @@ const Table = ({
               </tr>
             ) : sortedData.length > 0 ? (
               sortedData.map((rowItem, rowIndex) => (
-                <tr 
-                  key={rowIndex}
-                  className={onRowClick ? 'dome-table-row--clickable' : ''}
-                  onClick={(e) => {
-                    if (e.target.closest('.dome-table-actions')) return;
-                    if (onRowClick) onRowClick(rowItem, rowIndex);
-                  }}
-                >
-                  {columns.map((col, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className={col.className}
-                      style={{ textAlign: getColumnAlign(col), width: col.width }}
-                    >
-                      {col.render ? col.render(rowItem) : rowItem[col.key]}
-                    </td>
-                  ))}
-                  {showActions && (
-                    <td className="dome-table-actions">
-                      <button 
-                        className="dome-table-action-btn dome-table-action-btn--info"
-                        onClick={() => handleAction('info', rowItem)}
-                        title="Info"
+                <React.Fragment key={rowIndex}>
+                  <tr 
+                    className={onRowClick ? 'dome-table-row--clickable' : ''}
+                    onClick={(e) => {
+                      if (e.target.closest('.dome-table-actions') || e.target.closest('.dome-table-expand-toggle')) return;
+                      if (onRowClick) onRowClick(rowItem, rowIndex);
+                    }}
+                  >
+                    {columns.map((col, colIndex) => (
+                      <td
+                        key={colIndex}
+                        className={col.className}
+                        style={{ textAlign: getColumnAlign(col), width: col.width }}
                       >
-                        <IconInfoCircle size={16} stroke={2} />
-                      </button>
-                      <button 
-                        className="dome-table-action-btn dome-table-action-btn--list"
-                        onClick={() => handleAction('list', rowItem)}
-                        title="List"
-                      >
-                        <IconListDetails size={16} stroke={2} />
-                      </button>
-                      <button 
-                        className="dome-table-action-btn dome-table-action-btn--check"
-                        onClick={() => handleAction('check', rowItem)}
-                        title="Check"
-                      >
-                        <IconCheck size={16} stroke={2} />
-                      </button>
-                      <button 
-                        className="dome-table-action-btn dome-table-action-btn--delete"
-                        onClick={() => handleAction('delete', rowItem)}
-                        title="Delete"
-                      >
-                        <IconTrash size={16} stroke={2} />
-                      </button>
-                    </td>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: getColumnAlign(col) === 'right' ? 'flex-end' : getColumnAlign(col) === 'center' ? 'center' : 'flex-start' }}>
+                          {colIndex === 0 && rowHasSubComponent && rowHasSubComponent(rowItem) && (
+                            <span 
+                              className="dome-table-expand-toggle"
+                              style={{ cursor: 'pointer', marginRight: '8px', display: 'flex', alignItems: 'center' }} 
+                              onClick={(e) => { e.stopPropagation(); toggleRow(rowIndex); }}
+                            >
+                              {expandedRows[rowIndex] ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                            </span>
+                          )}
+                          {col.render ? col.render(rowItem) : rowItem[col.key]}
+                        </div>
+                      </td>
+                    ))}
+                    {showActions && (
+                      <td className="dome-table-actions">
+                        <button 
+                          className="dome-table-action-btn dome-table-action-btn--info"
+                          onClick={() => handleAction('info', rowItem)}
+                          title="Info"
+                        >
+                          <IconInfoCircle size={16} stroke={2} />
+                        </button>
+                        <button 
+                          className="dome-table-action-btn dome-table-action-btn--list"
+                          onClick={() => handleAction('list', rowItem)}
+                          title="List"
+                        >
+                          <IconListDetails size={16} stroke={2} />
+                        </button>
+                        <button 
+                          className="dome-table-action-btn dome-table-action-btn--check"
+                          onClick={() => handleAction('check', rowItem)}
+                          title="Check"
+                        >
+                          <IconCheck size={16} stroke={2} />
+                        </button>
+                        <button 
+                          className="dome-table-action-btn dome-table-action-btn--delete"
+                          onClick={() => handleAction('delete', rowItem)}
+                          title="Delete"
+                        >
+                          <IconTrash size={16} stroke={2} />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                  {expandedRows[rowIndex] && expandedRowRender && (
+                    expandedRowRender(rowItem)
                   )}
-                </tr>
+                </React.Fragment>
               ))
             ) : (
               <tr>

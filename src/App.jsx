@@ -22,6 +22,7 @@ import EngineeringDashboard from './pages/EngineeringDashboard/EngineeringDashbo
 import Machine from './pages/Machine/Machine';
 import Production from './pages/Production/Production.jsx';
 import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
+import Staff from './pages/Staff/Staff.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -96,6 +97,7 @@ function AppContent() {
               <Route path="permission-control" element={<PermissionControl />} />
               <Route path="access-permission/:empid" element={<AccessPermission />} />
             </Route>
+            <Route path="staff" element={<ProtectedRoute requiredRoute="/staff"><Staff /></ProtectedRoute>} />
             <Route path="settings" element={<SimplePlaceholder title="Settings" />} />
             <Route path="*" element={<NotFound />} />
           </Route>

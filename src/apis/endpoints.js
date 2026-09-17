@@ -47,6 +47,8 @@ export const API_ENDPOINTS = {
     GET_PLANS: '/production-planning/plans',
     CREATE_PLAN: '/production-planning/plan',
     UPDATE_PLAN: '/production-planning/plan',
+    MAN_EFFICIENCY: '/production-planning/man-efficiency',
+    MACHINE_EFFICIENCY_API: '/production-planning/machine-efficiency',
   },
 
   DASHBOARD: {
@@ -116,5 +118,17 @@ export const API_ENDPOINTS = {
     REQUESTS: '/purchase-order/requests',
     DETAILS: (docEntry) => `/purchase-order/requests/${docEntry}`,
     CREATE_REQUEST: '/purchase-order/requests/create',
+  },
+
+  STAFF: {
+    GET_STAFF: '/staff',
+    ADD_STAFF: '/staff',
+    UPDATE_STAFF: (id) => `/staff/${id}`
+  },
+
+  QC: {
+    CREATE_TEMPLATE: '/coa-template',
+    GET_ALL_TEMPLATES: '/coa-template',
+    GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`
   }
 };

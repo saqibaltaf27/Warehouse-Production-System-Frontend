@@ -315,11 +315,11 @@ const Inventory = () => {
       {/* Overview Tab Content */}
       {activeTab === 'overview' && (
         <div className="fade-in-up">
-          {dashboardCards && (
+          {/* {dashboardCards && (
             <div className="inventory-overview-cards">
               <Card items={overviewCards} />
             </div>
-          )}
+          )} */}
 
           {summaryBuckets && (
             <div className="expiry-cards-wrapper">

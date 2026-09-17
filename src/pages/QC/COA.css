@@ -276,3 +276,162 @@
   color: grey;
   font-weight: bold;
 }
+
+/* COATemplates Specific Styles */
+.coa-template-wrapper {
+  padding: 20px;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.coa-template-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.coa-template-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.coa-template-container {
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.coa-template-container-animated {
+  animation: globalPopupSlideIn 0.2s ease-out;
+}
+
+.coa-template-section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  margin-bottom: 24px;
+}
+
+.coa-template-field-group {
+  margin-bottom: 30px;
+}
+
+.coa-template-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.coa-template-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 4px;
+  display: block;
+}
+
+.coa-template-table-container {
+  margin-bottom: 15px;
+  margin-top: 0;
+}
+
+.coa-template-table {
+  width: 100%;
+}
+
+.coa-template-th-sn {
+  width: 50px;
+}
+
+.coa-template-th-action {
+  width: 80px;
+  text-align: center;
+}
+
+.coa-template-td-center {
+  text-align: center;
+}
+
+.coa-template-td-nopadding {
+  padding: 0;
+}
+
+.coa-template-textarea {
+  min-height: 40px;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  padding: 10px;
+  resize: vertical;
+  outline: none;
+  background: transparent;
+  display: block;
+}
+
+.coa-template-add-btn-wrapper {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.coa-template-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.coa-template-modal-content {
+  padding: 32px;
+  width: 100%;
+  overflow-y: auto;
+}
+
+.coa-template-modal-header {
+  margin-bottom: 24px;
+}
+
+.coa-template-modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.coa-template-modal-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+  margin: 0;
+}
+
+.coa-template-modal-subtitle {
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.coa-template-modal-table-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.coa-template-btn-edit {
+  width: 28px;
+  height: 28px;
+  background: #e0e7ff;
+  color: #4f46e5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

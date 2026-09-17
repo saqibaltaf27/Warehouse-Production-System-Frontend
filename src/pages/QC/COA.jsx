@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AsyncSelect from 'react-select/async';
 import { API_ENDPOINTS } from '../../apis/endpoints';
-import coaData from '../../util/text/coa.json';
+import { axiosInstance } from '../../apis/axiosinstance';
 import './COA.css';
 
 const getTodayFormatted = () => {
@@ -112,16 +112,30 @@ const COA = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await response.json();
+      
+      let presetTests = formData.tests;
+      
+      // Fetch dynamic template from database
+      try {
+        const templateRes = await axiosInstance.get(API_ENDPOINTS.QC.GET_TEMPLATE(itemCode));
+        if (templateRes.data.success && templateRes.data.data) {
+          const parsedTests = JSON.parse(templateRes.data.data);
+          // Map to match the COA UI format (adding analyzedBy, conclusion etc if missing)
+          presetTests = parsedTests.map((t, i) => ({
+            id: i + 1,
+            tests: t.test || '',
+            specifications: t.specification || '',
+            analyzedBy: '',
+            result: t.result || '',
+            conclusion: ''
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching dynamic template:', err);
+      }
+
       if (data.success && data.data) {
         const details = data.data;
-        
-        // Check if there is preset test data for this product line
-        let presetTests = formData.tests;
-        let presetRemarks = formData.remarks;
-        if (productLineStr && coaData[productLineStr]) {
-          presetTests = coaData[productLineStr].tests;
-          presetRemarks = coaData[productLineStr].remarks;
-        }
 
         setFormData(prev => ({
           ...prev,
@@ -136,7 +150,7 @@ const COA = () => {
           expDate: formatDate(details['EXP DATE']) || '',
           dateReported: formatDate(details['DATE REPORTED']) || '',
           tests: presetTests,
-          remarks: presetRemarks
+          remarks: prev.remarks // Keep existing remarks
         }));
       }
     } catch (error) {

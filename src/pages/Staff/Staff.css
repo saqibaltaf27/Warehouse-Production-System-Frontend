@@ -1,0 +1,41 @@
+.staff-container {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.staff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-header h2 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 24px;
+}
+
+.staff-content {
+  flex: 1;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+.staff-popup {
+  width: min(100%, 500px) !important;
+}
+
+.staff-modal-content {
+  padding: 30px;
+}
+
+.staff-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

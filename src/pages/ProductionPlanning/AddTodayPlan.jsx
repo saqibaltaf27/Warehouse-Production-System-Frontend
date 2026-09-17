@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Select from 'react-select';
+import toast from 'react-hot-toast';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Button from '../../global-components/Button/Button';
@@ -16,14 +17,15 @@ const AddTodayPlan = () => {
   
   const [openPOs, setOpenPOs] = useState([]);
   const [machines, setMachines] = useState([]);
+  const [staffList, setStaffList] = useState([]);
 
   const getInitialPlanFormData = () => ({
     date: getTodayDate(),
     line: 'R-Test Line',
-    machine: '[]',
+    machineItems: [{ name: '', qty: '', hours: '' }],
     supervisor: '',
     po: '',
-    jdItems: [{ name: '', jd: '' }],
+    jdItems: [{ name: '', jd: '', hours: '' }],
     shift: '',
     plannedManpower: '',
     actualManpower: '',
@@ -50,33 +52,57 @@ const AddTodayPlan = () => {
       const plan = location.state.plan;
       setEditingPlanId(plan.Id);
       
-      let machineVal = '[]';
+      let parsedMachines = [{ name: '', qty: '', hours: '' }];
       if (plan.Machine) {
         try {
           const parsed = JSON.parse(plan.Machine);
-          machineVal = Array.isArray(parsed) ? plan.Machine : '[]';
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (typeof parsed[0] === 'string') {
+              // Backward compatibility for old string array
+              parsedMachines = parsed.map(m => ({ name: m, qty: '', hours: '' }));
+            } else {
+              parsedMachines = parsed;
+            }
+          }
         } catch (e) {
-          machineVal = JSON.stringify(plan.Machine.split(', '));
+          parsedMachines = plan.Machine.split(', ').map(m => ({ name: m, qty: '', hours: '' }));
+        }
+      }
+
+      let parsedJdItems = [{ name: '', jd: '', hours: '' }];
+      if (plan.Persons) {
+        try {
+          const parsed = JSON.parse(plan.Persons);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsedJdItems = parsed.map(p => ({
+              staffId: p.StaffID,
+              jd: p.jd || '',
+              hours: p.hours || '',
+              name: '' // Will be resolved by the Select component using staffId
+            }));
+          }
+        } catch (e) {
+          console.error("Failed to parse Persons", e);
         }
       }
 
       setPlanFormData({
         date: plan.PlanDate ? plan.PlanDate.split('T')[0] : getTodayDate(),
         line: plan.Line || 'R-Test Line',
-        machine: machineVal,
+        machineItems: parsedMachines,
         supervisor: plan.Supervisor || '',
         po: plan.PO || '',
-        jdItems: plan.jdItems && plan.jdItems.length > 0 ? plan.jdItems : [{ name: '', jd: '' }],
-        shift: plan.shift || '',
-        plannedManpower: plan.plannedManpower || '',
-        actualManpower: plan.actualManpower || '',
-        workingHours: plan.workingHours || '8',
-        productionQty: plan.productionQty || '',
-        standardUnitsPerHour: plan.stdUnitsPerManHour || '',
-        totalManHours: plan.totalManHour || '',
-        unitsPerManHour: plan.unitsPerManHour || '',
-        productivity: plan.prdPercentage || '',
-        remarks: plan.remarks || ''
+        jdItems: parsedJdItems,
+        shift: plan.Shift !== undefined && plan.Shift !== null ? plan.Shift : '',
+        plannedManpower: plan.PlannedManpower !== undefined && plan.PlannedManpower !== null ? plan.PlannedManpower : '',
+        actualManpower: plan.ActualManpower !== undefined && plan.ActualManpower !== null ? plan.ActualManpower : '',
+        workingHours: plan.WorkingHours !== undefined && plan.WorkingHours !== null ? plan.WorkingHours : '8',
+        productionQty: plan.ProductionQty !== undefined && plan.ProductionQty !== null ? plan.ProductionQty : '',
+        standardUnitsPerHour: plan.StdUnitsPerManHour !== undefined && plan.StdUnitsPerManHour !== null ? plan.StdUnitsPerManHour : '',
+        totalManHours: plan.TotalManHour !== undefined && plan.TotalManHour !== null ? plan.TotalManHour : '',
+        unitsPerManHour: plan.UnitsPerManHour !== undefined && plan.UnitsPerManHour !== null ? plan.UnitsPerManHour : '',
+        productivity: plan.PrdPercentage !== undefined && plan.PrdPercentage !== null ? plan.PrdPercentage : '',
+        remarks: plan.Remarks || ''
       });
       setUserEditedPlan({ totalManHours: false, unitsPerManHour: false, productivity: false });
     }
@@ -104,10 +130,23 @@ const AddTodayPlan = () => {
     }
   }, []);
 
+  const fetchStaff = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(API_ENDPOINTS.STAFF.GET_STAFF);
+      if (res.data?.success) {
+        // Only active staff
+        setStaffList(res.data.data.filter(s => s.Status === 1 || s.Status === true));
+      }
+    } catch (err) {
+      console.error('Fetch Staff error:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOpenPOs();
     fetchMachines();
-  }, [fetchOpenPOs, fetchMachines]);
+    fetchStaff();
+  }, [fetchOpenPOs, fetchMachines, fetchStaff]);
 
   useEffect(() => {
     const actual = parseFloat(planFormData.actualManpower) || 0;
@@ -168,8 +207,23 @@ const AddTodayPlan = () => {
     setPlanFormData({ ...planFormData, jdItems: newItems });
   };
 
+  const handleEmployeeSelect = (idx, staffId) => {
+    const selectedStaff = staffList.find(s => s.StaffID === staffId);
+    const newItems = [...planFormData.jdItems];
+    if (selectedStaff) {
+      newItems[idx].name = selectedStaff.Name;
+      newItems[idx].staffId = selectedStaff.StaffID;
+      newItems[idx].jd = selectedStaff.Designation || '';
+    } else {
+      newItems[idx].name = '';
+      newItems[idx].staffId = '';
+      newItems[idx].jd = '';
+    }
+    setPlanFormData({ ...planFormData, jdItems: newItems });
+  };
+
   const handleAddJdItem = () => {
-    setPlanFormData({ ...planFormData, jdItems: [...planFormData.jdItems, { name: '', jd: '' }] });
+    setPlanFormData({ ...planFormData, jdItems: [...planFormData.jdItems, { name: '', jd: '', staffId: '', hours: '' }] });
   };
 
   const handleRemoveJdItem = (idx) => {
@@ -177,11 +231,29 @@ const AddTodayPlan = () => {
     setPlanFormData({ ...planFormData, jdItems: newItems });
   };
 
+  const handleMachineItemChange = (idx, field, val) => {
+    const newItems = [...planFormData.machineItems];
+    newItems[idx][field] = val;
+    setPlanFormData({ ...planFormData, machineItems: newItems });
+  };
+
+  const handleAddMachineItem = () => {
+    setPlanFormData({ ...planFormData, machineItems: [...planFormData.machineItems, { name: '', qty: '', hours: '' }] });
+  };
+
+  const handleRemoveMachineItem = (idx) => {
+    const newItems = planFormData.machineItems.filter((_, i) => i !== idx);
+    setPlanFormData({ ...planFormData, machineItems: newItems });
+  };
+
   const handleSavePlan = async () => {
     try {
       const payload = {
         ...planFormData,
-        jdItems: planFormData.jdItems.filter(item => item.name.trim() !== '' || item.jd.trim() !== ''),
+        machineItems: planFormData.machineItems.filter(item => item.name.trim() !== ''),
+        jdItems: planFormData.jdItems
+          .filter(item => item.staffId || item.name?.trim() !== '' || item.jd?.trim() !== '')
+          .map(item => ({ StaffID: item.staffId, jd: item.jd, hours: item.hours })),
         plannedManpower: parseFloat(planFormData.plannedManpower) || null,
         actualManpower: parseFloat(planFormData.actualManpower) || null,
         workingHours: parseFloat(planFormData.workingHours) || null,
@@ -200,24 +272,25 @@ const AddTodayPlan = () => {
       }
 
       if (res.data?.success) {
-        // Navigate back to Production page (Production Planning tab is active by default or state)
-        navigate('/production'); 
+        toast.success(editingPlanId ? 'Plan updated successfully!' : 'Plan created successfully!');
+        // Navigate back to Production page and set active tab
+        navigate('/production', { state: { activeTab: 'production-order' } }); 
       } else {
-        alert(res.data?.message || 'Failed to save plan');
+        toast.error(res.data?.message || 'Failed to save plan');
       }
     } catch (error) {
       console.error('Error saving plan:', error);
-      alert('Error saving plan');
+      toast.error('Error saving plan');
     }
   };
 
   return (
     <div className="add-today-plan-page p-6">
       <div className="add-today-plan-header">
-        <button className="add-today-plan-back-btn" onClick={() => navigate('/production')} aria-label="Go back">
+        <button className="add-today-plan-back-btn" onClick={() => navigate('/production', { state: { activeTab: 'production-order' } })} aria-label="Go back">
           <IconArrowLeft size={24} />
         </button>
-        <h2 className="add-today-plan-title">{editingPlanId ? 'Edit Today Plan' : 'Add Today Plan'}</h2>
+        <h2 className="add-today-plan-title">{editingPlanId ? 'Edit Today Plan' : 'Add Today Plans'}</h2>
       </div>
       
       <div className="add-today-plan-body">
@@ -251,43 +324,6 @@ const AddTodayPlan = () => {
               value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
               onChange={(selected) => setPlanFormData({...planFormData, po: selected ? selected.value : ''})}
               placeholder="Select PO"
-              isClearable
-              isSearchable
-              menuPortalTarget={document.body}
-              menuPosition="fixed"
-              styles={{
-                control: (base, state) => ({
-                  ...base,
-                  border: state.isFocused ? '1px solid #3b82f6' : '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  minHeight: '42px',
-                  fontSize: '0.9rem',
-                  boxShadow: state.isFocused ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : 'none',
-                  backgroundColor: state.isFocused ? '#fff' : '#f9fafb',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    border: state.isFocused ? '1px solid #3b82f6' : '1px solid #e5e7eb'
-                  }
-                }),
-                menuPortal: base => ({ ...base, zIndex: 9999 })
-              }}
-            />
-          </div>
-          <div className="form-group">
-            <label className="plan-form-label">Machine</label>
-            <Select
-              isMulti
-              options={machines.map(m => ({ value: m.ItemName, label: m.ItemName }))}
-              value={(() => {
-                try {
-                  const parsed = JSON.parse(planFormData.machine || '[]');
-                  return Array.isArray(parsed) ? parsed.map(m => ({ value: m, label: m })) : [];
-                } catch (e) {
-                  return [];
-                }
-              })()}
-              onChange={(selected) => setPlanFormData({...planFormData, machine: JSON.stringify(selected ? selected.map(s => s.value) : [])})}
-              placeholder="Select Machines"
               isClearable
               isSearchable
               menuPortalTarget={document.body}
@@ -359,26 +395,118 @@ const AddTodayPlan = () => {
           </div>
         </div>
 
+        {/* Assign Machine Section */}
+        <div>
+          <h3 className="add-today-plan-section-title">Assign Machine</h3>
+          <div className="plan-items-container">
+            <table className="plan-items-table">
+              <thead className="plan-items-thead">
+                <tr>
+                  <th className="plan-items-th col-name">Machine</th>
+                  <th className="plan-items-th col-jd">Produced Qty</th>
+                  <th className="plan-items-th col-jd">Run Hours</th>
+                  <th className="plan-items-th col-action">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {planFormData.machineItems.map((item, idx) => (
+                  <tr key={idx} className="plan-items-tr">
+                    <td className="plan-items-td">
+                      <select 
+                        className="plan-item-input" 
+                        value={item.name} 
+                        onChange={(e) => handleMachineItemChange(idx, 'name', e.target.value)}
+                      >
+                        <option value="">Select Machine</option>
+                        {machines.map(m => (
+                          <option key={m.ItemName} value={m.ItemName}>{m.ItemName}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="plan-items-td">
+                      <input type="number" className="plan-item-input" value={item.qty} onChange={(e) => handleMachineItemChange(idx, 'qty', e.target.value)} placeholder="Enter Qty" />
+                    </td>
+                    <td className="plan-items-td">
+                      <input type="number" className="plan-item-input" value={item.hours} onChange={(e) => handleMachineItemChange(idx, 'hours', e.target.value)} placeholder="Enter Hours" />
+                    </td>
+                    <td className="plan-items-td center">
+                      <Button variant="danger" size="sm" onClick={() => handleRemoveMachineItem(idx)}>Remove</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="plan-items-footer">
+              <Button variant="secondary" size="sm" onClick={handleAddMachineItem}>+ Add machine</Button>
+            </div>
+          </div>
+        </div>
+
         {/* Assign Employee Section */}
         <div>
-          <h3 className="add-today-plan-section-title">Assign Employee</h3>
+          <h3 className="add-today-plan-section-title">Assign Employees</h3>
           <div className="plan-items-container">
             <table className="plan-items-table">
               <thead className="plan-items-thead">
                 <tr>
                   <th className="plan-items-th col-name">Name</th>
                   <th className="plan-items-th col-jd">J.D</th>
+                  <th className="plan-items-th col-jd">Hours</th>
                   <th className="plan-items-th col-action">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {planFormData.jdItems.map((item, idx) => (
                   <tr key={idx} className="plan-items-tr">
-                    <td className="plan-items-td">
-                      <input type="text" className="plan-item-input" value={item.name} onChange={(e) => handleJdItemChange(idx, 'name', e.target.value)} placeholder="Enter name" />
+                    <td className="plan-items-td" style={{ minWidth: '250px' }}>
+                      <Select
+                        options={staffList.map(s => ({
+                          value: s.StaffID,
+                          label: s.Name,
+                          staff: s
+                        }))}
+                        value={
+                          item.staffId 
+                            ? { value: item.staffId, label: item.name, staff: staffList.find(s => s.StaffID === item.staffId) } 
+                            : (item.name ? { value: item.name, label: item.name, staff: staffList.find(s => s.Name === item.name) } : null)
+                        }
+                        onChange={(selected) => handleEmployeeSelect(idx, selected ? selected.value : '')}
+                        formatOptionLabel={(option, { context }) => {
+                          const { staff } = option;
+                          if (!staff) return option.label;
+                          if (context === 'value') {
+                            return <span>{staff.Name}</span>;
+                          }
+                          return (
+                            <div>
+                              <div><strong>{staff.Name}</strong> {staff.Designation ? `- ${staff.Designation}` : ''}</div>
+                              {staff.Address && <div style={{ fontSize: '0.8em', color: '#6b7280', marginTop: '2px' }}>{staff.Address}</div>}
+                            </div>
+                          );
+                        }}
+                        placeholder="Select Employee"
+                        isSearchable
+                        menuPortalTarget={document.body}
+                        menuPosition="fixed"
+                        styles={{
+                          control: (base, state) => ({
+                            ...base,
+                            border: state.isFocused ? '1px solid #3b82f6' : '1px solid #e5e7eb',
+                            borderRadius: '4px',
+                            minHeight: '38px',
+                            fontSize: '0.9rem',
+                            boxShadow: 'none',
+                            backgroundColor: '#fff',
+                          }),
+                          menuPortal: base => ({ ...base, zIndex: 9999 })
+                        }}
+                      />
                     </td>
                     <td className="plan-items-td">
                       <input type="text" className="plan-item-input" value={item.jd} onChange={(e) => handleJdItemChange(idx, 'jd', e.target.value)} placeholder="Enter J.D" />
+                    </td>
+                    <td className="plan-items-td">
+                      <input type="number" className="plan-item-input" value={item.hours || ''} onChange={(e) => handleJdItemChange(idx, 'hours', e.target.value)} placeholder="Enter Hours" />
                     </td>
                     <td className="plan-items-td center">
                       <Button variant="danger" size="sm" onClick={() => handleRemoveJdItem(idx)}>Remove</Button>
@@ -395,7 +523,7 @@ const AddTodayPlan = () => {
 
         {/* Footer Actions */}
         <div className="plan-modal-actions add-today-plan-actions">
-          <Button variant="secondary" onClick={() => navigate('/production')}>Cancel</Button>
+          <Button variant="secondary" onClick={() => navigate('/production', { state: { activeTab: 'production-order' } })}>Cancel</Button>
           <Button variant="primary" onClick={handleSavePlan}>{editingPlanId ? 'Update' : 'Save'}</Button>
         </div>
       </div>

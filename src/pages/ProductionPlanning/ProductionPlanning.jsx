@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Card from '../../global-components/Card/Card';
@@ -37,22 +38,38 @@ const ExpandableMachineCell = ({ machineStr }) => {
   let machines = [];
   try {
     const parsed = JSON.parse(machineStr);
-    machines = Array.isArray(parsed) ? parsed : [];
+    if (Array.isArray(parsed)) {
+      machines = parsed.map(m => {
+        if (typeof m === 'string') return { name: m };
+        return { name: m.name || 'Unknown', qty: m.qty, hours: m.hours };
+      });
+    }
   } catch(e) {
-    machines = machineStr.split(', ');
+    machines = machineStr.split(', ').map(m => ({ name: m }));
   }
 
   if (machines.length === 0) return <span>-</span>;
   
+  const renderItem = (m) => {
+    let text = m.name;
+    if (m.qty || m.hours) {
+      const parts = [];
+      if (m.qty) parts.push(`Qty: ${m.qty}`);
+      if (m.hours) parts.push(`Hrs: ${m.hours}`);
+      text += ` (${parts.join(', ')})`;
+    }
+    return text;
+  };
+
   if (machines.length === 1) {
-    return <span>{machines[0]}</span>;
+    return <span>{renderItem(machines[0])}</span>;
   }
   
   return (
     <div>
       <div onClick={() => setExpanded(!expanded)} className="expandable-cell-trigger">
         <IconSettings size={16} />
-        {machines[0]}
+        {machines[0].name}
         {machines.length > 1 && (
           <span className="badge">+{machines.length - 1}</span>
         )}
@@ -61,7 +78,7 @@ const ExpandableMachineCell = ({ machineStr }) => {
         <div className="plan-employee-list expandable-cell-list">
           {machines.map((m, idx) => (
             <div key={idx} className="plan-employee-item">
-              {m}
+              {renderItem(m)}
             </div>
           ))}
         </div>
@@ -120,7 +137,9 @@ const StatusBadge = ({ status }) => {
 };
 
 const ProductionPlanning = () => {
-  const [activeTab, setActiveTab] = useState('orders');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'orders');
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
@@ -162,6 +181,11 @@ const ProductionPlanning = () => {
   const [openPOs, setOpenPOs] = useState([]);
   const [machines, setMachines] = useState([]);
   const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+  const lineOptions = [
+    { value: 'R-Test Line', label: 'R-Test Line' },
+    { value: 'Packing Line', label: 'Packing Line' }
+  ];
 
   const [editingPlanId, setEditingPlanId] = useState(null);
   const [planFormData, setPlanFormData] = useState({
@@ -217,28 +241,7 @@ const ProductionPlanning = () => {
   };
 
   const handleEditPlan = (plan) => {
-    setEditingPlanId(plan.Id);
-    
-    let machineVal = '[]';
-    if (plan.Machine) {
-      try {
-        const parsed = JSON.parse(plan.Machine);
-        machineVal = Array.isArray(parsed) ? plan.Machine : '[]';
-      } catch (e) {
-        // Fallback for old comma-separated values
-        machineVal = JSON.stringify(plan.Machine.split(', '));
-      }
-    }
-
-    setPlanFormData({
-      date: plan.PlanDate ? plan.PlanDate.split('T')[0] : getTodayDate(),
-      line: plan.Line || 'R-Test Line',
-      machine: machineVal,
-      supervisor: plan.Supervisor || '',
-      po: plan.PO || '',
-      jdItems: plan.jdItems && plan.jdItems.length > 0 ? plan.jdItems : [{ name: '', jd: '' }]
-    });
-    setIsPlanModalOpen(true);
+    navigate('/production-plan/edit', { state: { plan } });
   };
 
   const fetchProductionPlans = useCallback(async () => {
@@ -389,6 +392,10 @@ const ProductionPlanning = () => {
     { header: 'PO', key: 'PO' },
     { header: 'Planned Qty', key: 'PlannedQty', render: (r) => fmt(r.PlannedQty) },
     { header: 'Completed Qty', key: 'CmpltQty', render: (r) => fmt(r.CmpltQty) },
+    { header: 'Produced Qty', key: 'ProductionQty', render: (r) => fmt(r.ProductionQty) },
+    { header: 'Shift', key: 'Shift' },
+    { header: 'Act. Manpower', key: 'ActualManpower' },
+    { header: 'Prd %', key: 'PrdPercentage', render: (r) => r.PrdPercentage ? `${Number(r.PrdPercentage).toFixed(2)}%` : '-' },
     { header: 'Machine', key: 'Machine', render: (r) => <ExpandableMachineCell machineStr={r.Machine} /> },
     { header: 'Supervisor', key: 'Supervisor' },
     { header: 'Assign Employee', key: 'employees', render: (r) => <ExpandableEmployeeCell jdItems={r.jdItems} /> },
@@ -484,8 +491,8 @@ const ProductionPlanning = () => {
           <div className="planning-section">
             <div className="planning-section-header">
               <h3>Production Planning</h3>
-              <Button variant="primary" icon={<IconPlus size={16} />} onClick={() => setIsPlanModalOpen(true)}>
-                Add today plan
+              <Button variant="primary" icon={<IconPlus size={16} />} onClick={() => navigate('/production-plan/add')}>
+                Add today plans
               </Button>
             </div>
             <Table
@@ -500,126 +507,7 @@ const ProductionPlanning = () => {
               onItemsPerPageChange={() => {}}
             />
 
-            {isPlanModalOpen && (
-              <GlobalPopup isOpen={isPlanModalOpen} onClose={() => {
-                setIsPlanModalOpen(false);
-                setEditingPlanId(null);
-                setPlanFormData({ date: getTodayDate(), line: 'R-Test Line', machine: '', supervisor: '', po: '', jdItems: [{ name: '', jd: '' }] });
-              }} title="" showClose={false}>
-                <div className="plan-modal-content">
-                  <div className="plan-modal-header">
-                    <h2 className="plan-modal-title">{editingPlanId ? 'Edit Today Plan' : 'Add Today Plan'}</h2>
-                  </div>
-                  
-                  <div className="plan-modal-body">
-                    {/* Grid for top fields */}
-                    <div className="plan-form-grid">
-                      <div className="form-group">
-                        <label className="plan-form-label">Date</label>
-                        <input type="date" className="plan-form-input" value={planFormData.date} onChange={(e) => setPlanFormData({...planFormData, date: e.target.value})} />
-                      </div>
-                      <div className="form-group">
-                        <label className="plan-form-label">Line</label>
-                        <Select
-                          options={lineOptions}
-                          value={lineOptions.find(o => o.value === planFormData.line) || null}
-                          onChange={(selected) => setPlanFormData({ ...planFormData, line: selected ? selected.value : '' })}
-                          placeholder="Select Line"
-                          isClearable
-                          className="react-select-container"
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="plan-form-label">Supervisor</label>
-                        <input type="text" className="plan-form-input" value={planFormData.supervisor} onChange={(e) => setPlanFormData({...planFormData, supervisor: e.target.value})} placeholder="Enter supervisor name" />
-                      </div>
-                      <div className="form-group">
-                        <label className="plan-form-label">PO</label>
-                        <Select
-                          options={openPOs.map(po => ({ value: po.DocNum, label: po.DocNum.toString() }))}
-                          value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
-                          onChange={(selected) => setPlanFormData({...planFormData, po: selected ? selected.value : ''})}
-                          placeholder="Select PO"
-                          isClearable
-                          isSearchable
-                          className="react-select-container"
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label className="plan-form-label">Machine</label>
-                        <Select
-                          isMulti
-                          options={machines.map(m => ({ value: m.ItemName, label: m.ItemName }))}
-                          value={(() => {
-                            try {
-                              const parsed = JSON.parse(planFormData.machine || '[]');
-                              return Array.isArray(parsed) ? parsed.map(m => ({ value: m, label: m })) : [];
-                            } catch (e) {
-                              return [];
-                            }
-                          })()}
-                          onChange={(selected) => setPlanFormData({...planFormData, machine: JSON.stringify(selected ? selected.map(s => s.value) : [])})}
-                          placeholder="Select Machines"
-                          isClearable
-                          isSearchable
-                          className="react-select-container"
-                          classNamePrefix="react-select"
-                          menuPortalTarget={document.body}
-                        />
-                      </div>
-                    </div>
 
-                    {/* Assign Employee Section */}
-                    <div>
-                      <h3 className="plan-items-title">Assign Employee</h3>
-                      <div className="plan-items-container">
-                        <table className="plan-items-table">
-                          <thead className="plan-items-thead">
-                            <tr>
-                              <th className="plan-items-th col-name">Name</th>
-                              <th className="plan-items-th col-jd">J.D</th>
-                              <th className="plan-items-th col-action">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {planFormData.jdItems.map((item, idx) => (
-                              <tr key={idx} className="plan-items-tr">
-                                <td className="plan-items-td">
-                                  <input type="text" className="plan-item-input" value={item.name} onChange={(e) => handleJdItemChange(idx, 'name', e.target.value)} placeholder="Enter name" />
-                                </td>
-                                <td className="plan-items-td">
-                                  <input type="text" className="plan-item-input" value={item.jd} onChange={(e) => handleJdItemChange(idx, 'jd', e.target.value)} placeholder="Enter J.D" />
-                                </td>
-                                <td className="plan-items-td center">
-                                  <Button variant="danger" size="sm" onClick={() => handleRemoveJdItem(idx)}>Remove</Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <div className="plan-items-footer">
-                          <Button variant="secondary" size="sm" onClick={handleAddJdItem}>+ Add employee</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer Actions */}
-                  <div className="plan-modal-actions">
-                    <Button variant="secondary" onClick={() => {
-                      setIsPlanModalOpen(false);
-                      setEditingPlanId(null);
-                      setPlanFormData({ date: getTodayDate(), line: 'R-Test Line', machine: '', supervisor: '', po: '', jdItems: [{ name: '', jd: '' }] });
-                    }}>Cancel</Button>
-                    <Button variant="primary" onClick={handleSavePlan}>{editingPlanId ? 'Update' : 'Save'}</Button>
-                  </div>
-                </div>
-              </GlobalPopup>
-            )}
           </div>
         )}
 

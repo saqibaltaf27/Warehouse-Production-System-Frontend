@@ -15,10 +15,12 @@ import {
   IconChartLine,
   IconSearch
 } from '@tabler/icons-react';
+import { useLoading } from '../../context/LoadingContext';
 import './CostAnalysis.css';
 
 const CostAnalysis = () => {
-  const [loading, setLoading] = useState(false);
+  const { showLoading, hideLoading } = useLoading();
+  const [tableLoading, setTableLoading] = useState(false);
   const [summary, setSummary] = useState(null);
   const [trendData, setTrendData] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -32,6 +34,7 @@ const CostAnalysis = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [materials, setMaterials] = useState([]);
+  const [orderStaff, setOrderStaff] = useState([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const costContributionData = React.useMemo(() => {
@@ -72,7 +75,7 @@ const CostAnalysis = () => {
   }, [page, limit, search]);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
+    showLoading();
     try {
       const [summaryRes, trendRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/summary`),
@@ -84,11 +87,11 @@ const CostAnalysis = () => {
     } catch (error) {
       console.error("Error fetching cost analysis data", error);
     }
-    setLoading(false);
+    hideLoading();
   };
 
   const fetchOrders = async () => {
-    setLoading(true);
+    setTableLoading(true);
     try {
       const ordersRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders`, {
         params: { page, limit, search }
@@ -100,17 +103,19 @@ const CostAnalysis = () => {
     } catch (error) {
       console.error("Error fetching orders data", error);
     }
-    setLoading(false);
+    setTableLoading(false);
   };
 
   const handleOrderClick = async (record) => {
     setSelectedOrder(record);
     setIsModalVisible(true);
     setMaterialsLoading(true);
+    setOrderStaff([]);
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders/${record.DocEntry}/materials`);
       if (res.data?.success) {
         setMaterials(res.data.data);
+        setOrderStaff(res.data.staff || []);
       }
     } catch (error) {
       console.error("Failed to load materials for order", error);
@@ -133,12 +138,12 @@ const CostAnalysis = () => {
     },
     {
       key: 'PlannedFGQty',
-      header: 'Planned Qty',
+      header: 'PO Qty',
       render: (row) => Number(row.PlannedFGQty || 0).toLocaleString()
     },
     {
       key: 'ActualFGQty',
-      header: 'Actual Qty',
+      header: 'Produced Qty',
       render: (row) => Number(row.ActualFGQty || 0).toLocaleString()
     },
     {
@@ -148,23 +153,18 @@ const CostAnalysis = () => {
     },
     {
       key: 'ActualCost',
-      header: 'Actual Total',
+      header: 'Standard Cost',
       render: (row) => `${Number(row.ActualCost || row.ActualMaterialCost || 0).toFixed(2)}`
     },
     {
       key: 'MaterialCost', 
-      header: 'Material (Act)', 
+      header: 'Material', 
       render: (row) => `${Number(row.ActualMaterialCost || 0).toFixed(2)}`
     },
     {
       key: 'LabourCost', 
-      header: 'Labour (Act)', 
+      header: 'Labour', 
       render: (row) => `${Number(row.ActualLabourCost || 0).toFixed(2)}`
-    },
-    {
-      key: 'FOHCost', 
-      header: 'FOH (Act)', 
-      render: (row) => `${Number(row.ActualFOHCost || 0).toFixed(2)}`
     },
     {
       key: 'HR',
@@ -176,68 +176,65 @@ const CostAnalysis = () => {
       header: 'Capex',
       render: () => '-'
     },
-    {
-      key: 'TotalVariance',
-      header: 'Variance',
-      render: (row) => {
-        const variance = (row.ActualCost || row.ActualMaterialCost || 0) - (row.PlannedCost || row.PlannedMaterialCost || 0);
-        const colorClass = variance > 0 ? 'variance-positive' : 'variance-negative';
-        return <span className={`variance-text ${colorClass}`}>{variance.toFixed(2)}</span>;
-      }
-    }
+    // {
+    //   key: 'TotalVariance',
+    //   header: 'Variance',
+    //   render: (row) => {
+    //     const variance = (row.ActualCost || row.ActualMaterialCost || 0) - (row.PlannedCost || row.PlannedMaterialCost || 0);
+    //     const colorClass = variance > 0 ? 'variance-positive' : 'variance-negative';
+    //     return <span className={`variance-text ${colorClass}`}>{variance.toFixed(2)}</span>;
+    //   }
+    // }
   ];
 
   const materialColumns = [
-    { key: 'ItemCode', header: 'Item/Resource', render: (row) => row.ItemCode },
+    { key: 'ItemCode', header: 'Item Code', render: (row) => row.ItemCode },
+    { key: 'ItemDescription', header: 'Description', render: (row) => row['Item Description'] },
     {
       key: 'Type',
       header: 'Type',
       render: (row) => {
-        if (row.ItemType === 290) {
-          if (row.ResType === 'L') return 'Labour';
-          if (row.ResType === 'M') return 'Machine';
-          if (row.ResType === 'O') return 'FOH';
-          return 'Resource';
+        if (row.Type === 'Item') return 'Material';
+        if (row.Type === 'Resource') {
+          const desc = (row['Item Description'] || '').toLowerCase();
+          const code = (row.ItemCode || '').toLowerCase();
+          if (desc.includes('labor') || desc.includes('labour') || code.includes('-lc-')) return 'Labour';
+          if (desc.includes('foh') || code.includes('-foh-')) return 'FOH';
+          if (desc.includes('qc') || code.includes('-qc-')) return 'QC';
         }
-        return 'Material';
+        return row.Type;
       }
     },
-    { key: 'PlannedQty', header: 'Planned Qty', render: (row) => Number(row.PlannedQty || 0).toFixed(2) },
-    { key: 'ActualQty', header: 'Actual Qty', render: (row) => Number(row.ActualQty || 0).toFixed(2) },
+    { key: 'PlannedQty', 
+      header: 'Qty', 
+      render: (row) => Number(row.PlannedQty || 0).toFixed(2) 
+    },
     {
       key: 'PlannedCost',
-      header: 'Planned Cost',
-      render: (row) => `${Number(row.PlannedCost || 0).toFixed(2)}`
+      header: 'Standard Cost',
+      render: (row) => {
+        const stdCost = (Number(row.PlannedQty) || 0) * (Number(row['Item Cost']) || 0);
+        return stdCost.toFixed(2);
+      }
     },
     {
       key: 'ActualCost',
       header: 'Actual Cost',
-      render: (row) => `${Number(row.ActualCost || 0).toFixed(2)}`
-    },
-    {
-      key: 'UsageVariance',
-      header: 'Usage Variance',
       render: (row) => {
-        const val = row.UsageVariance || 0;
-        const colorClass = val > 0 ? 'variance-positive' : 'variance-negative';
-        return <span className={`variance-text ${colorClass}`}>{Number(val).toFixed(2)}</span>;
-      }
-    },
-    {
-      key: 'PriceVariance',
-      header: 'Price Variance',
-      render: (row) => {
-        const val = row.PriceVariance || 0;
-        const colorClass = val > 0 ? 'variance-positive' : 'variance-negative';
-        return <span className={`variance-text ${colorClass}`}>{Number(val).toFixed(2)}</span>;
+        if (row.Type !== 'Item') return '-';
+        const actCost = (Number(row.PlannedQty) || 0) * (Number(row['Item Cost']) || 0);
+        return actCost.toFixed(2);
       }
     },
     {
       key: 'TotalVariance',
-      header: 'Total Variance',
+      header: 'Variance',
       render: (row) => {
-        const val = row.TotalVariance || 0;
-        const colorClass = val > 0 ? 'variance-positive' : 'variance-negative';
+        if (row.Type !== 'Item') return <span className="variance-text">-</span>;
+        const stdCost = (Number(row.PlannedQty) || 0) * (Number(row['Item Cost']) || 0);
+        const actCost = stdCost;
+        const val = stdCost - actCost;
+        const colorClass = val > 0 ? 'variance-positive' : (val < 0 ? 'variance-negative' : '');
         return <span className={`variance-text variance-bold ${colorClass}`}>{Number(val).toFixed(2)}</span>;
       }
     }
@@ -248,10 +245,6 @@ const CostAnalysis = () => {
 
   return (
     <div className="cost-analysis-dashboard">
-
-      {loading ? (
-        <GlobalLoading />
-      ) : (
         <>
           {/* KPI Cards Layer 1 */}
           {/* <div className="fade-in-up delay-100 mb-6">
@@ -344,6 +337,7 @@ const CostAnalysis = () => {
             </div>
             <Table
               data={orders}
+              isLoading={tableLoading}
               columns={columns}
               totalEntries={totalOrders}
               currentPage={page}
@@ -355,27 +349,120 @@ const CostAnalysis = () => {
             />
           </div>
         </>
-      )}
 
       {/* Drill-down Modal */}
       {isModalVisible && selectedOrder && (
         <GlobalPopup
-          title={`Cost Details - Order #${selectedOrder.DocNum} (${selectedOrder.FGItemCode})`}
           onClose={() => setIsModalVisible(false)}
+          className="large"
         >
-          <div className="modal-content modal-table-scroll">
-            {materialsLoading ? (
-              <GlobalLoading text="Loading materials..." />
-            ) : materials.length === 0 ? (
-              <EmptyState message="No material/resource data found for this order" />
-            ) : (
-              <Table
-                data={materials}
-                columns={materialColumns}
-                totalEntries={materials.length}
-                showActions={false}
-                showPagination={false}
-              />
+          <div className="modal-content" style={{ display: 'flex', flexDirection: 'column', maxHeight: '85vh' }}>
+            {/* Modal Header (Fixed) */}
+            <div style={{ flexShrink: 0, padding: '24px 24px 0 24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', paddingBottom: '16px', borderBottom: '1px solid #e5e7eb' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#111827', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    Production Order: {selectedOrder.DocNum}
+                    <span className={`status-badge po-badge-${selectedOrder.Status === 'L' || selectedOrder.Status === 'C' ? 'closed' : selectedOrder.Status === 'R' || selectedOrder.Status === 'P' ? 'open' : 'unknown'}`} style={{ fontSize: '0.75rem', padding: '4px 8px', fontWeight: '500' }}>
+                      {selectedOrder.Status === 'L' || selectedOrder.Status === 'C' ? 'Closed' : selectedOrder.Status === 'R' ? 'Released' : selectedOrder.Status === 'P' ? 'Planned' : selectedOrder.Status}
+                    </span>
+                  </h3>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+                    Product: {selectedOrder.FGItemCode}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body (Scrollable) */}
+            <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px 24px' }}>
+              {materialsLoading ? (
+                <GlobalLoading text="Loading materials..." />
+              ) : materials.length === 0 ? (
+                <EmptyState message="No material/resource data found for this order" />
+              ) : (
+                <Table
+                  data={materials}
+                  columns={materialColumns}
+                  totalEntries={materials.length}
+                  showActions={false}
+                  showPagination={false}
+                  rowHasSubComponent={(row) => {
+                    const desc = (row['Item Description'] || '').toLowerCase();
+                    const code = (row.ItemCode || '').toLowerCase();
+                    return row.Type === 'Resource' && (desc.includes('labor') || desc.includes('labour') || code.includes('-lc-')) && orderStaff.length > 0;
+                  }}
+                  expandedRowRender={(row) => (
+                    <>
+                      {orderStaff.map(s => (
+                        <tr key={s.StaffID} style={{ backgroundColor: '#f8fafc' }}>
+                          <td style={{ paddingLeft: '48px', fontSize: '0.875rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#64748b' }}></span>
+                              {s.Name}
+                            </div>
+                          </td>
+                          <td style={{ fontSize: '0.875rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                              <span>{s.Designation}</span>
+                              <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                                {s.DaysWorked ? `${s.DaysWorked} Days` : ''} 
+                                {s.DaysWorked && s.TotalHours ? ' • ' : ''} 
+                                {s.TotalHours ? `${s.TotalHours} Hrs` : ''}
+                              </span>
+                            </div>
+                          </td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td style={{ textAlign: 'right', fontSize: '0.875rem', fontWeight: '500', color: '#1e293b' }}>
+                            {s.CalculatedCost ? parseFloat(s.CalculatedCost).toFixed(2) : '-'}
+                          </td>
+                          <td></td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
+                />
+              )}
+            </div>
+
+            {/* Modal Footer (Fixed) */}
+            {!materialsLoading && materials.length > 0 && (
+              <div style={{ flexShrink: 0, padding: '0 24px 24px 24px', backgroundColor: '#fff' }}>
+                {(() => {
+                  let totalStandardCost = 0;
+                  let totalActualCost = 0;
+                  
+                  materials.forEach(row => {
+                    const std = (Number(row.PlannedQty) || 0) * (Number(row['Item Cost']) || 0);
+                    totalStandardCost += std;
+                    if (row.Type === 'Item') {
+                      totalActualCost += std;
+                    }
+                  });
+                  
+                  const poQuantity = Number(selectedOrder.PlannedFGQty) || 1;
+                  const averageTotalCost = totalStandardCost / poQuantity;
+
+                  return (
+                    <div className="cost-summary-footer" style={{ marginTop: '0', borderRadius: '0 0 8px 8px' }}>
+                      <div className="cost-summary-item">
+                        <span className="cost-summary-label">Total Standard Cost</span>
+                        <span className="cost-summary-value">{totalStandardCost.toFixed(2)}</span>
+                      </div>
+                      <div className="cost-summary-item">
+                        <span className="cost-summary-label">Total Actual Cost</span>
+                        <span className="cost-summary-value">{totalActualCost.toFixed(2)}</span>
+                      </div>
+                      <div className="cost-summary-item">
+                        <span className="cost-summary-label">Average Total Cost</span>
+                        <span className="cost-summary-value">{averageTotalCost.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             )}
           </div>
         </GlobalPopup>
