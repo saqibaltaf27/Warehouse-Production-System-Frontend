@@ -23,7 +23,7 @@ const Production = () => {
     { key: 'cost-analysis', label: 'Cost Analysis' },
     { key: 'production-orders', label: 'Production Orders' },
     { key: 'production-planning', label: 'Production Planning' },
-    { key: 'purchase-order', label: 'Purchase Order' },
+    { key: 'purchase-order', label: 'Purchase Request' },
     { key: 'production-trend', label: 'Production Trend' },
     { key: 'production-template', label: 'Production Template' },
 

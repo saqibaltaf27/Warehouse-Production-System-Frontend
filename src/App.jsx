@@ -23,6 +23,7 @@ import Machine from './pages/Machine/Machine';
 import Production from './pages/Production/Production.jsx';
 import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import Staff from './pages/Staff/Staff.jsx';
+import Sampling from './pages/Sampling/Sampling.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -98,6 +99,7 @@ function AppContent() {
               <Route path="access-permission/:empid" element={<AccessPermission />} />
             </Route>
             <Route path="staff" element={<ProtectedRoute requiredRoute="/staff"><Staff /></ProtectedRoute>} />
+            <Route path="sampling" element={<ProtectedRoute requiredRoute="/sampling"><Sampling /></ProtectedRoute>} />
             <Route path="settings" element={<SimplePlaceholder title="Settings" />} />
             <Route path="*" element={<NotFound />} />
           </Route>

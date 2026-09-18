@@ -183,26 +183,49 @@ const Staff = () => {
         >
           <div className="staff-modal-content">
             <h3 style={{ marginTop: 0 }}>{editStaffId ? "Edit Staff" : "Add New Staff"}</h3>
-            <div className="staff-form">
-              <Input label="Name" id="staff-name" placeholder="Enter staff name" value={formData.name} onChange={handleInputChange} disabled={isSaving} />
-              <Input label="Number" id="staff-number" placeholder="Enter phone number" value={formData.number} onChange={handleInputChange} disabled={isSaving} />
-              <Input label="Address" id="staff-address" placeholder="Enter address" value={formData.address} onChange={handleInputChange} disabled={isSaving} />
-              <Input label="Designation" id="staff-designation" placeholder="Enter designation" value={formData.designation} onChange={handleInputChange} disabled={isSaving} />
-              <Input label="Wage/Salary" id="staff-salary" placeholder="Enter wage or salary" type="number" value={formData.salary} onChange={handleInputChange} disabled={isSaving} />
-              
-              <Input 
-                label="Status" 
-                id="staff-status" 
-                type="select" 
-                value={formData.status} 
-                onChange={handleInputChange} 
-                disabled={isSaving}
-                options={[
-                  { label: 'Active', value: '1' },
-                  { label: 'Inactive', value: '0' }
-                ]}
-              />
-            </div>
+            <table className="staff-form-table">
+              <tbody>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-name">Name</label></td>
+                  <td className="staff-form-input-cell">
+                    <input id="staff-name" className="dome-form-input" placeholder="Enter staff name" value={formData.name} onChange={handleInputChange} disabled={isSaving} />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-number">Number</label></td>
+                  <td className="staff-form-input-cell">
+                    <input id="staff-number" className="dome-form-input" placeholder="Enter phone number" value={formData.number} onChange={handleInputChange} disabled={isSaving} />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-address">Address</label></td>
+                  <td className="staff-form-input-cell">
+                    <input id="staff-address" className="dome-form-input" placeholder="Enter address" value={formData.address} onChange={handleInputChange} disabled={isSaving} />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-designation">Designation</label></td>
+                  <td className="staff-form-input-cell">
+                    <input id="staff-designation" className="dome-form-input" placeholder="Enter designation" value={formData.designation} onChange={handleInputChange} disabled={isSaving} />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-salary">Wage/Salary</label></td>
+                  <td className="staff-form-input-cell">
+                    <input id="staff-salary" type="number" className="dome-form-input" placeholder="Enter wage or salary" value={formData.salary} onChange={handleInputChange} disabled={isSaving} />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="staff-form-label-cell"><label htmlFor="staff-status">Status</label></td>
+                  <td className="staff-form-input-cell">
+                    <select id="staff-status" className="dome-form-input" value={formData.status} onChange={handleInputChange} disabled={isSaving}>
+                      <option value="1">Active</option>
+                      <option value="0">Inactive</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <div className="staff-modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
               <Button variant="secondary" onClick={() => setIsAddModalOpen(false)} disabled={isSaving}>
                 Cancel

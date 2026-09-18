@@ -389,7 +389,7 @@ const CostSummary = ({ filters }) => {
             <>
               <div className="cost-summary-hero">
                 <div className="cost-total-primary">
-                  <span>Actual Total Cost</span>
+                  <span>ACTUAL TOTAL COST</span>
                   <strong>{formatNumberCompact(data.total.actual)}</strong>
                   <small>
                     Standard: {formatNumberCompact(data.total.standard)}
@@ -398,201 +398,73 @@ const CostSummary = ({ filters }) => {
                 <div
                   className={`cost-variance-highlight ${data.total.variance > 0 ? "is-over" : "is-under"}`}
                 >
-                  <span>Total Variance</span>
+                  <span>TOTAL VARIANCE</span>
                   <strong>{formatNumberCompact(data.total.variance)}</strong>
                   <small>{data.total.variancePercent}%</small>
                 </div>
               </div>
-              <div className="cost-breakdown-panel">
-                <div className="cost-breakdown-header">
-                  <span>Cost Component</span>
-                  <span>Standard</span>
-                  <span>Actual</span>
-                  <span>Variance</span>
-                  <span>Variance %</span>
-                </div>
-                {[
-                  {
-                    label: "Material Cost",
-                    values: data.material,
-                    complete: true,
-                  },
-                  { label: "Labor Cost", values: data.labor, complete: false },
-                  {
-                    label: "Overhead Cost",
-                    values: data.overhead,
-                    complete: false,
-                  },
-                ].map((item) => (
-                  <div className="cost-breakdown-row" key={item.label}>
-                    <strong>{item.label}</strong>
-                    <span>
-                      {item.complete
-                        ? formatNumberCompact(item.values.standard)
-                        : formatCurrency(item.values.standard)}
-                    </span>
-                    <span>
-                      {item.complete
-                        ? formatNumberCompact(item.values.actual)
-                        : formatCurrency(item.values.actual)}
-                    </span>
-                    <span
-                      className={
-                        item.complete
-                          ? item.values.variance > 0
-                            ? "text-danger"
-                            : "text-success"
-                          : "text-muted"
-                      }
-                    >
-                      {item.complete
-                        ? formatNumberCompact(item.values.variance)
-                        : "—"}
-                    </span>
-                    <span
-                      className={
-                        item.complete
-                          ? item.values.variancePercent > 0
-                            ? "text-danger"
-                            : "text-success"
-                          : "text-muted"
-                      }
-                    >
-                      {item.complete ? `${item.values.variancePercent}%` : "—"}
-                    </span>
-                  </div>
-                ))}
+              
+              <div className="compact-table-wrapper flex-1" style={{ margin: '0 0 1.5rem 0' }}>
+                <Table
+                  data={[
+                    { label: "Material Cost", values: data.material, complete: true },
+                    { label: "Labor Cost", values: data.labor, complete: false },
+                    { label: "Overhead Cost", values: data.overhead, complete: false }
+                  ]}
+                  columns={[
+                    {
+                      key: 'label',
+                      header: 'COST COMPONENT',
+                      render: (row) => <span style={{ fontWeight: '600' }}>{row.label}</span>
+                    },
+                    {
+                      key: 'standard',
+                      header: 'STANDARD',
+                      render: (row) => row.complete ? formatNumberCompact(row.values.standard) : formatCurrency(row.values.standard)
+                    },
+                    {
+                      key: 'actual',
+                      header: 'ACTUAL',
+                      render: (row) => row.complete ? formatNumberCompact(row.values.actual) : formatCurrency(row.values.actual)
+                    },
+                    {
+                      key: 'variance',
+                      header: 'VARIANCE',
+                      render: (row) => row.complete ? (
+                        <span className={row.values.variance > 0 ? "text-danger" : "text-success"}>
+                          {formatNumberCompact(row.values.variance)}
+                        </span>
+                      ) : <span className="text-muted">—</span>
+                    },
+                    {
+                      key: 'variancePercent',
+                      header: 'VARIANCE %',
+                      render: (row) => row.complete ? (
+                        <span className={row.values.variancePercent > 0 ? "text-danger" : "text-success"}>
+                          {row.values.variancePercent}%
+                        </span>
+                      ) : <span className="text-muted">—</span>
+                    }
+                  ]}
+                  showActions={false}
+                  showPagination={false}
+                />
               </div>
+
               <div className="cost-per-unit-grid">
                 <div>
-                  <span>Standard / Unit</span>
+                  <span>STANDARD / UNIT</span>
                   <strong>{formatCurrency(data.perUnit.standard)}</strong>
                 </div>
                 <div>
-                  <span>Actual / Unit</span>
+                  <span>ACTUAL / UNIT</span>
                   <strong>{formatCurrency(data.perUnit.actual)}</strong>
                 </div>
                 <div
                   className={data.perUnit.variance > 0 ? "is-over" : "is-under"}
                 >
-                  <span>Variance / Unit</span>
+                  <span>VARIANCE / UNIT</span>
                   <strong>{formatCurrency(data.perUnit.variance)}</strong>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="quality-summary-legacy">
-          {loading || !data ? (
-            <div className="dashboard-state">
-              <IconRefresh className="spin" size={32} color="var(--primary)" />
-            </div>
-          ) : (
-            <>
-              <div className="compact-table-wrapper flex-1">
-                <table className="compact-table">
-                  <thead>
-                    <tr>
-                      <th>Particulars</th>
-                      <th className="text-right">Standard</th>
-                      <th className="text-right">Actual</th>
-                      <th className="text-right">Variance</th>
-                      <th className="text-right">Variance %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Material Cost</td>
-                      <td className="text-right" title={data.material.standard}>
-                        {formatNumberCompact(data.material.standard)}
-                      </td>
-                      <td className="text-right" title={data.material.actual}>
-                        {formatNumberCompact(data.material.actual)}
-                      </td>
-                      <td
-                        className={`text-right ${data.material.variance > 0 ? "text-danger" : "text-success"}`}
-                      >
-                        {formatNumberCompact(data.material.variance)}
-                      </td>
-                      <td
-                        className={`text-right ${data.material.variancePercent > 0 ? "text-danger" : "text-success"}`}
-                      >
-                        {data.material.variancePercent}%
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Labor Cost</td>
-                      <td className="text-right">
-                        {formatCurrency(data.labor.standard)}
-                      </td>
-                      <td className="text-right">
-                        {formatCurrency(data.labor.actual)}
-                      </td>
-                      <td className="text-right text-muted">—</td>
-                      <td className="text-right text-muted">—</td>
-                    </tr>
-                    <tr>
-                      <td>Overhead Cost</td>
-                      <td className="text-right">
-                        {formatCurrency(data.overhead.standard)}
-                      </td>
-                      <td className="text-right">
-                        {formatCurrency(data.overhead.actual)}
-                      </td>
-                      <td className="text-right text-muted">—</td>
-                      <td className="text-right text-muted">—</td>
-                    </tr>
-                    <tr className="cost-total-row">
-                      <td>Total Cost</td>
-                      <td className="text-right" title={data.total.standard}>
-                        {formatNumberCompact(data.total.standard)}
-                      </td>
-                      <td className="text-right" title={data.total.actual}>
-                        {formatNumberCompact(data.total.actual)}
-                      </td>
-                      <td
-                        className={`text-right ${data.total.variance > 0 ? "text-danger" : "text-success"}`}
-                      >
-                        {formatNumberCompact(data.total.variance)}
-                      </td>
-                      <td
-                        className={`text-right ${data.total.variancePercent > 0 ? "text-danger" : "text-success"}`}
-                      >
-                        {data.total.variancePercent}%
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="d-flex gap-3 mt-4">
-                <div className="flex-1 text-center legacy-cost-unit-card">
-                  <p className="m-0 text-muted font-semibold mb-2 legacy-cost-unit-label">
-                    Cost per Unit (Standard)
-                  </p>
-                  <h4 className="m-0">
-                    {formatCurrency(data.perUnit.standard)}
-                  </h4>
-                </div>
-                <div className="flex-1 text-center legacy-cost-unit-card">
-                  <p className="m-0 text-muted font-semibold mb-2 legacy-cost-unit-label">
-                    Cost per Unit (Actual)
-                  </p>
-                  <h4 className="m-0">{formatCurrency(data.perUnit.actual)}</h4>
-                </div>
-                <div
-                  className={`flex-1 text-center legacy-cost-unit-card ${data.perUnit.variance > 0 ? "bg-danger-light" : "bg-success-light"}`}
-                >
-                  <p
-                    className={`m-0 font-semibold mb-2 legacy-cost-unit-label ${data.perUnit.variance > 0 ? "text-danger" : "text-success"}`}
-                  >
-                    Variance per Unit
-                  </p>
-                  <h4
-                    className={`m-0 ${data.perUnit.variance > 0 ? "text-danger" : "text-success"}`}
-                  >
-                    {formatCurrency(data.perUnit.variance)}
-                  </h4>
                 </div>
               </div>
             </>

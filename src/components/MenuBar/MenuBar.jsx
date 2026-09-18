@@ -52,6 +52,11 @@ const MenuBar = ({ onLogout, onNavigate, user }) => {
       path: "/staff",
       main_module: "Staff",
     },
+    {
+     title: "Sampling",
+     path: "/sampling",
+     main_module: "Sampling",
+    },
 
    
   ];

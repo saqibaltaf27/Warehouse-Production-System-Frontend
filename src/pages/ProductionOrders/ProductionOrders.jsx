@@ -23,7 +23,8 @@ const ProductionOrders = () => {
   const [headerData, setHeaderData] = useState({
     Type: 'Standard',
     Status: 'Planned',
-    ProcureItems: false
+    ProcureItems: false,
+    Priority: 100
   });
   const [componentsData, setComponentsData] = useState([]);
 
@@ -175,7 +176,8 @@ const ProductionOrders = () => {
     setHeaderData({
       Type: 'Standard',
       Status: 'Planned',
-      ProcureItems: false
+      ProcureItems: false,
+      Priority: 100
     });
     setComponentsData([]);
     setItemCode('');
@@ -188,7 +190,8 @@ const ProductionOrders = () => {
     const numVal = parseFloat(val) || 0;
     setComponentsData(prev => prev.map(comp => ({
       ...comp,
-      PlannedQty: comp.BaseQty ? parseFloat((comp.BaseQty * numVal).toFixed(6)) : 0
+      PlannedQty: comp.BaseQty ? parseFloat((comp.BaseQty * numVal).toFixed(6)) : 0,
+      isEdited: false
     })));
   };
 
@@ -218,7 +221,7 @@ const ProductionOrders = () => {
   const handleComponentChange = (index, field, value) => {
     setComponentsData(prev => prev.map((comp, i) => {
       if (i === index) {
-        return { ...comp, [field]: value };
+        return { ...comp, [field]: value, isEdited: true };
       }
       return comp;
     }));
@@ -251,6 +254,17 @@ const ProductionOrders = () => {
     } else if (headerData.LinkedTo === 'Production Order' && headerData.LinkedOrder) {
       payload.LinkToObj = 202;
       payload.OriginNum = parseInt(headerData.LinkedOrder, 10) || null;
+    }
+
+    const changedLines = componentsData
+      .filter(comp => comp.isEdited)
+      .map(comp => ({
+        ItemCode: comp.No,
+        PlannedQuantity: parseFloat(comp.PlannedQty) || 0
+      }));
+
+    if (changedLines.length > 0) {
+      payload.Lines = changedLines;
     }
 
     setLoading(true);
@@ -294,6 +308,19 @@ const ProductionOrders = () => {
     { key: 'Status', header: 'Status', width: '10%' },
   ];
 
+  const isFormValid = Boolean(
+    itemCode &&
+    headerData?.Type &&
+    headerData?.Status &&
+    headerData?.PlannedQuantity &&
+    headerData?.Warehouse &&
+    headerData?.Branch &&
+    headerData?.Priority !== undefined && headerData?.Priority !== '' &&
+    headerData?.OrderDate &&
+    headerData?.StartDate &&
+    headerData?.DueDate
+  );
+
   return (
     <div className="po-container">
       {error && <div className="po-error">{error}</div>}
@@ -325,7 +352,7 @@ const ProductionOrders = () => {
           </div>
 
           <div className="po-footer-actions">
-            <Button variant="primary" disabled={loading} onClick={handleAddPO}>
+            <Button variant="primary" disabled={loading || !isFormValid} onClick={handleAddPO}>
               Add PO
             </Button>
             <Button variant="danger" onClick={handleClear} disabled={loading}>

@@ -1,0 +1,144 @@
+.sampling-page-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sampling-tabs-wrapper {
+  padding: 16px 24px 0 24px;
+  background: white;
+}
+
+.sampling-tab-content {
+  flex: 1;
+  overflow: auto;
+  margin-top:20px;
+}
+
+.sampling-placeholder-content {
+  background: white;
+  padding: 32px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.sampling-placeholder-content h3 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+}
+
+.sampling-placeholder-content p {
+  margin: 0;
+  color: #64748b;
+}
+
+/* Add Sample Form Styles */
+.qc-sampling-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.add-sample-wrapper {
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  padding: 24px;
+}
+
+.add-sample-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.add-sample-title {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.add-sample-body {
+  min-height: 150px;
+}
+
+.add-sample-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 48px;
+  margin-bottom: 32px;
+}
+
+.add-sample-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.add-sample-field {
+  display: flex;
+  align-items: center;
+}
+
+.add-sample-label {
+  width: 150px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.add-sample-input {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #1e293b;
+  transition: all 0.2s;
+}
+
+.add-sample-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-sample-input:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.add-sample-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.add-sample-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.add-sample-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 32px 20px;
+  font-size: 14px;
+}
+
+.add-sample-footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

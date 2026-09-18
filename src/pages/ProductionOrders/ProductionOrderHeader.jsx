@@ -359,7 +359,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           <div className="po-field-value">{headerData?.DistrRule || ''}</div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Project <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Project</div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select

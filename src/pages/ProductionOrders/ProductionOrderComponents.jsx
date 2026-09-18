@@ -41,16 +41,6 @@ const ProductionOrderComponents = ({ componentsData, itemCode, onRemoveRow, onRo
               componentsData.map((row, index) => (
                 <tr key={index}>
                   <td style={{ textAlign: 'center' }}>
-                    {isLinked && (
-                      <button 
-                        type="button" 
-                        onClick={() => onRemoveRow && onRemoveRow(index)}
-                        style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}
-                        title="Remove Row"
-                      >
-                        <IconTrash size={18} />
-                      </button>
-                    )}
                   </td>
                   <td>{index + 1}</td>
                   <td className="po-icon-cell">
@@ -68,7 +58,6 @@ const ProductionOrderComponents = ({ componentsData, itemCode, onRemoveRow, onRo
                       onChange={(e) => onRowChange && onRowChange(index, 'PlannedQty', e.target.value)}
                       className="po-uom-input" 
                       style={{ width: '80px' }}
-                      disabled={!isLinked}
                     />
                   </td>
                   <td>{row.Issued}</td>
