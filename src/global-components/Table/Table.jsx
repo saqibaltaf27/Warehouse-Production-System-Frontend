@@ -162,7 +162,7 @@ const Table = ({
                               {expandedRows[rowIndex] ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
                             </span>
                           )}
-                          {col.render ? col.render(rowItem) : rowItem[col.key]}
+                          {col.render ? col.render(rowItem, rowIndex) : rowItem[col.key]}
                         </div>
                       </td>
                     ))}
