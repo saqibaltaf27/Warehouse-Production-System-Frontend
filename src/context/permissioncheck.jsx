@@ -8,6 +8,8 @@ const PermissionContext = createContext(null);
 export const PermissionProvider = ({ children }) => {
   const { user } = useAuth();
   const [allowedModules, setAllowedModules] = useState(new Set());
+  const [allowedSubModules, setAllowedSubModules] = useState(new Set());
+  const [allowedChildModules, setAllowedChildModules] = useState(new Set());
   const [allowedRoutes, setAllowedRoutes] = useState(new Set());
   const [loadingPermissions, setLoadingPermissions] = useState(true);
 
@@ -37,12 +39,20 @@ export const PermissionProvider = ({ children }) => {
           const userPermissionIds = userPermsRes.data.data;
           
           const allowedMainModules = new Set();
+          const allowedSubModuleSet = new Set();
+          const allowedChildModuleSet = new Set();
           const allowedRouteSet = new Set();
           
           allPermissions.forEach(perm => {
             if (userPermissionIds.includes(perm.Id)) {
               if (perm.main_module) {
                 allowedMainModules.add(perm.main_module);
+              }
+              if (perm.sub_module) {
+                allowedSubModuleSet.add(perm.sub_module);
+              }
+              if (perm.child_module) {
+                allowedChildModuleSet.add(perm.child_module);
               }
               if (perm.Route) {
                 allowedRouteSet.add(perm.Route);
@@ -51,6 +61,8 @@ export const PermissionProvider = ({ children }) => {
           });
           
           setAllowedModules(allowedMainModules);
+          setAllowedSubModules(allowedSubModuleSet);
+          setAllowedChildModules(allowedChildModuleSet);
           setAllowedRoutes(allowedRouteSet);
         }
       } catch (err) {
@@ -64,7 +76,13 @@ export const PermissionProvider = ({ children }) => {
   }, [user]);
 
   return (
-    <PermissionContext.Provider value={{ allowedModules, allowedRoutes, loadingPermissions }}>
+    <PermissionContext.Provider value={{ 
+      allowedModules, 
+      allowedSubModules, 
+      allowedChildModules, 
+      allowedRoutes, 
+      loadingPermissions 
+    }}>
       {children}
     </PermissionContext.Provider>
   );

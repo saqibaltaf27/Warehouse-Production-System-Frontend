@@ -19,19 +19,13 @@ const Layout = () => {
     }
   }, [pathname, fetchUser]);
   const moduleTitles = {
-    "/dashboard": "Dashboard",
-    "/engineering-dashboard": "Engineering Dashboard",
-    "/analytics": "Analytics",
-    "/production-trend": "Production Trend",
-    "/machine-efficiency": "Machine Efficiency",
-    "/inventory": "Inventory",
-    "/orders": "Orders",
-    "/delivery": "Delivery",
-    // "/cost-analysis": "Cost Analysis",
-    "/production-planning": "Production Planning",
-    "/production-orders": "Production Orders",
-    "/production-template": "Production Template",
+    "/production": "Production",
     "/qc": "QC",
+    "/engineering-dashboard": "Engineering Dashboard",
+    "/inventory": "Inventory",
+    "/machine": "Machine",
+    "/staff": "Staff",
+    "/sampling": "Sampling",
     "/access-control": "Access Control",
   };
 

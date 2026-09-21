@@ -218,6 +218,7 @@ const QCSampling = () => {
     { key: 'Sampling No', header: 'Sampling No' },
     { key: 'Sampling Date', header: 'Sampling Date', render: row => row['Sampling Date'] ? new Date(row['Sampling Date']).toLocaleDateString() : '' },
     { key: 'Docnument Type', header: 'Document Type' },
+    { key: 'Document Entry', header: 'Document Entry' },
     { key: 'Document No', header: 'Document No' },
     { key: 'Supplier Code', header: 'Supplier Code' },
     { key: 'Supplier Name', header: 'Supplier Name' },

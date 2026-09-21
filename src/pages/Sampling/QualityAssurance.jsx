@@ -21,6 +21,7 @@ const QualityAssurance = () => {
   const [sampleQty, setSampleQty] = useState('');
   const [tableData, setTableData] = useState([]);
   const [equipmentOptions, setEquipmentOptions] = useState([]);
+  const [employeeOptions, setEmployeeOptions] = useState([]);
   const [nextDocEntry, setNextDocEntry] = useState('');
   const [batchOptions, setBatchOptions] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -29,6 +30,20 @@ const QualityAssurance = () => {
   const [batchExpDate, setBatchExpDate] = useState('');
   const [docDate, setDocDate] = useState(new Date().toISOString().split('T')[0]);
   const [qcType, setQcType] = useState('B');
+
+  const [sampleBy, setSampleBy] = useState('');
+  const [inspectedBy, setInspectedBy] = useState('');
+  const [analyzedBy, setAnalyzedBy] = useState('');
+  const [reviewedBy, setReviewedBy] = useState('');
+  const [reportBy, setReportBy] = useState('');
+  const [qcDecision, setQcDecision] = useState('A');
+  const [qcRemarks, setQcRemarks] = useState('');
+  const [acceptedQty, setAcceptedQty] = useState('');
+  const [rejectedQty, setRejectedQty] = useState('');
+  const [releaseWarehouse, setReleaseWarehouse] = useState('');
+  const [rejectionWarehouse, setRejectionWarehouse] = useState('');
+  const [acceptedITR, setAcceptedITR] = useState('');
+  const [rejectedITR, setRejectedITR] = useState('');
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -63,9 +78,21 @@ const QualityAssurance = () => {
     }
   };
 
+  const fetchEmployees = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/employees`);
+      if (res.data?.success) {
+        setEmployeeOptions(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+    }
+  };
+
   useEffect(() => {
     fetchQualityRecords(page);
     fetchEquipments();
+    fetchEmployees();
   }, [page]);
 
   const handleRowClick = async (row) => {
@@ -116,6 +143,19 @@ const QualityAssurance = () => {
     setBatchExpDate('');
     setDocDate(new Date().toISOString().split('T')[0]);
     setQcType('B');
+    setSampleBy('');
+    setInspectedBy('');
+    setAnalyzedBy('');
+    setReviewedBy('');
+    setReportBy('');
+    setQcDecision('A');
+    setQcRemarks('');
+    setAcceptedQty('');
+    setRejectedQty('');
+    setReleaseWarehouse('');
+    setRejectionWarehouse('');
+    setAcceptedITR('');
+    setRejectedITR('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -137,6 +177,24 @@ const QualityAssurance = () => {
         qcType,
         docDate,
         lines: tableData,
+        sampleBy,
+        sampleByName: employeeOptions.find(e => e.EmpID == sampleBy)?.FirstName || null,
+        inspectedBy,
+        inspectedByName: employeeOptions.find(e => e.EmpID == inspectedBy)?.FirstName || null,
+        analyzedBy,
+        analyzedByName: employeeOptions.find(e => e.EmpID == analyzedBy)?.FirstName || null,
+        reviewedBy,
+        reviewedByName: employeeOptions.find(e => e.EmpID == reviewedBy)?.FirstName || null,
+        reportBy,
+        reportByName: employeeOptions.find(e => e.EmpID == reportBy)?.FirstName || null,
+        qcDecision,
+        qcRemarks,
+        acceptedQty,
+        rejectedQty,
+        releaseWarehouse,
+        rejectionWarehouse,
+        acceptedITR,
+        rejectedITR,
         empId: user ? (user.empId || user.EmpID || user.id || user.emp_id) : null,
         empName: user ? (user.firstName ? `${user.firstName} ${user.lastName || ''}` : user.username) : null,
       };
@@ -171,8 +229,32 @@ const QualityAssurance = () => {
     { key: 'Parameter Line', header: '#' },
     { key: 'Parameter Code', header: 'Parameter Code' },
     { key: 'Parameter Name', header: 'Parameter Name' },
-    { key: 'Action', header: 'Action' },
-    { key: 'Criteria', header: 'Criteria' },
+    { 
+      key: 'Action', 
+      header: 'Action',
+      render: (row) => (
+        <textarea 
+          rows={2}
+          value={row['Action'] || ''}
+          readOnly
+          className="qc-param-textarea"
+          style={{ backgroundColor: '#f5f5f5' }}
+        />
+      )
+    },
+    { 
+      key: 'Criteria', 
+      header: 'Criteria',
+      render: (row) => (
+        <textarea 
+          rows={2}
+          value={row['Criteria'] || ''}
+          readOnly
+          className="qc-param-textarea"
+          style={{ backgroundColor: '#f5f5f5' }}
+        />
+      )
+    },
     { 
       key: 'Equipment Code', 
       header: 'Equipment Code',
@@ -546,23 +628,48 @@ const QualityAssurance = () => {
                   <div className="add-sample-col">
                     <div className="add-sample-field">
                       <label className="add-sample-label">Sample By</label>
-                      <input type="text" className="add-sample-input" />
+                      <select className="add-sample-input" value={sampleBy} onChange={e => setSampleBy(e.target.value)}>
+                        <option value="">Select Employee</option>
+                        {employeeOptions.map(emp => (
+                          <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Inspected By</label>
-                      <input type="text" className="add-sample-input" />
+                      <select className="add-sample-input" value={inspectedBy} onChange={e => setInspectedBy(e.target.value)}>
+                        <option value="">Select Employee</option>
+                        {employeeOptions.map(emp => (
+                          <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Analyzed By</label>
-                      <input type="text" className="add-sample-input" />
+                      <select className="add-sample-input" value={analyzedBy} onChange={e => setAnalyzedBy(e.target.value)}>
+                        <option value="">Select Employee</option>
+                        {employeeOptions.map(emp => (
+                          <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Reviewed By</label>
-                      <input type="text" className="add-sample-input" />
+                      <select className="add-sample-input" value={reviewedBy} onChange={e => setReviewedBy(e.target.value)}>
+                        <option value="">Select Employee</option>
+                        {employeeOptions.map(emp => (
+                          <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Report By</label>
-                      <input type="text" className="add-sample-input" />
+                      <select className="add-sample-input" value={reportBy} onChange={e => setReportBy(e.target.value)}>
+                        <option value="">Select Employee</option>
+                        {employeeOptions.map(emp => (
+                          <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
+                        ))}
+                      </select>
                     </div>
                     
                     <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
@@ -575,47 +682,49 @@ const QualityAssurance = () => {
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>QC Decision</label>
-                        <select className="add-sample-input">
-                          <option>Accepted</option>
-                          <option>Rejected</option>
+                        <select className="add-sample-input" value={qcDecision} onChange={e => setQcDecision(e.target.value)}>
+                          <option value="A">Accepted</option>
+                          <option value="R">Rejected</option>
+                          <option value="CA">Conditionally Accepted</option>
+                          <option value="CR">Conditionally Rejected</option>
                         </select>
                       </div>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>QC Remarks</label>
-                        <input type="text" className="add-sample-input" />
+                        <input type="text" className="add-sample-input" value={qcRemarks} onChange={e => setQcRemarks(e.target.value)} />
                       </div>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Accepted Qty</label>
-                        <input type="text" className="add-sample-input" />
+                        <input type="text" className="add-sample-input" value={acceptedQty} onChange={e => setAcceptedQty(e.target.value)} />
                       </div>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Rejected Qty</label>
-                        <input type="text" className="add-sample-input" />
+                        <input type="text" className="add-sample-input" value={rejectedQty} onChange={e => setRejectedQty(e.target.value)} />
                       </div>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Release Warehouse</label>
-                        <input type="text" className="add-sample-input" />
+                        <input type="text" className="add-sample-input" value={releaseWarehouse} onChange={e => setReleaseWarehouse(e.target.value)} />
                       </div>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Rejection Warehouse</label>
-                        <input type="text" className="add-sample-input" />
+                        <input type="text" className="add-sample-input" value={rejectionWarehouse} onChange={e => setRejectionWarehouse(e.target.value)} />
                       </div>
                     </div>
                     
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Accepted ITR</label>
-                        <input type="text" className="add-sample-input" disabled />
+                        <input type="text" className="add-sample-input" disabled value={acceptedITR} />
                       </div>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Rejected ITR</label>
-                        <input type="text" className="add-sample-input" disabled />
+                        <input type="text" className="add-sample-input" disabled value={rejectedITR} />
                       </div>
                     </div>
 
@@ -661,13 +770,80 @@ const QualityAssurance = () => {
                 </div>
                 
                 <h4 style={{ marginBottom: '12px', color: '#333' }}>Parameters</h4>
-                <div className="add-sample-table-wrapper" style={{ border: 'none', boxShadow: 'none' }}>
+                <div className="add-sample-table-wrapper" style={{ border: 'none', boxShadow: 'none', marginBottom: '24px' }}>
                   <Table 
                     data={recordDetails}
                     columns={detailColumns}
                     isLoading={loadingDetails}
                     showActions={false}
                   />
+                </div>
+
+                <div className="add-sample-grid" style={{ marginBottom: '24px' }}>
+                  <div className="add-sample-col">
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Sample By</label>
+                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Sample By Name'] ? `${selectedRecord['Sample By']} - ${selectedRecord['Sample By Name']}` : (selectedRecord['Sample By'] || '')} />
+                    </div>
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Inspected By</label>
+                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Inspected By Name'] ? `${selectedRecord['Inspected By']} - ${selectedRecord['Inspected By Name']}` : (selectedRecord['Inspected By'] || '')} />
+                    </div>
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Analyzed By</label>
+                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Analyzed By Name'] ? `${selectedRecord['Analyzed By']} - ${selectedRecord['Analyzed By Name']}` : (selectedRecord['Analyzed By'] || '')} />
+                    </div>
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Reviewed By</label>
+                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Reviewed By Name'] ? `${selectedRecord['Reviewed By']} - ${selectedRecord['Reviewed By Name']}` : (selectedRecord['Reviewed By'] || '')} />
+                    </div>
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Report By</label>
+                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Report By Name'] ? `${selectedRecord['Report By']} - ${selectedRecord['Report By Name']}` : (selectedRecord['Report By'] || '')} />
+                    </div>
+                  </div>
+
+                  <div className="add-sample-col">
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted Qty</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Accepted Qty'] || ''} />
+                      </div>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected Qty</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejected Qty'] || ''} />
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Release Warehouse</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Release Warehouse'] || ''} />
+                      </div>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Rejection Warehouse</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejection Warehouse'] || ''} />
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted ITR</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Accepted ITR'] || ''} />
+                      </div>
+                      <div className="add-sample-field" style={{ flex: 1 }}>
+                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected ITR</label>
+                        <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejected ITR'] || ''} />
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <Button variant="secondary">Release Sticker</Button>
+                      <Button variant="secondary">Rejected Sticker</Button>
+                      <Button variant="secondary">COA</Button>
+                      <Button variant="secondary">QC Report</Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
