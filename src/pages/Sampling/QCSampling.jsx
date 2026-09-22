@@ -399,7 +399,7 @@ const QCSampling = () => {
                   <div style={{ flex: 1 }}>
                     <ChooseFromList
                       title={`Select Open ${sampleForm.DocumentType}`}
-                      apiEndpoint={`${import.meta.env.VITE_API_BASE_URL}/sampling/open-documents`}
+                      apiEndpoint={`/sampling/open-documents`}
                       queryParams={{ docType: sampleForm.DocumentType }}
                       disabled={formMode === 'view'}
                       columns={[

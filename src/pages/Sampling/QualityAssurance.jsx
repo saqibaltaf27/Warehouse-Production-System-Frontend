@@ -415,7 +415,7 @@ const QualityAssurance = () => {
                       <div style={{ flex: 1 }}>
                         <ChooseFromList
                           title="Select Item"
-                          apiEndpoint={`${import.meta.env.VITE_API_BASE_URL}/quality/items`}
+                          apiEndpoint={`/quality/items`}
                           columns={[
                             { key: 'ItemCode', header: 'Item Code' },
                             { key: 'ItemName', header: 'Item Name' }
