@@ -11,12 +11,21 @@ import './Production.css';
 
 const Production = () => {
   const [activeTab, setActiveTab] = useState(() => {
-    return sessionStorage.getItem('mainProductionActiveTab') || 'purchase-order';
+    return sessionStorage.getItem('mainProductionActiveTab') || 'dashboard';
   });
 
   React.useEffect(() => {
     sessionStorage.setItem('mainProductionActiveTab', activeTab);
   }, [activeTab]);
+
+  // Clear the saved tab when navigating away to another page.
+  // This cleanup function does NOT run when the browser is refreshed,
+  // so the tab will still be remembered on refresh!
+  React.useEffect(() => {
+    return () => {
+      sessionStorage.removeItem('mainProductionActiveTab');
+    };
+  }, []);
 
   const tabs = [
     { key: 'dashboard', label: 'Dashboard' },
@@ -25,7 +34,7 @@ const Production = () => {
     { key: 'production-planning', label: 'Production Planning' },
     { key: 'purchase-order', label: 'Purchase Request' },
     { key: 'production-trend', label: 'Production Trend' },
-    { key: 'production-template', label: 'Production Template' },
+    // { key: 'production-template', label: 'Production Template' },
 
   ];
 

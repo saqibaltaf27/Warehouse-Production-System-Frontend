@@ -35,6 +35,7 @@ const CostAnalysis = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [materials, setMaterials] = useState([]);
   const [orderStaff, setOrderStaff] = useState([]);
+  const [orderMachines, setOrderMachines] = useState([]);
   const [materialsLoading, setMaterialsLoading] = useState(false);
 
   const costContributionData = React.useMemo(() => {
@@ -118,6 +119,7 @@ const CostAnalysis = () => {
     setIsModalVisible(true);
     setMaterialsLoading(true);
     setOrderStaff([]);
+    setOrderMachines([]);
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_BASE_URL}/cost-analysis/orders/${record.DocEntry}/materials`,
@@ -125,6 +127,7 @@ const CostAnalysis = () => {
       if (res.data?.success) {
         setMaterials(res.data.data);
         setOrderStaff(res.data.staff || []);
+        setOrderMachines(res.data.machines || []);
       }
     } catch (error) {
       console.error("Failed to load materials for order", error);
@@ -475,83 +478,161 @@ const CostAnalysis = () => {
                   rowHasSubComponent={(row) => {
                     const desc = (row["Item Description"] || "").toLowerCase();
                     const code = (row.ItemCode || "").toLowerCase();
+                    const isLabour = desc.includes("labor") || desc.includes("labour") || code.includes("-lc-");
+                    const isFOH = desc.includes("foh") || code.includes("-foh-");
+                    
                     return (
                       row.Type === "Resource" &&
-                      (desc.includes("labor") ||
-                        desc.includes("labour") ||
-                        code.includes("-lc-")) &&
-                      orderStaff.length > 0
+                      ((isLabour && orderStaff.length > 0) || (isFOH && orderMachines.length > 0))
                     );
                   }}
-                  expandedRowRender={(row) => (
-                    <>
-                      {orderStaff.map((s) => (
-                        <tr
-                          key={s.StaffID}
-                          style={{ backgroundColor: "#f8fafc" }}
-                        >
-                          <td
-                            style={{
-                              paddingLeft: "48px",
-                              fontSize: "0.875rem",
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                              }}
+                  expandedRowRender={(row) => {
+                    const desc = (row["Item Description"] || "").toLowerCase();
+                    const code = (row.ItemCode || "").toLowerCase();
+                    const isLabour = desc.includes("labor") || desc.includes("labour") || code.includes("-lc-");
+                    const isFOH = desc.includes("foh") || code.includes("-foh-");
+
+                    if (isLabour) {
+                      return (
+                        <>
+                          {orderStaff.map((s) => (
+                            <tr
+                              key={s.StaffID}
+                              style={{ backgroundColor: "#f8fafc" }}
                             >
-                              <span
+                              <td
                                 style={{
-                                  width: "4px",
-                                  height: "4px",
-                                  borderRadius: "50%",
-                                  backgroundColor: "#64748b",
+                                  paddingLeft: "48px",
+                                  fontSize: "0.875rem",
                                 }}
-                              ></span>
-                              {s.Name}
-                            </div>
-                          </td>
-                          <td style={{ fontSize: "0.875rem" }}>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "16px",
-                              }}
-                            >
-                              <span>{s.Designation}</span>
-                              <span
-                                style={{ fontSize: "0.8rem", color: "#64748b" }}
                               >
-                                {s.DaysWorked ? `${s.DaysWorked} Days` : ""}
-                                {s.DaysWorked && s.TotalHours ? " • " : ""}
-                                {s.TotalHours ? `${s.TotalHours} Hrs` : ""}
-                              </span>
-                            </div>
-                          </td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td
-                            style={{
-                              textAlign: "right",
-                              fontSize: "0.875rem",
-                              fontWeight: "500",
-                              color: "#1e293b",
-                            }}
-                          >
-                            {s.CalculatedCost
-                              ? parseFloat(s.CalculatedCost).toFixed(2)
-                              : "-"}
-                          </td>
-                          <td></td>
-                        </tr>
-                      ))}
-                    </>
-                  )}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      width: "4px",
+                                      height: "4px",
+                                      borderRadius: "50%",
+                                      backgroundColor: "#64748b",
+                                    }}
+                                  ></span>
+                                  {s.Name}
+                                </div>
+                              </td>
+                              <td style={{ fontSize: "0.875rem" }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "16px",
+                                  }}
+                                >
+                                  <span>{s.Designation}</span>
+                                  <span
+                                    style={{ fontSize: "0.8rem", color: "#64748b" }}
+                                  >
+                                    {s.DaysWorked ? `${s.DaysWorked} Days` : ""}
+                                    {s.DaysWorked && s.TotalHours ? " • " : ""}
+                                    {s.TotalHours ? `${s.TotalHours} Hrs` : ""}
+                                  </span>
+                                </div>
+                              </td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td
+                                style={{
+                                  textAlign: "right",
+                                  fontSize: "0.875rem",
+                                  fontWeight: "500",
+                                  color: "#1e293b",
+                                }}
+                              >
+                                {s.CalculatedCost
+                                  ? parseFloat(s.CalculatedCost).toFixed(2)
+                                  : "-"}
+                              </td>
+                              <td></td>
+                            </tr>
+                          ))}
+                        </>
+                      );
+                    }
+                    
+                    if (isFOH) {
+                      return (
+                        <>
+                          {orderMachines.map((m, idx) => (
+                            <tr
+                              key={`machine-${idx}`}
+                              style={{ backgroundColor: "#f8fafc" }}
+                            >
+                              <td
+                                style={{
+                                  paddingLeft: "48px",
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      width: "4px",
+                                      height: "4px",
+                                      borderRadius: "50%",
+                                      backgroundColor: "#64748b",
+                                    }}
+                                  ></span>
+                                  {m.Name}
+                                </div>
+                              </td>
+                              <td style={{ fontSize: "0.875rem" }}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "16px",
+                                  }}
+                                >
+                                  <span>Machine</span>
+                                  <span
+                                    style={{ fontSize: "0.8rem", color: "#64748b" }}
+                                  >
+                                    {m.TotalHours ? `${m.TotalHours} Hrs` : ""}
+                                  </span>
+                                </div>
+                              </td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td
+                                style={{
+                                  textAlign: "right",
+                                  fontSize: "0.875rem",
+                                  fontWeight: "500",
+                                  color: "#1e293b",
+                                }}
+                              >
+                                -
+                              </td>
+                              <td></td>
+                            </tr>
+                          ))}
+                        </>
+                      );
+                    }
+                    return null;
+                  }}
                 />
               )}
             </div>

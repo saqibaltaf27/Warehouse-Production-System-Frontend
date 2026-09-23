@@ -459,9 +459,9 @@ const ProductionPlanning = () => {
               { key: 'machine-efficiency', label: 'Machine Efficiency', icon: <IconSettings size={18} /> },
               { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
               { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
-              { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
-              { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
-              { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
+              // { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
+              // { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
+              // { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
             ]}
             activeTab={activeTab}
             onTabChange={setActiveTab}
