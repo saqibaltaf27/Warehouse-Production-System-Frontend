@@ -234,7 +234,7 @@ const ProductionOrders = () => {
     }
 
     const payload = {
-      CompanyDB: "Z_Dummy_LDS_Live",
+      CompanyDB: "LDS_Live",
       ItemCode: itemCode,
       PlannedQuantity: parseFloat(headerData.PlannedQuantity),
       WarehouseCode: headerData.Warehouse || '',
