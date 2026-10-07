@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { IconEdit } from '@tabler/icons-react';
+import { IconEdit, IconSearch } from '@tabler/icons-react';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
@@ -17,6 +17,9 @@ const Staff = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const [staffData, setStaffData] = useState([]);
+  const [totalStaff, setTotalStaff] = useState(0);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [editStaffId, setEditStaffId] = useState(null);
   
   const [formData, setFormData] = useState({
@@ -28,12 +31,29 @@ const Staff = () => {
     status: '1'
   });
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery !== searchInput) {
+        setSearchQuery(searchInput);
+        setCurrentPage(1);
+      }
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchInput]);
+
   const fetchStaff = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axiosInstance.get(API_ENDPOINTS.STAFF.GET_STAFF);
+      const res = await axiosInstance.get(API_ENDPOINTS.STAFF.GET_STAFF, {
+        params: { page: currentPage, limit: pageSize, search: searchQuery }
+      });
       if (res.data.success) {
         setStaffData(res.data.data);
+        if (res.data.pagination) {
+          setTotalStaff(res.data.pagination.total);
+        } else {
+          setTotalStaff(res.data.data.length);
+        }
       }
     } catch (error) {
       console.error('Error fetching staff:', error);
@@ -41,7 +61,7 @@ const Staff = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize, searchQuery]);
 
   useEffect(() => {
     fetchStaff();
@@ -154,15 +174,28 @@ const Staff = () => {
     <div className="staff-container">
       <div className="staff-header">
         <h2>Staff Directory</h2>
-        <Button variant="primary" onClick={openAddModal}>
-          Add Staff
-        </Button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div className="purchase-order-search-wrapper" style={{ position: 'relative' }}>
+            <IconSearch size={18} className="purchase-order-search-icon" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="purchase-order-search-input"
+              style={{ paddingLeft: '36px', paddingRight: '12px', height: '36px', borderRadius: '6px', border: '1px solid #d1d5db' }}
+            />
+          </div>
+          <Button variant="primary" onClick={openAddModal}>
+            Add Staff
+          </Button>
+        </div>
       </div>
       <div className="staff-content">
         <Table
           data={staffData}
           columns={columns}
-          totalEntries={staffData.length}
+          totalEntries={totalStaff}
           showActions={false}
           isLoading={isLoading}
           currentPage={currentPage}

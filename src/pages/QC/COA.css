@@ -435,3 +435,117 @@
   align-items: center;
   justify-content: center;
 }
+
+.coa-print-only {
+  display: none;
+}
+
+.coa-print-product-text {
+  flex: 1;
+  font-weight: normal;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 5mm;
+}
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .no-print,
+  .coa-screen-only {
+    display: none !important;
+  }
+
+  .coa-print-only {
+    display: block !important;
+  }
+
+  /* Print only the certificate box */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .coa-document,
+  .coa-document * {
+    visibility: visible !important;
+  }
+
+  .coa-document {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  /* Ensure the container fits on one page */
+  .coa-document-container {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  
+  .coa-document-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Reduce paddings slightly to save vertical space if needed */
+  .coa-table-section {
+    padding: 10px 10px 0px 10px;
+  }
+  
+  .coa-details-section {
+    padding: 10px;
+  }
+}
+
+/* Classes converted from inline styles */
+.coa-wrapper-centered {
+  flex-direction: column;
+  align-items: center;
+}
+
+.coa-print-action-container {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.coa-print-btn {
+  padding: 10px 20px;
+  background-color: #4a86e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.coa-top-logo-no-border {
+  border: none !important;
+  gap: 10px;
+}
+
+.coa-top-logo-img {
+  height: 80px;
+  object-fit: contain;
+}
+
+.coa-logo-section-padded {
+  padding: 10px;
+}
+
+.coa-header-logo-img {
+  max-width: 100%;
+  max-height: 110px;
+  object-fit: contain;
+}

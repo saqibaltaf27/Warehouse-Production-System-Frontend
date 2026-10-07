@@ -22,6 +22,7 @@ const QualityAssurance = () => {
   const [tableData, setTableData] = useState([]);
   const [equipmentOptions, setEquipmentOptions] = useState([]);
   const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [warehouseOptions, setWarehouseOptions] = useState([]);
   const [nextDocEntry, setNextDocEntry] = useState('');
   const [batchOptions, setBatchOptions] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState('');
@@ -48,12 +49,14 @@ const QualityAssurance = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [decisionOptions, setDecisionOptions] = useState([]);
 
-  const fetchQualityRecords = async (pageNum = 1) => {
+  const fetchQualityRecords = async (pageNum = 1, currentStatusFilter = statusFilter) => {
     setLoading(true);
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-records`, {
-        params: { page: pageNum, limit }
+        params: { page: pageNum, limit, status: currentStatusFilter }
       });
       if (res.data?.success) {
         setData(res.data.data);
@@ -89,17 +92,63 @@ const QualityAssurance = () => {
     }
   };
 
+  const fetchDecisionOptions = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-decisions`);
+      if (res.data?.success) {
+        setDecisionOptions(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching quality decisions:", err);
+    }
+  };
+
+  const fetchWarehouses = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/warehouses`);
+      if (res.data?.success) {
+        setWarehouseOptions(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching warehouses:", err);
+    }
+  };
+
   useEffect(() => {
-    fetchQualityRecords(page);
+    fetchQualityRecords(page, statusFilter);
     fetchEquipments();
     fetchEmployees();
-  }, [page]);
+    fetchDecisionOptions();
+    fetchWarehouses();
+  }, [page, statusFilter]);
 
   const handleRowClick = async (row) => {
     setSelectedRecord(row);
     setShowForm(true);
     setLoadingDetails(true);
     
+    // Set editable fields for existing records
+    setSampleBy(row['Sample By'] || '');
+    setInspectedBy(row['Inspected By'] || '');
+    setAnalyzedBy(row['Analyzed By'] || '');
+    setReviewedBy(row['Reviewed By'] || '');
+    setReportBy(row['Report By'] || '');
+    
+    let decCode = 'A';
+    if (row['QC Decision'] === 'Accepted') decCode = 'A';
+    else if (row['QC Decision'] === 'Rejected') decCode = 'R';
+    else if (row['QC Decision'] === 'Conditionally Accepted') decCode = 'CA';
+    else if (row['QC Decision'] === 'Conditionally Rejected') decCode = 'CR';
+    else decCode = row['QC Decision'] || 'A';
+    setQcDecision(decCode);
+    
+    setAcceptedQty(row['Accepted Qty'] !== null ? String(row['Accepted Qty']) : '');
+    setRejectedQty(row['Rejected Qty'] !== null ? String(row['Rejected Qty']) : '');
+    setReleaseWarehouse(row['Release Warehouse'] || '');
+    setRejectionWarehouse(row['Rejection Warehouse'] || '');
+    setAcceptedITR(row['Accepted ITR'] || '');
+    setRejectedITR(row['Rejected ITR'] || '');
+
     // Smooth scroll to top to see the details panel
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -709,11 +758,21 @@ const QualityAssurance = () => {
                     <div style={{ display: 'flex', gap: '16px' }}>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Release Warehouse</label>
-                        <input type="text" className="add-sample-input" value={releaseWarehouse} onChange={e => setReleaseWarehouse(e.target.value)} />
+                        <select className="add-sample-input" value={releaseWarehouse} onChange={e => setReleaseWarehouse(e.target.value)}>
+                          <option value="">Select Warehouse</option>
+                          {warehouseOptions.map(whs => (
+                            <option key={whs.WhsCode} value={whs.WhsCode}>{whs.WhsCode} - {whs.WhsName}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="add-sample-field" style={{ flex: 1 }}>
                         <label className="add-sample-label" style={{ width: '100px' }}>Rejection Warehouse</label>
-                        <input type="text" className="add-sample-input" value={rejectionWarehouse} onChange={e => setRejectionWarehouse(e.target.value)} />
+                        <select className="add-sample-input" value={rejectionWarehouse} onChange={e => setRejectionWarehouse(e.target.value)}>
+                          <option value="">Select Warehouse</option>
+                          {warehouseOptions.map(whs => (
+                            <option key={whs.WhsCode} value={whs.WhsCode}>{whs.WhsCode} - {whs.WhsName}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                     
@@ -854,9 +913,11 @@ const QualityAssurance = () => {
       <div className="dome-card-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px 0' }}>
           <h3 className="section-title">Quality Records</h3>
-          <Button variant="primary" onClick={handleAddQuality}>
-            Add Quality
-          </Button>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <Button variant="primary" onClick={handleAddQuality}>
+              Add Quality
+            </Button>
+          </div>
         </div>
 
         <Table 

@@ -202,6 +202,16 @@ const CostAnalysis = () => {
       header: "Capex",
       render: () => "-",
     },
+    {
+      key: "PerTestCost",
+      header: "Per Test Cost",
+      render: (row) => `${Number(row.CalculatedStaffCost || 0).toFixed(2)}`,
+    },
+    {
+      key: "TotalTestsProduced",
+      header: "Total Tests Produced",
+      render: (row) => Number(row.TotalTestsProduced || 0).toLocaleString(),
+    },
     // {
     //   key: 'TotalVariance',
     //   header: 'Variance',
@@ -258,6 +268,16 @@ const CostAnalysis = () => {
       key: "ActualCost",
       header: "Actual Cost",
       render: (row) => {
+        if (row.Type === "Resource") {
+          const desc = (row["Item Description"] || "").toLowerCase();
+          const code = (row.ItemCode || "").toLowerCase();
+          const isLabour = desc.includes("labor") || desc.includes("labour") || code.includes("-lc-");
+          if (isLabour) {
+            const staffCost = orderStaff.reduce((sum, s) => sum + (Number(s.CalculatedCost) || 0), 0);
+            return staffCost > 0 ? staffCost.toFixed(2) : "-";
+          }
+          return "-";
+        }
         if (row.Type !== "Item") return "-";
         const actCost =
           (Number(row.PlannedQty) || 0) * (Number(row["Item Cost"]) || 0);
@@ -268,11 +288,23 @@ const CostAnalysis = () => {
       key: "TotalVariance",
       header: "Variance",
       render: (row) => {
-        if (row.Type !== "Item")
+        const stdCost = (Number(row.PlannedQty) || 0) * (Number(row["Item Cost"]) || 0);
+        let actCost = stdCost; // Default for Item
+
+        if (row.Type === "Resource") {
+          const desc = (row["Item Description"] || "").toLowerCase();
+          const code = (row.ItemCode || "").toLowerCase();
+          const isLabour = desc.includes("labor") || desc.includes("labour") || code.includes("-lc-");
+          
+          if (isLabour) {
+            actCost = orderStaff.reduce((sum, s) => sum + (Number(s.CalculatedCost) || 0), 0);
+          } else {
+            return <span className="variance-text">-</span>;
+          }
+        } else if (row.Type !== "Item") {
           return <span className="variance-text">-</span>;
-        const stdCost =
-          (Number(row.PlannedQty) || 0) * (Number(row["Item Cost"]) || 0);
-        const actCost = stdCost;
+        }
+
         const val = stdCost - actCost;
         const colorClass =
           val > 0 ? "variance-positive" : val < 0 ? "variance-negative" : "";
@@ -649,14 +681,25 @@ const CostAnalysis = () => {
                 {(() => {
                   let totalStandardCost = 0;
                   let totalActualCost = 0;
+                  let addedStaffCost = false;
 
                   materials.forEach((row) => {
                     const std =
                       (Number(row.PlannedQty) || 0) *
                       (Number(row["Item Cost"]) || 0);
                     totalStandardCost += std;
+                    
                     if (row.Type === "Item") {
                       totalActualCost += std;
+                    } else if (row.Type === "Resource") {
+                      const desc = (row["Item Description"] || "").toLowerCase();
+                      const code = (row.ItemCode || "").toLowerCase();
+                      const isLabour = desc.includes("labor") || desc.includes("labour") || code.includes("-lc-");
+                      if (isLabour && !addedStaffCost) {
+                        const staffCost = orderStaff.reduce((sum, s) => sum + (Number(s.CalculatedCost) || 0), 0);
+                        totalActualCost += staffCost;
+                        addedStaffCost = true;
+                      }
                     }
                   });
 

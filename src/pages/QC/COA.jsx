@@ -149,6 +149,9 @@ const COA = () => {
           mfgDate: formatDate(details['MFG DATE']) || '',
           expDate: formatDate(details['EXP DATE']) || '',
           dateReported: formatDate(details['DATE REPORTED']) || '',
+          composition: details['COMPOSITION'] || prev.composition,
+          reg: details['REG'] || prev.reg,
+          revisionNo: details['REVISION NO.'] || prev.revisionNo,
           tests: presetTests,
           remarks: prev.remarks // Keep existing remarks
         }));
@@ -188,12 +191,20 @@ const COA = () => {
   };
 
   return (
-    <div className="coa-document-wrapper">
+    <div className="coa-document-wrapper coa-wrapper-centered">
+      <div className="no-print coa-print-action-container">
+        <button 
+          onClick={() => window.print()} 
+          className="coa-print-btn"
+        >
+          Print PDF
+        </button>
+      </div>
       <div className="coa-document-container">
         {/* Top Header Outside Document */}
-        <div className="coa-top-header">
-          <div className="coa-top-logo" style={{ border: 'none', gap: '10px' }}>
-            <img src="/images/ldslogo.png" alt="LDS Logo" style={{ height: '80px', objectFit: 'contain' }} />
+        <div className="coa-top-header no-print">
+          <div className="coa-top-logo coa-top-logo-no-border">
+            <img src="/images/ldslogo.png" alt="LDS Logo" className="coa-top-logo-img" />
             <span className="logo-text">Lab Diagnostic Systems<br/>(SMC) Pvt Ltd</span>
           </div>
           <div className="coa-top-title">{formData.productLine || ''}</div>
@@ -203,8 +214,8 @@ const COA = () => {
           
           {/* Header Section */}
         <div className="coa-header">
-          <div className="coa-logo-section" style={{ padding: '10px' }}>
-            <img src="/images/ldslogo.png" alt="LDS Logo" style={{ maxWidth: '100%', maxHeight: '110px', objectFit: 'contain' }} />
+          <div className="coa-logo-section coa-logo-section-padded">
+            <img src="/images/ldslogo.png" alt="LDS Logo" className="coa-header-logo-img" />
           </div>
           <div className="coa-title-section">
             <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PVT LTD.</h2>
@@ -223,7 +234,8 @@ const COA = () => {
         <div className="coa-details-section">
           <div className="coa-detail-row full-width coa-detail-row-centered">
             <label>PRODUCT:</label>
-            <div className="coa-item-select-container">
+            <div className="coa-print-only coa-print-product-text">{formData.productTop}</div>
+            <div className="coa-item-select-container coa-screen-only">
               <AsyncSelect
                 cacheOptions
                 defaultOptions

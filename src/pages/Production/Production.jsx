@@ -7,6 +7,7 @@ import ProductionOrders from '../ProductionOrders/ProductionOrders';
 import ProductionTemplate from '../ProductionTemplate/ProductionTemplate';
 import Dashboard from '../dashboard/Dashboard';
 import CostAnalysis from '../CostAnalysis/CostAnalysis';
+import ProductionOverview from '../ProductionOverview/ProductionOverview';
 import './Production.css';
 
 const Production = () => {
@@ -34,6 +35,7 @@ const Production = () => {
     { key: 'production-planning', label: 'Production Planning' },
     { key: 'purchase-order', label: 'Purchase Request' },
     { key: 'production-trend', label: 'Production Trend' },
+    // { key: 'quality-control', label: 'Overview' },
     // { key: 'production-template', label: 'Production Template' },
 
   ];
@@ -55,6 +57,7 @@ const Production = () => {
         {activeTab === 'production-orders' && <ProductionOrders />}
         {activeTab === 'production-template' && <ProductionTemplate />}
         {activeTab === 'cost-analysis' && <CostAnalysis />}
+        {activeTab === 'quality-control' && <ProductionOverview />}
       </div>
     </div>
   );
