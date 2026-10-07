@@ -202,16 +202,16 @@ const CostAnalysis = () => {
       header: "Capex",
       render: () => "-",
     },
-    {
-      key: "PerTestCost",
-      header: "Per Test Cost",
-      render: (row) => `${Number(row.CalculatedStaffCost || 0).toFixed(2)}`,
-    },
-    {
-      key: "TotalTestsProduced",
-      header: "Total Tests Produced",
-      render: (row) => Number(row.TotalTestsProduced || 0).toLocaleString(),
-    },
+    // {
+    //   key: "PerTestCost",
+    //   header: "Per Test Cost",
+    //   render: (row) => `${Number(row.CalculatedStaffCost || 0).toFixed(2)}`,
+    // },
+    // {
+    //   key: "TotalTestsProduced",
+    //   header: "Total Tests Produced",
+    //   render: (row) => Number(row.TotalTestsProduced || 0).toLocaleString(),
+    // },
     // {
     //   key: 'TotalVariance',
     //   header: 'Variance',
