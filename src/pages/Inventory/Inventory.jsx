@@ -308,9 +308,9 @@ const Inventory = () => {
       </div>
 
       {/* Tabs */}
-      <div className="inventory-tabs">
+      {/* <div className="inventory-tabs">
         <Tabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
-      </div>
+      </div> */}
 
       {/* Overview Tab Content */}
       {activeTab === 'overview' && (

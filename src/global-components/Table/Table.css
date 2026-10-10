@@ -10,8 +10,9 @@
   width: 100%;
   overflow-x: auto;
   background: #ffffff;
-  border: 1px solid #c9d5e3;
-  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   scrollbar-color: #9fb0c4 #eef3f8;
   scrollbar-width: thin;
 }
@@ -31,45 +32,39 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  height: 34px;
-  padding: 7px 12px;
-  color: #102f55;
-  background: #e6edf5;
-  border-right: 1px solid #c9d5e3;
-  border-bottom: 1px solid #b9c8d9;
+  height: 40px;
+  padding: 12px 24px;
+  color: #6b7280;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.05em;
   line-height: 1.15;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.dome-table th:last-child {
-  border-right: 0;
-}
-
 .dome-table td {
-  height: 36px;
-  padding: 7px 12px;
-  color: #071b33;
+  height: 48px;
+  padding: 16px 24px;
+  color: #374151;
   background: #ffffff;
-  border-right: 1px solid #d2dce8;
-  border-bottom: 1px solid #d2dce8;
+  border-bottom: 1px solid #e5e7eb;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
   line-height: 1.25;
   vertical-align: middle;
   white-space: nowrap;
-  transition: background-color 120ms ease;
+  transition: background-color 150ms ease;
 }
 
 .dome-table td:last-child {
-  border-right: 0;
+  /* No special right border to remove anymore */
 }
 
-.dome-table tbody tr:nth-child(odd) td {
-  background: #f1f5f9;
+.dome-table tbody tr td {
+  background: #ffffff;
 }
 
 .dome-table tbody tr:last-child td {
@@ -78,7 +73,7 @@
 
 .dome-table tbody tr:hover td,
 .dome-table tbody tr.dome-table-row--clickable:hover td {
-  background: #e4efff;
+  background: #f9fafb;
 }
 
 .dome-table tr.dome-table-row--clickable {
@@ -159,4 +154,30 @@
     padding-right: 10px;
     padding-left: 10px;
   }
+}
+
+.dome-table-header-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dome-table-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.dome-table-header-action {
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.dome-table-header-action:hover {
+  text-decoration: underline;
 }

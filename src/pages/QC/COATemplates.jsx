@@ -239,7 +239,7 @@ const COATemplates = () => {
 
       {/* Header with Create Button */}
       <div className="coa-template-header">
-        <h2 className="coa-template-title">COA Templates</h2>
+        <h2 className="coa-template-title"></h2>
         {!showCreateForm && (
           <Button variant="primary" onClick={() => {
             setFormData({

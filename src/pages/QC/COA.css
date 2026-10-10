@@ -292,8 +292,8 @@
 }
 
 .coa-template-title {
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 500;
   color: #111827;
   margin: 0;
 }
@@ -312,7 +312,7 @@
 
 .coa-template-section-title {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 500;
   color: #111827;
   margin: 0;
   margin-bottom: 24px;

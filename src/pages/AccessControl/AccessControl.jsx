@@ -39,9 +39,9 @@ const AccessControl = () => {
 
   return (
     <div className="access-control-page">
-      <div className="access-control-header">
+      {/* <div className="access-control-header">
         <h1>Access Control Manager</h1>
-      </div>
+      </div> */}
 
       <div className="access-control-controls">
         <div className="access-search-wrapper">

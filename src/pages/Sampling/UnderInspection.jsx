@@ -483,7 +483,7 @@ const UnderInspection = () => {
 
       <div className="dome-card-wrapper">
         <div className="section-header-flex" style={{ marginBottom: '16px' }}>
-          <h3 className="section-title">Under Inspection Samples</h3>
+          <h3 className="section-title"></h3>
         </div>
         
         <Table

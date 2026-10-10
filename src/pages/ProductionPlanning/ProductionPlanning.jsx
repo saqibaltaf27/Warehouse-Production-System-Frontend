@@ -100,7 +100,7 @@ const ExpandableEmployeeCell = ({ jdItems }) => {
     <div>
       <div onClick={() => setExpanded(!expanded)} className="expandable-cell-trigger">
         <IconUsers size={16} />
-        {jdItems[0]?.name || 'Unassigned'}
+        {jdItems[0]?.name || 'Labour'}
         {jdItems.length > 1 && (
           <span className="badge">+{jdItems.length - 1}</span>
         )}
@@ -139,7 +139,7 @@ const StatusBadge = ({ status }) => {
 const ProductionPlanning = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'orders');
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'production-order');
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
@@ -409,67 +409,26 @@ const ProductionPlanning = () => {
   return (
     <div className="production-planning-page fade-in-up">
       
-      {/* Filters Bar */}
-      <div className="planning-filters">
-        <input
-          className="search-input"
-          type="text"
-          placeholder="Search items or orders..."
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-        />
-        {(activeTab === 'orders' || activeTab === 'expiry') && (
-          <select value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
-            <option value="">All Warehouses</option>
-            <option value="01">General Warehouse (01)</option>
-            <option value="02">Main Warehouse (02)</option>
-            <option value="04">Finished Goods (04)</option>
-            <option value="06">Quarantine (06)</option>
-            <option value="07">Rejection (07)</option>
-            <option value="08">Raw Material (08)</option>
-          </select>
-        )}
-        {activeTab === 'orders' && (
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="R">Released</option>
-            <option value="P">Planned</option>
-          </select>
-        )}
-        {activeTab === 'expiry' && (
-          <select value={bucket} onChange={(e) => setBucket(e.target.value)}>
-            <option value="">All Expiry Buckets</option>
-            <option value="Expired">Expired</option>
-            <option value="0-30 Days">0-30 Days</option>
-            <option value="31-90 Days">31-90 Days</option>
-            <option value="90+ Days">90+ Days</option>
-          </select>
-        )}
-      </div>
+
 
    
 
-      <div className="vertical-tabs-layout">
-        <div className="planning-tabs vertical-tabs-container">
-          <Tabs
-            tabs={[
-              { key: 'orders', label: 'Daily Execution', icon: <IconCalendarEvent size={18} /> },
-              { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
-              { key: 'man-effiency', label: 'Man Effiency', icon: <IconUsers size={18} /> },
-              { key: 'machine-efficiency', label: 'Machine Efficiency', icon: <IconSettings size={18} /> },
-              { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
-              { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
-              // { key: 'history', label: 'Production History', icon: <IconHistory size={18} /> },
-              // { key: 'trend', label: 'Trend', icon: <IconChartBar size={18} /> },
-              // { key: 'recommendation', label: 'Planner', icon: <IconBulb size={18} /> }
-            ]}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            className="vertical-tabs"
-          />
-        </div>
+      <div className="planning-tabs-container">
+        <Tabs
+          variant="underline"
+          tabs={[
+            { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
+            { key: 'man-effiency', label: 'Man Effiency', icon: <IconUsers size={18} /> },
+            { key: 'machine-efficiency', label: 'Machine Efficiency', icon: <IconSettings size={18} /> },
+            { key: 'shortages', label: 'Material Shortages', icon: <IconAlertTriangle size={18} /> },
+            { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+      </div>
 
-        <div className="planning-content vertical-tabs-content fade-in-up delay-100">
+      <div className="planning-content fade-in-up delay-100">
         {activeTab === 'orders' && (
           <div className="planning-section">
             <h3>Open Production Orders</h3>
@@ -555,7 +514,6 @@ const ProductionPlanning = () => {
         {activeTab === 'recommendation' && <ProductionRecommendation />}
       </div>
     </div>
-  </div>
   );
 };
 

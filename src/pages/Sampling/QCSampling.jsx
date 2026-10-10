@@ -642,7 +642,7 @@ const QCSampling = () => {
 
       <div className="dome-card-wrapper">
         <div className="section-header-flex" style={{ marginBottom: '16px' }}>
-          <h3 className="section-title">Saved QC Samples</h3>
+          <h3 className="section-title"></h3>
           <div className="qc-sampling-actions">
             {!showAddSample && (
               <Button variant="primary" onClick={() => {

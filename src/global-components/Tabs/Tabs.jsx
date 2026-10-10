@@ -4,22 +4,27 @@ const Tabs = ({
   tabs = [],
   activeTab,
   onTabChange,
-  className = ''
+  className = '',
+  variant = 'pills' // 'pills' or 'underline'
 }) => {
   if (!tabs || tabs.length === 0) return null;
 
+  const isUnderline = variant === 'underline';
+  const groupClass = isUnderline ? 'global-tab-group-underline' : 'global-tab-group-pills';
+  const itemClassBase = isUnderline ? 'global-tab-underline-item' : 'global-tab-pill';
+
   return (
-    <div className={`global-tab-group-pills ${className}`.trim()}>
+    <div className={`${groupClass} ${className}`.trim()}>
       {tabs.map((tab) => {
         if (tab.hidden) return null;
 
         const isActive = activeTab === tab.key;
-        const pillClass = `global-tab-pill ${isActive ? 'active' : ''}`.trim();
+        const itemClass = `${itemClassBase} ${isActive ? 'active' : ''}`.trim();
 
         return (
           <button
             key={tab.key}
-            className={pillClass}
+            className={itemClass}
             onClick={() => onTabChange && onTabChange(tab.key)}
             type="button"
           >

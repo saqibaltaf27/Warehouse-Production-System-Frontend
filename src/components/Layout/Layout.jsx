@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { IconMenu2, IconLock } from "@tabler/icons-react";
 import MenuBar from "../MenuBar/MenuBar";
@@ -10,6 +10,7 @@ import "./Layout.css";
 const Layout = () => {
   const { user, logout, fetchUser } = useAuth();
   const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { allowedModules, loadingPermissions } = usePermission();
 
@@ -18,6 +19,7 @@ const Layout = () => {
       fetchUser();
     }
   }, [pathname, fetchUser]);
+
   const moduleTitles = {
     "/production": "Production",
     "/qc": "QC",
@@ -27,44 +29,41 @@ const Layout = () => {
     "/staff": "Staff",
     "/sampling": "Sampling",
     "/access-control": "Access Control",
+    "/": "My Workspace"
   };
 
-  let breadcrumbItems = [];
-  if (pathname.startsWith('/inventory/item-master/')) {
-    const parts = pathname.split('/');
-    const itemCode = decodeURIComponent(parts[parts.length - 1]);
-    breadcrumbItems = [
-      { label: 'Inventory', href: '/inventory' },
-      { label: itemCode, current: true }
-    ];
-  } else if (pathname.startsWith('/access-control/')) {
-    const isPermissionControl = pathname.includes('/permission-control');
-    const isAccessPermission = pathname.includes('/access-permission');
-    
-    breadcrumbItems = [
-      { label: 'Access Control', href: '/access-control' }
-    ];
-    
-    if (isPermissionControl) {
-      breadcrumbItems.push({ label: 'Permission Control', current: true });
-    } else if (isAccessPermission) {
-      breadcrumbItems.push({ label: 'User Permissions', current: true });
-    }
+  const tabTitles = {
+    'dashboard': 'Dashboard',
+    'production-orders': 'Production Orders',
+    'purchase-order': 'Purchase Request',
+    'production-planning': 'Production Planning',
+    'cost-analysis': 'Cost Analysis',
+    'quality-control': 'Overview',
+    'complaints': 'Complaints',
+    'coa': 'COA',
+    'template': 'COA Templates',
+    'qc': 'Sampling',
+    'Under Inspection': 'Under Inspection',
+    'quality-assurance': 'Quality Assurance',
+    'QC Parameters': 'QC Parameters',
+    'equipment-pm': 'Line wise Equipments & PM',
+    'machine': 'Machine',
+    'overview': 'Inventory Overview',
+    'master': 'Item Master'
+  };
+
+  let pageTitle = "Dashboard";
+  const currentTab = searchParams.get('tab');
+  
+  if (currentTab && tabTitles[currentTab]) {
+    pageTitle = tabTitles[currentTab];
+  } else if (moduleTitles[pathname]) {
+    pageTitle = moduleTitles[pathname];
   } else {
-    let pageTitle = "Dashboard";
-    
-    // Exact match
-    if (moduleTitles[pathname]) {
-      pageTitle = moduleTitles[pathname];
-    } else {
-      // Find matching base path for sub-routes
-      const matchedPath = Object.keys(moduleTitles).find(key => pathname.startsWith(key + '/'));
-      if (matchedPath) {
-        pageTitle = moduleTitles[matchedPath];
-      }
+    const matchedPath = Object.keys(moduleTitles).find(key => pathname.startsWith(key + '/'));
+    if (matchedPath) {
+      pageTitle = moduleTitles[matchedPath];
     }
-    
-    breadcrumbItems = [{ label: pageTitle, current: true }];
   }
 
   if (loadingPermissions) {
@@ -102,8 +101,8 @@ const Layout = () => {
         onNavigate={() => setSidebarOpen(false)}
       />
       <div className="dribbble-main-wrapper">
-        <header className="dribbble-top-header">
-          <div className="header-left">
+        <header className="dribbble-top-header" style={{ display: 'flex', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #e2e4e8', backgroundColor: '#fff' }}>
+          <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button
               type="button"
               className="mobile-menu-button"
@@ -112,6 +111,9 @@ const Layout = () => {
             >
               <IconMenu2 size={22} />
             </button>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', margin: 0 }}>
+              {pageTitle}
+            </h1>
           </div>
         </header>
         <main className="dribbble-content">

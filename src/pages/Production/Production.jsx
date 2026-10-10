@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Tabs from '../../global-components/Tabs/Tabs';
 import PurchaseOrder from '../PurchaseOrder/PurchaseOrder';
 import ProductionPlanning from '../ProductionPlanning/ProductionPlanning';
@@ -11,18 +12,30 @@ import ProductionOverview from '../ProductionOverview/ProductionOverview';
 import './Production.css';
 
 const Production = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
   const [activeTab, setActiveTab] = useState(() => {
+    if (tabParam) return tabParam;
     return sessionStorage.getItem('mainProductionActiveTab') || 'dashboard';
   });
 
-  React.useEffect(() => {
-    sessionStorage.setItem('mainProductionActiveTab', activeTab);
-  }, [activeTab]);
+  useEffect(() => {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+      sessionStorage.setItem('mainProductionActiveTab', tabParam);
+    }
+  }, [tabParam]);
 
-  // Clear the saved tab when navigating away to another page.
-  // This cleanup function does NOT run when the browser is refreshed,
-  // so the tab will still be remembered on refresh!
-  React.useEffect(() => {
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    sessionStorage.setItem('mainProductionActiveTab', newTab);
+    navigate(`/production?tab=${newTab}`);
+  };
+
+  useEffect(() => {
     return () => {
       sessionStorage.removeItem('mainProductionActiveTab');
     };
@@ -34,21 +47,21 @@ const Production = () => {
     { key: 'production-orders', label: 'Production Orders' },
     { key: 'production-planning', label: 'Production Planning' },
     { key: 'purchase-order', label: 'Purchase Request' },
-    { key: 'production-trend', label: 'Production Trend' },
-    // { key: 'quality-control', label: 'Overview' },
+   // { key: 'production-trend', label: 'Production Trend' },
+   { key: 'quality-control', label: 'Overview' },
     // { key: 'production-template', label: 'Production Template' },
 
   ];
 
   return (
     <div className="production-page-container">
-      <div className="production-tabs-wrapper">
+      {/* <div className="production-tabs-wrapper">
         <Tabs 
           tabs={tabs} 
           activeTab={activeTab} 
-          onTabChange={setActiveTab} 
+          onTabChange={handleTabChange} 
         />
-      </div>
+      </div> */}
       <div className="production-tab-content">
         {activeTab === 'dashboard' && <Dashboard />}
         {activeTab === 'purchase-order' && <PurchaseOrder />}

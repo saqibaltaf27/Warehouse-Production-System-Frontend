@@ -43,11 +43,11 @@ const DefaultRedirect = () => {
   }
   
   if (user?.isSuperAdmin) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/production?tab=dashboard" replace />;
   }
 
   const menuItems = [
-    { path: '/dashboard', main_module: 'Production Dashboard' },
+    { path: '/production?tab=dashboard', main_module: 'Production Dashboard' },
     { path: '/engineering-dashboard', main_module: 'Engineering Dashboard' },
     { path: '/inventory', main_module: 'Inventory' },
     { path: '/machine-efficiency', main_module: 'Machine Efficiency' },
@@ -61,7 +61,7 @@ const DefaultRedirect = () => {
     }
   }
 
-  return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/production?tab=dashboard" replace />;
 };
 function AppContent() {
   const { user } = useAuth();

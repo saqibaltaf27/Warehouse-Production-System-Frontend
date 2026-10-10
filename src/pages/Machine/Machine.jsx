@@ -63,7 +63,7 @@ const Machine = () => {
 
   return (
     <div className="machine-page-wrapper">
-      <h2 className="machine-page-title">Machine List</h2>
+      {/* <h2 className="machine-page-title">Machine List</h2> */}
       
       <div className="machine-filters-card">
         <div className="machine-filters-grid">

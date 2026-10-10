@@ -41,3 +41,37 @@
     display: inline-flex;
     align-items: center;
 }
+
+/* Underline variant styles */
+.global-tab-group-underline {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    margin-bottom: 24px;
+}
+
+.global-tab-underline-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    color: var(--text-secondary, #6b7280);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font: inherit;
+    font-size: var(--font-size-md, 14px);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast, 0.2s ease);
+    margin-bottom: -1px; /* Overlap the group border */
+}
+
+.global-tab-underline-item:hover {
+    color: var(--text-primary, #374151);
+}
+
+.global-tab-underline-item.active {
+    color: var(--primary, #1B47DB);
+    border-bottom-color: var(--primary, #1B47DB);
+}

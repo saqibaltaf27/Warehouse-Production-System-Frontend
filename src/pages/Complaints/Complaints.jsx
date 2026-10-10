@@ -292,7 +292,7 @@ const Complaints = () => {
     <div className="complaints-container">
       <Toaster position="top-right" />
       <div className="complaints-header">
-        <h1>Complaints Management</h1>
+        <h1></h1>
         <Button variant="primary" onClick={handleOpenModal}>
           Generate Complain
         </Button>

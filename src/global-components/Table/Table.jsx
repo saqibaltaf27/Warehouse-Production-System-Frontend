@@ -19,6 +19,8 @@ const Table = ({
   isLoading = false,
   expandedRowRender,
   rowHasSubComponent,
+  title,
+  headerAction,
 }) => {
   const [sortConfig, setSortConfig] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
@@ -96,6 +98,12 @@ const Table = ({
   return (
     <div className="dome-table-container">
       <div className="dome-table-wrapper">
+        {(title || headerAction) && (
+          <div className="dome-table-header-block">
+            {title && <h3 className="dome-table-title">{title}</h3>}
+            {headerAction && <div className="dome-table-header-action">{headerAction}</div>}
+          </div>
+        )}
         <table className="dome-table">
           <thead>
             <tr>

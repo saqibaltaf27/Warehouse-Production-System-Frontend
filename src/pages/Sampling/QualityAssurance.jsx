@@ -912,7 +912,7 @@ const QualityAssurance = () => {
 
       <div className="dome-card-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px 0' }}>
-          <h3 className="section-title">Quality Records</h3>
+          <h3 className="section-title"></h3>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
             <Button variant="primary" onClick={handleAddQuality}>
               Add Quality

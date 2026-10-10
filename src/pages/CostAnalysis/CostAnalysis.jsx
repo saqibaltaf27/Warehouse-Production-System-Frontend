@@ -400,7 +400,7 @@ const CostAnalysis = () => {
         {/* Orders Table */}
         <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">
           <div className="section-header-flex">
-            <h3 className="section-title">Production Orders</h3>
+            <h3 className="section-title">Cost Analysis</h3>
             <div className="purchase-order-search-wrapper">
               <IconSearch size={18} className="purchase-order-search-icon" />
               <input
