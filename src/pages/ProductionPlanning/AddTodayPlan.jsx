@@ -25,7 +25,7 @@ const AddTodayPlan = () => {
     machineItems: [{ name: '', qty: '', hours: '' }],
     supervisor: '',
     po: '',
-    jdItems: [{ name: '', jd: '', hours: '' }],
+    jdItems: [{ name: '', jd: '', hours: '8' }],
     shift: '',
     plannedManpower: '',
     actualManpower: '',
@@ -69,16 +69,17 @@ const AddTodayPlan = () => {
         }
       }
 
-      let parsedJdItems = [{ name: '', jd: '', hours: '' }];
+      let parsedJdItems = [{ name: '', jd: '', hours: '8' }];
       if (plan.Persons) {
         try {
           const parsed = JSON.parse(plan.Persons);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            parsedJdItems = parsed.map(p => ({
-              staffId: p.StaffID,
+            const savedItems = Array.isArray(plan.jdItems) ? plan.jdItems : [];
+            parsedJdItems = parsed.map((p, idx) => ({
+              staffId: p.StaffID ?? '',
               jd: p.jd || '',
-              hours: p.hours || '',
-              name: '' // Will be resolved by the Select component using staffId
+              hours: p.hours || '8',
+              name: p.name || savedItems[idx]?.name || ''
             }));
           }
         } catch (e) {
@@ -132,9 +133,10 @@ const AddTodayPlan = () => {
 
   const fetchStaff = useCallback(async () => {
     try {
-      const res = await axiosInstance.get(API_ENDPOINTS.STAFF.GET_STAFF);
+      const res = await axiosInstance.get(API_ENDPOINTS.STAFF.GET_STAFF, { params: { limit: 1000 } });
       if (res.data?.success) {
-        // Only active staff
+        // Only active staff. The staff API pages results, so ask for the full list
+        // or saved employees past the first page render as an empty name.
         setStaffList(res.data.data.filter(s => s.Status === 1 || s.Status === true));
       }
     } catch (err) {
@@ -214,6 +216,7 @@ const AddTodayPlan = () => {
       newItems[idx].name = selectedStaff.Name;
       newItems[idx].staffId = selectedStaff.StaffID;
       newItems[idx].jd = selectedStaff.Designation || '';
+      if (!newItems[idx].hours) newItems[idx].hours = '8';
     } else {
       newItems[idx].name = '';
       newItems[idx].staffId = '';
@@ -223,7 +226,7 @@ const AddTodayPlan = () => {
   };
 
   const handleAddJdItem = () => {
-    setPlanFormData({ ...planFormData, jdItems: [...planFormData.jdItems, { name: '', jd: '', staffId: '', hours: '' }] });
+    setPlanFormData({ ...planFormData, jdItems: [...planFormData.jdItems, { name: '', jd: '', staffId: '', hours: '8' }] });
   };
 
   const handleRemoveJdItem = (idx) => {
@@ -252,8 +255,8 @@ const AddTodayPlan = () => {
         ...planFormData,
         machineItems: planFormData.machineItems.filter(item => item.name.trim() !== ''),
         jdItems: planFormData.jdItems
-          .filter(item => item.staffId || item.name?.trim() !== '' || item.jd?.trim() !== '')
-          .map(item => ({ StaffID: item.staffId, jd: item.jd, hours: item.hours })),
+          .filter(item => item.staffId || item.name?.trim())
+          .map(item => ({ StaffID: item.staffId, name: item.name, jd: item.jd, hours: item.hours })),
         plannedManpower: parseFloat(planFormData.plannedManpower) || null,
         actualManpower: parseFloat(planFormData.actualManpower) || null,
         workingHours: parseFloat(planFormData.workingHours) || null,
@@ -274,7 +277,7 @@ const AddTodayPlan = () => {
       if (res.data?.success) {
         toast.success(editingPlanId ? 'Plan updated successfully!' : 'Plan created successfully!');
         // Navigate back to Production page and set active tab
-        navigate('/production', { state: { activeTab: 'production-order' } }); 
+        navigate('/production?tab=production-planning'); 
       } else {
         toast.error(res.data?.message || 'Failed to save plan');
       }
@@ -287,7 +290,7 @@ const AddTodayPlan = () => {
   return (
     <div className="add-today-plan-page p-6">
       <div className="add-today-plan-header">
-        <button className="add-today-plan-back-btn" onClick={() => navigate('/production', { state: { activeTab: 'production-order' } })} aria-label="Go back">
+        <button className="add-today-plan-back-btn" onClick={() => navigate('/production?tab=production-planning')} aria-label="Go back">
           <IconArrowLeft size={24} />
         </button>
         <h2 className="add-today-plan-title">{editingPlanId ? 'Edit Today Plan' : 'Add Today Plans'}</h2>
@@ -466,8 +469,8 @@ const AddTodayPlan = () => {
                           staff: s
                         }))}
                         value={
-                          item.staffId 
-                            ? { value: item.staffId, label: item.name, staff: staffList.find(s => s.StaffID === item.staffId) } 
+                          item.staffId
+                            ? { value: item.staffId, label: item.name, staff: staffList.find(s => Number(s.StaffID) === Number(item.staffId)) }
                             : (item.name ? { value: item.name, label: item.name, staff: staffList.find(s => s.Name === item.name) } : null)
                         }
                         onChange={(selected) => handleEmployeeSelect(idx, selected ? selected.value : '')}
@@ -523,7 +526,7 @@ const AddTodayPlan = () => {
 
         {/* Footer Actions */}
         <div className="plan-modal-actions add-today-plan-actions">
-          <Button variant="secondary" onClick={() => navigate('/production', { state: { activeTab: 'production-order' } })}>Cancel</Button>
+          <Button variant="secondary" onClick={() => navigate('/production?tab=production-planning')}>Cancel</Button>
           <Button variant="primary" onClick={handleSavePlan}>{editingPlanId ? 'Update' : 'Save'}</Button>
         </div>
       </div>

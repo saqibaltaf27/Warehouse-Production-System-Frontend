@@ -21,9 +21,11 @@ import ProductionTemplate from './pages/ProductionTemplate/ProductionTemplate.js
 import EngineeringDashboard from './pages/EngineeringDashboard/EngineeringDashboard.jsx';
 import Machine from './pages/Machine/Machine';
 import Production from './pages/Production/Production.jsx';
+import MyWorkspace from './pages/MyWorkspace/MyWorkspace.jsx';
 import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import Staff from './pages/Staff/Staff.jsx';
 import Sampling from './pages/Sampling/Sampling.jsx';
+import CostingOverview from './pages/Costing/CostingOverview.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -82,6 +84,7 @@ function AppContent() {
             <Route path="dashboard" element={<ProtectedRoute requiredRoute="/dashboard"><Dashboard /></ProtectedRoute>} />
             <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
+            <Route path="workspace" element={<ProtectedRoute requiredRoute="/production"><MyWorkspace /></ProtectedRoute>} />
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
             <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
@@ -97,6 +100,10 @@ function AppContent() {
               <Route index element={<AccessControl />} />
               <Route path="permission-control" element={<PermissionControl />} />
               <Route path="access-permission/:empid" element={<AccessPermission />} />
+            </Route>
+            <Route path="costing">
+              <Route index element={<Navigate to="/costing/overview" replace />} />
+              <Route path="overview" element={<CostingOverview />} />
             </Route>
             <Route path="staff" element={<ProtectedRoute requiredRoute="/staff"><Staff /></ProtectedRoute>} />
             <Route path="sampling" element={<ProtectedRoute requiredRoute="/sampling"><Sampling /></ProtectedRoute>} />

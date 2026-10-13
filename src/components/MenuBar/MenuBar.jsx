@@ -12,7 +12,7 @@ import {
   IconUsers,
   IconFlask,
   IconSettingsAutomation,
-  IconHome
+  IconReportMoney
 } from "@tabler/icons-react";
 import BrandLogo from "../../global-components/BrandLogo/BrandLogo";
 import "./MenuBar.css";
@@ -21,7 +21,8 @@ import { usePermission } from "../../context/permissioncheck";
 const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [expandedMenu, setExpandedMenu] = useState(null);
-  const [expandedSubMenu, setExpandedSubMenu] = useState(null);
+  const [openFlyoutTitle, setOpenFlyoutTitle] = useState(null);
+  const [flyoutDismissed, setFlyoutDismissed] = useState(false);
   const { allowedModules, loadingPermissions } = usePermission();
   const location = useLocation();
   const profileMenuRef = useRef(null);
@@ -38,19 +39,23 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     };
   }, []);
 
+  useEffect(() => {
+    setOpenFlyoutTitle(null);
+  }, [location.pathname, location.search]);
+
   const toggleMenu = (title, e) => {
     e.preventDefault();
     setExpandedMenu(expandedMenu === title ? null : title);
-    setExpandedSubMenu(null); // Reset sub-menu when top-level toggles
-  };
-
-  const toggleSubMenu = (title, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setExpandedSubMenu(expandedSubMenu === title ? null : title);
+    setOpenFlyoutTitle(null);
   };
 
   const menuItems = [
+    {
+      title: "My Workspace",
+      path: "/workspace",
+      main_module: "Production",
+      icon: <IconSettings size={18} stroke={1.5} />, 
+    },
     {
       title: "Production",
       path: "/production",
@@ -58,10 +63,19 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       icon: <IconSettings size={18} stroke={1.5} />,
       subItems: [
         { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
-        { title: 'Overview', path: '/production?tab=quality-control', tabKey: 'quality-control' },
+        { title: 'Monthly Report', path: '/production?tab=quality-control', tabKey: 'quality-control' },
         { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
         { title: 'Purchase Request', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },     
-        { title: 'Production Planning', path: '/production?tab=production-planning', tabKey: 'production-planning' },
+        {
+          title: 'Production Planning',
+          subItems: [
+            { title: 'Production Planning', path: '/production?tab=production-planning&planTab=production-order', tabKey: 'production-order' },
+            { title: 'Man Effiency', path: '/production?tab=production-planning&planTab=man-effiency', tabKey: 'man-effiency' },
+            { title: 'Machine Efficiency', path: '/production?tab=production-planning&planTab=machine-efficiency', tabKey: 'machine-efficiency' },
+            { title: 'Material Shortages', path: '/production?tab=production-planning&planTab=shortages', tabKey: 'shortages' },
+            { title: 'Batch Expiry', path: '/production?tab=production-planning&planTab=expiry', tabKey: 'expiry' },
+          ]
+        },
         { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
        //{ title: 'Production Trend', path: '/production?tab=production-trend', tabKey: 'production-trend' },
        
@@ -110,10 +124,14 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     },
 
     {
-      title: "Staff",
-      path: "/staff",
-      main_module: "Staff",
-      icon: <IconUsers size={18} stroke={1.5} />,
+      title: "Costing",
+      path: "/costing",
+      main_module: "Costing",
+      icon: <IconReportMoney size={18} stroke={1.5} />,
+      subItems: [
+       // { title: 'Overview', path: '/costing/overview', tabKey: 'overview', main_module: 'Costing' },
+        { title: 'Staff', path: '/staff', tabKey: 'staff', main_module: 'Staff' },
+      ]
     },
   
   ];
@@ -129,7 +147,11 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     });
   } else if (!loadingPermissions) {
     visibleMenuItems = menuItems.filter((item) =>
-      allowedModules.has(item.main_module),
+      allowedModules.has(item.main_module) ||
+      (item.subItems && item.subItems.some((sub) =>
+        allowedModules.has(sub.main_module) ||
+        allowedModules.has(sub.title)
+      ))
     );
   } else {
     visibleMenuItems = [];
@@ -160,31 +182,27 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
 
       <div className="sidebar-scrollable-content">
         <div className="sidebar-nav-section">
-          <NavLink to="/" className={({ isActive }) => `nav-workspace-header ${isActive || location.pathname === '/' ? 'active' : ''}`}>
-            <div className="nav-item-left">
-              <span className="nav-item-icon">
-                <IconHome size={18} stroke={1.5} />
-              </span>
-              <span>My Workspace</span>
-            </div>
-          </NavLink>
-          
           <nav className="sidebar-nav-list">
             {visibleMenuItems.map((item, index) => {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedMenu === item.title;
               
               const isGroupActive = location.pathname.startsWith(item.path) || (hasSubItems && item.subItems.some(sub => {
-                if (sub.subItems) return sub.subItems.some(ss => location.pathname.startsWith(ss.path.split('?')[0]));
-                return location.pathname.startsWith(sub.path.split('?')[0]);
+                if (sub.subItems) return sub.subItems.some(ss => ss.path && location.pathname.startsWith(ss.path.split('?')[0]));
+                return sub.path && location.pathname.startsWith(sub.path.split('?')[0]);
               }));
+              const coveredByGroup = !hasSubItems && visibleMenuItems.some((other) =>
+                other.subItems?.length &&
+                other.path === item.path &&
+                location.pathname.startsWith(other.path)
+              );
 
               return (
                 <div key={index} className="nav-item-group">
                   <NavLink
                     to={hasSubItems ? "#" : item.path}
                     className={({ isActive }) =>
-                      `sidebar-nav-item ${(!hasSubItems && isActive) || (hasSubItems && isGroupActive) ? "active" : ""}`
+                      `sidebar-nav-item ${(!hasSubItems && isActive && !coveredByGroup) || (hasSubItems && isGroupActive) ? "active" : ""}`
                     }
                     onClick={(e) => {
                       if (hasSubItems) {
@@ -206,47 +224,78 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
                     <div className="sidebar-subnav-list">
                       {item.subItems.map((subItem, subIdx) => {
                         const hasSubSubItems = subItem.subItems && subItem.subItems.length > 0;
-                        const isSubExpanded = expandedSubMenu === subItem.title;
+                        const isSubActive = Boolean(
+                          !hasSubSubItems &&
+                          subItem.path &&
+                          (subItem.path.includes('?')
+                            ? location.pathname === subItem.path.split('?')[0] && (subItem.tabKey ? location.search.includes(subItem.tabKey) : true)
+                            : location.pathname === subItem.path)
+                        );
 
                         return (
                           <div key={subIdx}>
                             {hasSubSubItems ? (
-                              <a
-                                href="#"
-                                className={`sidebar-subnav-item ${isSubExpanded ? 'active' : ''}`}
-                                style={{ fontWeight: 600, color: '#4b5563', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                                onClick={(e) => toggleSubMenu(subItem.title, e)}
-                              >
-                                <span>{subItem.title}</span>
-                                <IconChevronRight size={14} className={`nav-chevron ${isSubExpanded ? "expanded" : ""}`} />
-                              </a>
+                              (() => {
+                                const isOpen = openFlyoutTitle === subItem.title;
+
+                                return (
+                                  <div
+                                    className={`sidebar-subnav-group-relative ${isOpen ? 'open' : ''} ${flyoutDismissed ? 'flyout-dismissed' : ''}`}
+                                    onMouseLeave={() => {
+                                      setFlyoutDismissed(false);
+                                      setOpenFlyoutTitle(null);
+                                    }}
+                                  >
+                                    <button
+                                      type="button"
+                                      className={`sidebar-subnav-item sidebar-subnav-toggle sidebar-subnav-flyout-trigger ${isOpen ? 'open' : ''}`}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        setOpenFlyoutTitle(openFlyoutTitle === subItem.title ? null : subItem.title);
+                                      }}
+                                    >
+                                      <span>{subItem.title}</span>
+                                      <IconChevronRight size={14} className="nav-chevron" />
+                                    </button>
+
+                                    <div className="sidebar-flyout-menu">
+                                      {subItem.subItems.map((flyItem, flyIdx) => {
+                                        const isFlyActive = Boolean(
+                                          flyItem.path &&
+                                          (flyItem.path.includes('?')
+                                            ? location.pathname === flyItem.path.split('?')[0] && (flyItem.tabKey ? location.search.includes(flyItem.tabKey) : true)
+                                            : location.pathname === flyItem.path)
+                                        );
+
+                                        return (
+                                          <NavLink
+                                            key={`fly-${flyIdx}`}
+                                            to={flyItem.path}
+                                            className={() => `sidebar-flyout-item ${isFlyActive ? 'active' : ''}`}
+                                            onClick={() => {
+                                              setOpenFlyoutTitle(null);
+                                              setFlyoutDismissed(true);
+                                              onNavigate();
+                                            }}
+                                          >
+                                            <span className="sidebar-flyout-text">{flyItem.title}</span>
+                                          </NavLink>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()
                             ) : (
                               <NavLink
                                 to={subItem.path}
-                                className={() => `sidebar-subnav-item ${location.search.includes(subItem.tabKey) ? "active" : ""}`}
+                                className={() => `sidebar-subnav-item ${isSubActive ? "active" : ""}`}
                                 onClick={() => {
                                   onNavigate();
                                 }}
                               >
                                 {subItem.title}
                               </NavLink>
-                            )}
-                            
-                            {hasSubSubItems && isSubExpanded && (
-                              <div className="sidebar-sub-subnav-list" style={{ display: 'flex', flexDirection: 'column', marginLeft: '12px', borderLeft: '1px solid #e5e7eb', paddingLeft: '8px', marginTop: '4px' }}>
-                                {subItem.subItems.map((ssItem, ssIdx) => (
-                                  <NavLink
-                                    key={`ss-${ssIdx}`}
-                                    to={ssItem.path}
-                                    className={() => `sidebar-subnav-item ${location.search.includes(ssItem.tabKey) ? "active" : ""}`}
-                                    onClick={() => {
-                                      onNavigate();
-                                    }}
-                                  >
-                                    {ssItem.title}
-                                  </NavLink>
-                                ))}
-                              </div>
                             )}
                           </div>
                         );

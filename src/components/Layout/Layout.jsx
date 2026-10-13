@@ -21,6 +21,7 @@ const Layout = () => {
   }, [pathname, fetchUser]);
 
   const moduleTitles = {
+    "/workspace": "My Workspace",
     "/production": "Production",
     "/qc": "QC",
     "/engineering-dashboard": "Engineering Dashboard",

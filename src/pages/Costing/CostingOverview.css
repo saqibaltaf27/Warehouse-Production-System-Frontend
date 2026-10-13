@@ -1,0 +1,62 @@
+.costing-overview-container {
+  padding: 24px;
+  background-color: var(--bg-main, #f4f5f8);
+  min-height: calc(100vh - 64px);
+}
+
+.costing-overview-header {
+  margin-bottom: 24px;
+}
+
+.costing-overview-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary, #232e32);
+  margin: 0 0 6px 0;
+}
+
+.costing-overview-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary, #798089);
+  margin: 0;
+}
+
+.costing-overview-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e4e8);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 400px;
+}
+
+.costing-overview-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--primary-light, #ebf1ff);
+  color: var(--primary, #1b47db);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.costing-overview-placeholder-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #232e32);
+  margin: 0 0 8px 0;
+}
+
+.costing-overview-placeholder-desc {
+  font-size: 14px;
+  color: var(--text-secondary, #798089);
+  max-width: 480px;
+  margin: 0;
+  line-height: 1.5;
+}

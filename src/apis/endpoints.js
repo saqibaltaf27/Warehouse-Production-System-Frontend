@@ -43,6 +43,8 @@ export const API_ENDPOINTS = {
     TREND: '/production-planning/trend',
     RECOMMENDATIONS: '/production-planning/recommendations',
     OPEN_ORDERS: '/production-planning/open-orders',
+    PLANNED_RELEASED_ORDERS: '/production-planning/planned-released-orders',
+    TODAY_WORKING_PLANS: '/production-planning/today-working-plans',
     GET_MACHINES: '/production-planning/machines',
     GET_PLANS: '/production-planning/plans',
     CREATE_PLAN: '/production-planning/plan',

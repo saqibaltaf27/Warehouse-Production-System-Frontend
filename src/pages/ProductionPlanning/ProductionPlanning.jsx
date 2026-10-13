@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Card from '../../global-components/Card/Card';
@@ -89,11 +89,19 @@ const ExpandableMachineCell = ({ machineStr }) => {
 
 const ExpandableEmployeeCell = ({ jdItems }) => {
   const [expanded, setExpanded] = useState(false);
+
+  const renderLabour = (item) => {
+    if (item.name && item.jd) {
+      return <>{item.name} - <span className="expandable-cell-jd-text">{item.jd}</span></>;
+    }
+    if (item.name) return item.name;
+    return <span className="expandable-cell-jd-text">{item.jd || '-'}</span>;
+  };
   
   if (!jdItems || jdItems.length === 0) return <span>-</span>;
   
   if (jdItems.length === 1) {
-    return <span>{jdItems[0].name} - {jdItems[0].jd}</span>;
+    return <span>{renderLabour(jdItems[0])}</span>;
   }
   
   return (
@@ -107,9 +115,9 @@ const ExpandableEmployeeCell = ({ jdItems }) => {
       </div>
       {expanded && jdItems.length > 1 && (
         <div className="plan-employee-list expandable-cell-list">
-          {jdItems.slice(1).map((i, idx) => (
+          {jdItems.map((i, idx) => (
             <div key={idx} className="plan-employee-item">
-              {i.name} - <span className="expandable-cell-jd-text">{i.jd}</span>
+              {renderLabour(i)}
             </div>
           ))}
         </div>
@@ -139,7 +147,18 @@ const StatusBadge = ({ status }) => {
 const ProductionPlanning = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'production-order');
+  const [searchParams] = useSearchParams();
+  const planTab = searchParams.get('planTab');
+  const [activeTab, setActiveTab] = useState(planTab || location.state?.activeTab || 'production-order');
+
+  useEffect(() => {
+    if (planTab && planTab !== activeTab) setActiveTab(planTab);
+  }, [planTab, activeTab]);
+
+  const handlePlanTabChange = (key) => {
+    setActiveTab(key);
+    navigate(`/production?tab=production-planning&planTab=${key}`);
+  };
 
   // Filters
   const [searchInput, setSearchInput] = useState('');
@@ -414,7 +433,7 @@ const ProductionPlanning = () => {
    
 
       <div className="planning-tabs-container">
-        <Tabs
+        {/* <Tabs
           variant="underline"
           tabs={[
             { key: 'production-order', label: 'Production Planning', icon: <IconPlus size={18} /> },
@@ -424,8 +443,8 @@ const ProductionPlanning = () => {
             { key: 'expiry', label: 'Batch Expiry', icon: <IconClock size={18} /> },
           ]}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
+          onTabChange={handlePlanTabChange}
+        /> */}
       </div>
 
       <div className="planning-content fade-in-up delay-100">
