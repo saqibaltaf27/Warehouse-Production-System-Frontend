@@ -20,8 +20,8 @@ import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
 import "./MyWorkspace.css";
 
-const DASHBOARD_URL = "http://localhost:1002/api/home/dashboard";
-const NOTICE_URL = "http://localhost:1002/api/home/admin/notices";
+const DASHBOARD_URL = "https://dome-backend.gms-world.com/api/home/dashboard";
+const NOTICE_URL = "https://dome-backend.gms-world.com/api/home/admin/notices";
 
 const STATUS_COLORS = { Planned: "#F59E0B", Released: "#1B47DB" };
 const WAREHOUSE_COLORS = ["#1B47DB", "#6997E4", "#10B981", "#F59E0B", "#B26552", "#94B5E3"];
