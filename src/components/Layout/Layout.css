@@ -15,10 +15,74 @@
 }
 
 
+.dribbble-top-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e4e8;
+  background-color: #fff;
+}
+
 .header-left {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 16px;
+}
+
+.layout-page-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.layout-loading,
+.layout-denied {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.layout-loading {
+  color: #64748b;
+}
+
+.layout-denied {
+  flex-direction: column;
+  background-color: #f8fafc;
+  padding: 2rem;
+  text-align: center;
+}
+
+.layout-denied-icon {
+  margin-bottom: 1.5rem;
+  color: #94a3b8;
+}
+
+.layout-denied-title {
+  margin: 0 0 1rem;
+  color: #0f172a;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.layout-denied-text {
+  max-width: 400px;
+  margin: 0 0 2.5rem;
+  color: #475569;
+  font-size: 1.1rem;
+}
+
+.layout-denied-button {
+  padding: 0.75rem 2rem;
+  background-color: #023e25;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
 }
 
 .mobile-menu-button {

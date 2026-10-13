@@ -30,7 +30,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
       {/* Left Column */}
       <div className="po-header-col">
         <div className="po-field-row">
-          <div className="po-field-label">Type <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Type <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
@@ -42,19 +42,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                   { value: 'Disassembly', label: 'Disassembly' }
                 ]}
                 isSearchable={false}
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.Type || ''
@@ -62,11 +51,11 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           </div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Status <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Status <span className="po-required">*</span></div>
           <div className="po-field-value">{headerData?.Status || ''}</div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Product No. <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Product No. <span className="po-required">*</span></div>
           <div className={`po-field-value highlight ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
@@ -95,7 +84,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           <div className="po-field-value">{headerData?.ProductDescription || ''}</div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Planned Quantity <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Planned Quantity <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
@@ -112,7 +101,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           <div className="po-field-value">{headerData?.UoMName || ''}</div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Warehouse <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Warehouse <span className="po-required">*</span></div>
           <div className={`po-field-value highlight ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
@@ -126,26 +115,14 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                 placeholder="Warehouse..."
                 isClearable
                 isSearchable
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  clearIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.Warehouse || ''
             )}
           </div>
-          <div className="po-field-label po-inline-label">Branch <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label po-inline-label">Branch <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create' : ''}`}>
             {isCreateMode ? (
               <Select
@@ -157,20 +134,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                 placeholder="Branch..."
                 isClearable
                 isSearchable
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  clearIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.Branch || ''
@@ -178,7 +143,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           </div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Priority <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Priority <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
@@ -209,7 +174,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           <div className="po-field-value">{headerData?.No || ''}</div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Order Date <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Order Date <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
@@ -224,7 +189,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           </div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Start Date <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Start Date <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
@@ -239,7 +204,7 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
           </div>
         </div>
         <div className="po-field-row">
-          <div className="po-field-label">Due Date <span style={{ color: 'red' }}>*</span></div>
+          <div className="po-field-label">Due Date <span className="po-required">*</span></div>
           <div className={`po-field-value ${isCreateMode ? 'po-field-value-create-basic' : ''}`}>
             {isCreateMode ? (
               <input 
@@ -271,20 +236,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                 isClearable
                 isSearchable={false}
                 placeholder="Select..."
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  clearIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.LinkedTo || ''
@@ -379,20 +332,8 @@ const ProductionOrderHeader = ({ headerData, isCreateMode, products, warehouses,
                 placeholder="Project..."
                 isClearable
                 isSearchable
-                styles={{
-                  container: (base) => ({ ...base, width: '100%' }),
-                  control: (base) => ({
-                    ...base,
-                    minHeight: '26px',
-                    fontSize: '12px',
-                    borderRadius: '2px',
-                    borderColor: '#ccc',
-                    backgroundColor: '#fffde7'
-                  }),
-                  dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
-                  clearIndicator: (base) => ({ ...base, padding: '2px' }),
-                  menu: (base) => ({ ...base, fontSize: '12px', zIndex: 9999 })
-                }}
+                className="po-select"
+                classNamePrefix="po-select"
               />
             ) : (
               headerData?.Project || ''

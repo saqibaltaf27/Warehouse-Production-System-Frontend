@@ -253,7 +253,7 @@ const ProductionOverview = () => {
   ];
 
   return (
-    <div className="production-overview">
+    <div className="layout-page-padding production-overview">
       <div className="overview-header-container">
         <div className="overview-header">
           <h2>

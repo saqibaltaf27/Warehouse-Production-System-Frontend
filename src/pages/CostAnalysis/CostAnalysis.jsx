@@ -321,7 +321,7 @@ const CostAnalysis = () => {
   const paginatedOrders = orders.slice((page - 1) * limit, page * limit);
 
   return (
-    <div className="cost-analysis-dashboard">
+    <div className=" layout-page-padding">
       <>
         {/* KPI Cards Layer 1 */}
         {/* <div className="fade-in-up delay-100 mb-6">
@@ -400,7 +400,7 @@ const CostAnalysis = () => {
         {/* Orders Table */}
         <div className="efficiency-table-wrapper dome-card-wrapper fade-in-up delay-300">
           <div className="section-header-flex">
-            <h3 className="section-title">Cost Analysis</h3>
+            <h3 className="section-title"></h3>
             <div className="purchase-order-search-wrapper">
               <IconSearch size={18} className="purchase-order-search-icon" />
               <input
@@ -430,44 +430,14 @@ const CostAnalysis = () => {
       {/* Drill-down Modal */}
       {isModalVisible && selectedOrder && (
         <GlobalPopup onClose={() => setIsModalVisible(false)} className="large">
-          <div
-            className="modal-content"
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              maxHeight: "85vh",
-            }}
-          >
-            {/* Modal Header (Fixed) */}
-            <div style={{ flexShrink: 0, padding: "24px 24px 0 24px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  paddingBottom: "16px",
-                  borderBottom: "1px solid #e5e7eb",
-                }}
-              >
+          <div className="modal-content cost-drill-modal">
+            <div className="cost-drill-header">
+              <div className="cost-drill-title-row">
                 <div>
-                  <h3
-                    style={{
-                      margin: 0,
-                      fontSize: "1.25rem",
-                      color: "#111827",
-                      fontWeight: "600",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                    }}
-                  >
+                  <h3 className="cost-drill-title">
                     Production Order: {selectedOrder.DocNum}
                     <span
-                      className={`status-badge po-badge-${selectedOrder.Status === "L" || selectedOrder.Status === "C" ? "closed" : selectedOrder.Status === "R" || selectedOrder.Status === "P" ? "open" : "unknown"}`}
-                      style={{
-                        fontSize: "0.75rem",
-                        padding: "4px 8px",
-                        fontWeight: "500",
-                      }}
+                      className={`status-badge cost-drill-badge po-badge-${selectedOrder.Status === "L" || selectedOrder.Status === "C" ? "closed" : selectedOrder.Status === "R" || selectedOrder.Status === "P" ? "open" : "unknown"}`}
                     >
                       {selectedOrder.Status === "L" ||
                       selectedOrder.Status === "C"
@@ -479,23 +449,14 @@ const CostAnalysis = () => {
                             : selectedOrder.Status}
                     </span>
                   </h3>
-                  <p
-                    style={{
-                      margin: "4px 0 0 0",
-                      fontSize: "0.875rem",
-                      color: "#6b7280",
-                    }}
-                  >
+                  <p className="cost-drill-product">
                     Product: {selectedOrder.FGItemCode}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Modal Body (Scrollable) */}
-            <div
-              style={{ flexGrow: 1, overflowY: "auto", padding: "16px 24px" }}
-            >
+            <div className="cost-drill-body">
               {materialsLoading ? (
                 <GlobalLoading text="Loading materials..." />
               ) : materials.length === 0 ? (
@@ -528,46 +489,17 @@ const CostAnalysis = () => {
                       return (
                         <>
                           {orderStaff.map((s) => (
-                            <tr
-                              key={s.StaffID}
-                              style={{ backgroundColor: "#f8fafc" }}
-                            >
-                              <td
-                                style={{
-                                  paddingLeft: "48px",
-                                  fontSize: "0.875rem",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      width: "4px",
-                                      height: "4px",
-                                      borderRadius: "50%",
-                                      backgroundColor: "#64748b",
-                                    }}
-                                  ></span>
+                            <tr key={s.StaffID} className="cost-sub-row">
+                              <td className="cost-sub-name">
+                                <div className="cost-sub-line">
+                                  <span className="cost-sub-dot"></span>
                                   {s.Name}
                                 </div>
                               </td>
-                              <td style={{ fontSize: "0.875rem" }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "16px",
-                                  }}
-                                >
+                              <td className="cost-sub-detail">
+                                <div className="cost-sub-meta">
                                   <span>{s.Designation}</span>
-                                  <span
-                                    style={{ fontSize: "0.8rem", color: "#64748b" }}
-                                  >
+                                  <span className="cost-sub-note">
                                     {s.DaysWorked ? `${s.DaysWorked} Days` : ""}
                                     {s.DaysWorked && s.TotalHours ? " • " : ""}
                                     {s.TotalHours ? `${s.TotalHours} Hrs` : ""}
@@ -577,14 +509,7 @@ const CostAnalysis = () => {
                               <td></td>
                               <td></td>
                               <td></td>
-                              <td
-                                style={{
-                                  textAlign: "right",
-                                  fontSize: "0.875rem",
-                                  fontWeight: "500",
-                                  color: "#1e293b",
-                                }}
-                              >
+                              <td className="cost-sub-amount">
                                 {s.CalculatedCost
                                   ? parseFloat(s.CalculatedCost).toFixed(2)
                                   : "-"}
@@ -600,46 +525,17 @@ const CostAnalysis = () => {
                       return (
                         <>
                           {orderMachines.map((m, idx) => (
-                            <tr
-                              key={`machine-${idx}`}
-                              style={{ backgroundColor: "#f8fafc" }}
-                            >
-                              <td
-                                style={{
-                                  paddingLeft: "48px",
-                                  fontSize: "0.875rem",
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      width: "4px",
-                                      height: "4px",
-                                      borderRadius: "50%",
-                                      backgroundColor: "#64748b",
-                                    }}
-                                  ></span>
+                            <tr key={`machine-${idx}`} className="cost-sub-row">
+                              <td className="cost-sub-name">
+                                <div className="cost-sub-line">
+                                  <span className="cost-sub-dot"></span>
                                   {m.Name}
                                 </div>
                               </td>
-                              <td style={{ fontSize: "0.875rem" }}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "16px",
-                                  }}
-                                >
+                              <td className="cost-sub-detail">
+                                <div className="cost-sub-meta">
                                   <span>Machine</span>
-                                  <span
-                                    style={{ fontSize: "0.8rem", color: "#64748b" }}
-                                  >
+                                  <span className="cost-sub-note">
                                     {m.TotalHours ? `${m.TotalHours} Hrs` : ""}
                                   </span>
                                 </div>
@@ -647,14 +543,7 @@ const CostAnalysis = () => {
                               <td></td>
                               <td></td>
                               <td></td>
-                              <td
-                                style={{
-                                  textAlign: "right",
-                                  fontSize: "0.875rem",
-                                  fontWeight: "500",
-                                  color: "#1e293b",
-                                }}
-                              >
+                              <td className="cost-sub-amount">
                                 -
                               </td>
                               <td></td>
@@ -671,13 +560,7 @@ const CostAnalysis = () => {
 
             {/* Modal Footer (Fixed) */}
             {!materialsLoading && materials.length > 0 && (
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "0 24px 24px 24px",
-                  backgroundColor: "#fff",
-                }}
-              >
+              <div className="cost-drill-footer">
                 {(() => {
                   let totalStandardCost = 0;
                   let totalActualCost = 0;
@@ -707,10 +590,7 @@ const CostAnalysis = () => {
                   const averageTotalCost = totalStandardCost / poQuantity;
 
                   return (
-                    <div
-                      className="cost-summary-footer"
-                      style={{ marginTop: "0", borderRadius: "0 0 8px 8px" }}
-                    >
+                    <div className="cost-summary-footer">
                       <div className="cost-summary-item">
                         <span className="cost-summary-label">
                           Total Standard Cost

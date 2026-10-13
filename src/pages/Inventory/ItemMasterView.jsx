@@ -164,15 +164,15 @@ const ItemMasterView = () => {
 
   return (
     <div className="item-master-page fade-in-up">
-      <div className="page-header-with-back" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-         <button 
-           onClick={() => navigate(-1)} 
-           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#1e40af', padding: 0 }}
+      <div className="page-header-with-back">
+         <button
+           className="page-back-btn"
+           onClick={() => navigate(-1)}
            title="Go Back"
          >
            <IconArrowLeft size={28} />
          </button>
-         <h1 className="page-title" style={{ margin: 0 }}>Item Details: {itemCode}</h1>
+         <h1 className="page-title">Item Details: {itemCode}</h1>
       </div>
       
       <div className="item-detail-content mt-6">

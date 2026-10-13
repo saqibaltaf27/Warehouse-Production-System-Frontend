@@ -69,7 +69,7 @@ const Layout = () => {
 
   if (loadingPermissions) {
     return (
-      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#64748b' }}>
+      <div className="layout-loading">
         Loading your workspace...
       </div>
     );
@@ -77,16 +77,13 @@ const Layout = () => {
 
   if (allowedModules.size === 0 && !user?.isSuperAdmin) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#f8fafc', padding: '2rem', textAlign: 'center' }}>
-        <IconLock size={64} color="#94a3b8" style={{ marginBottom: '1.5rem' }} />
-        <h1 style={{ color: '#0f172a', fontSize: '2rem', marginBottom: '1rem', fontWeight: 'bold' }}>Access Denied</h1>
-        <p style={{ color: '#475569', fontSize: '1.1rem', marginBottom: '2.5rem', maxWidth: '400px' }}>
+      <div className="layout-denied">
+        <IconLock className="layout-denied-icon" size={64} />
+        <h1 className="layout-denied-title">Access Denied</h1>
+        <p className="layout-denied-text">
           You don't have any permissions assigned to your account. Please contact the <strong>Enterprise Technology</strong> department for access.
         </p>
-        <button 
-          onClick={logout} 
-          style={{ padding: '0.75rem 2rem', backgroundColor: '#023e25', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1rem' }}
-        >
+        <button className="layout-denied-button" onClick={logout}>
           Return to Login
         </button>
       </div>
@@ -102,8 +99,8 @@ const Layout = () => {
         onNavigate={() => setSidebarOpen(false)}
       />
       <div className="dribbble-main-wrapper">
-        <header className="dribbble-top-header" style={{ display: 'flex', alignItems: 'center', padding: '16px 24px', borderBottom: '1px solid #e2e4e8', backgroundColor: '#fff' }}>
-          <div className="header-left" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <header className="dribbble-top-header">
+          <div className="header-left">
             <button
               type="button"
               className="mobile-menu-button"
@@ -112,7 +109,7 @@ const Layout = () => {
             >
               <IconMenu2 size={22} />
             </button>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', margin: 0 }}>
+            <h1 className="layout-page-title">
               {pageTitle}
             </h1>
           </div>

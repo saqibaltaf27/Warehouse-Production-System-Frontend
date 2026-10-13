@@ -426,7 +426,7 @@ const ProductionPlanning = () => {
   ];
 
   return (
-    <div className="production-planning-page fade-in-up">
+    <div className="production-planning-page fade-in-up layout-page-padding">
       
 
 

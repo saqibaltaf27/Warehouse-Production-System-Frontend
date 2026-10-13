@@ -148,17 +148,17 @@ const PermissionControl = () => {
   return (
     <div className="permission-control-page">
       <div className="pc-top-section">
-        <div className="pc-header-text" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <button 
-             onClick={() => navigate(-1)} 
-             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#1e40af', padding: 0 }}
+        <div className="pc-header-text">
+          <button
+             className="pc-back-btn"
+             onClick={() => navigate(-1)}
              title="Go Back"
            >
              <IconArrowLeft size={28} />
            </button>
           <div>
-            <h1 style={{ margin: 0 }}>Permissions</h1>
-            <p style={{ margin: 0 }}>Browse modules by clicking cards. Permissions appear at the selected node.</p>
+            <h1>Permissions</h1>
+            <p>Browse modules by clicking cards. Permissions appear at the selected node.</p>
           </div>
         </div>
         <div className="pc-action-buttons">
@@ -263,8 +263,8 @@ const PermissionControl = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className="ap-modal-overlay">
-          <div className="ap-modal-container" style={{ maxWidth: '400px' }}>
-            <div className="ap-modal-header" style={{ borderBottom: 'none' }}>
+          <div className="ap-modal-container pc-delete-modal">
+            <div className="ap-modal-header pc-delete-modal-header">
               <div className="ap-modal-header-text">
                 <h2>Delete Permission</h2>
                 <p>Are you sure you want to delete this permission? This action cannot be undone.</p>
@@ -272,7 +272,7 @@ const PermissionControl = () => {
             </div>
             <div className="ap-modal-footer">
               <button className="ap-btn-cancel" onClick={() => setDeleteConfirmId(null)} disabled={isDeleting}>Cancel</button>
-              <button className="pc-icon-btn pc-delete-btn" style={{ padding: '8px 16px', borderRadius: '6px' }} onClick={confirmDelete} disabled={isDeleting}>
+              <button className="pc-icon-btn pc-delete-btn pc-delete-confirm" onClick={confirmDelete} disabled={isDeleting}>
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>

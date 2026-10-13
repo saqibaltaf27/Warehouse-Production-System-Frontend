@@ -3,7 +3,6 @@
    ═══════════════════════════════════════════════════ */
 
 .inventory-page {
-  padding: var(--spacing-6, 24px);
   padding-bottom: 32px;
 }
 

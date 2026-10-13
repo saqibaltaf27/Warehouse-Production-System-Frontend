@@ -95,6 +95,13 @@ const Table = ({
     return typeof sample === 'number' ? 'right' : 'left';
   };
 
+  const alignClass = (column) => {
+    const align = getColumnAlign(column);
+    if (align === 'right') return 'dome-align-right';
+    if (align === 'center') return 'dome-align-center';
+    return '';
+  };
+
   return (
     <div className="dome-table-container">
       <div className="dome-table-wrapper">
@@ -110,23 +117,18 @@ const Table = ({
               {columns.map((col, index) => (
                 <th
                   key={index}
-                  className={`${col.className || ''}`}
-                  style={{ textAlign: getColumnAlign(col), width: col.width, cursor: col.key ? 'pointer' : 'default', userSelect: 'none' }}
+                  className={`${col.className || ''} ${col.key ? 'dome-th-sortable' : ''} ${alignClass(col)}`.trim()}
+                  style={col.width ? { width: col.width } : undefined}
                   onClick={() => col.key && requestSort(col.key)}
                 >
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: getColumnAlign(col) === 'right' ? 'flex-end' : getColumnAlign(col) === 'center' ? 'center' : 'flex-start',
-                    gap: '4px'
-                  }}>
+                  <div className={`dome-cell-content ${alignClass(col)}`.trim()}>
                     {col.header}
                     {col.key && (
-                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <span className="dome-sort-icon">
                         {sortConfig?.key === col.key ? (
                           sortConfig.direction === 'ascending' ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />
                         ) : (
-                          <IconSelector size={16} style={{ opacity: 0.3 }} />
+                          <IconSelector className="dome-sort-idle" size={16} />
                         )}
                       </span>
                     )}
@@ -157,14 +159,13 @@ const Table = ({
                     {columns.map((col, colIndex) => (
                       <td
                         key={colIndex}
-                        className={col.className}
-                        style={{ textAlign: getColumnAlign(col), width: col.width }}
+                        className={`${col.className || ''} ${alignClass(col)}`.trim()}
+                        style={col.width ? { width: col.width } : undefined}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: getColumnAlign(col) === 'right' ? 'flex-end' : getColumnAlign(col) === 'center' ? 'center' : 'flex-start' }}>
+                        <div className={`dome-cell-content ${alignClass(col)}`.trim()}>
                           {colIndex === 0 && rowHasSubComponent && rowHasSubComponent(rowItem) && (
-                            <span 
+                            <span
                               className="dome-table-expand-toggle"
-                              style={{ cursor: 'pointer', marginRight: '8px', display: 'flex', alignItems: 'center' }} 
                               onClick={(e) => { e.stopPropagation(); toggleRow(rowIndex); }}
                             >
                               {expandedRows[rowIndex] ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}

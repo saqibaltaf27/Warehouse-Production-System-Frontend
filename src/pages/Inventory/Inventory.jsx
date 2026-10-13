@@ -275,7 +275,7 @@ const Inventory = () => {
   ];
 
   return (
-    <div className="inventory-page fade-in-up">
+    <div className="inventory-page fade-in-up layout-page-padding">
       {/* Filters */}
       <div className="inventory-filters">
         {activeTab !== 'overview' && (

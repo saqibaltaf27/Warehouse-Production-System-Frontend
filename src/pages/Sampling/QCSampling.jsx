@@ -303,11 +303,10 @@ const QCSampling = () => {
       key: 'SampleQty', 
       header: 'Sample Qty',
       render: (row) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="qc-qty-cell">
           <input 
             type="number" 
-            className="add-sample-input" 
-            style={{ width: '80px', padding: '4px', marginBottom: 0 }}
+            className="add-sample-input qc-qty-input"
             value={row.SampleQty || ''}
             disabled={formMode === 'view'}
             onChange={(e) => {
@@ -322,7 +321,7 @@ const QCSampling = () => {
             <button 
               type="button" 
               onClick={() => setPrintModalRow(row)} 
-              style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '18px' }}
+              className="qc-print-btn"
               title="Print Form"
             >
               🖨️
@@ -336,8 +335,7 @@ const QCSampling = () => {
       header: 'Status', 
       render: (row) => (
         <select 
-          className="add-sample-input" 
-          style={{ width: '150px', padding: '4px' }}
+          className="add-sample-input qc-status-select"
           value={row.Status || 'A'}
           disabled={formMode === 'view'}
           onChange={(e) => {
@@ -362,154 +360,80 @@ const QCSampling = () => {
   ];
 
   return (
-    <div className="qc-sampling-container fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="qc-sampling-container fade-in-up">
       {printModalRow && (
-        <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div className="modal-content" style={{ backgroundColor: '#fff', padding: '0', width: '900px', borderRadius: '8px', maxHeight: '95vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
-            <div className="no-print" style={{ display: 'flex', justifyContent: 'flex-end', padding: '16px 24px', borderBottom: '1px solid #ddd', backgroundColor: '#f9f9f9', position: 'sticky', top: 0, zIndex: 10 }}>
-               <Button variant="primary" onClick={() => window.print()} style={{ minWidth: '100px' }}>Print</Button>
-               <Button variant="outline" style={{ marginLeft: '12px', minWidth: '100px' }} onClick={() => setPrintModalRow(null)}>Close</Button>
+        <div className="sample-form-print-overlay">
+          <div className="sample-form-sheet">
+            <div className="sample-form-toolbar no-print">
+               <Button className="sample-form-print-btn" variant="primary" onClick={() => window.print()}>Print</Button>
+               <Button className="sample-form-close-btn" variant="outline" onClick={() => setPrintModalRow(null)}>Close</Button>
             </div>
             
-            <div id="print-area" style={{ padding: '40px', backgroundColor: '#fff', color: '#000', fontFamily: 'Arial, sans-serif' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <img src="/images/ldslogo.png" alt="LDS Logo" style={{ height: '50px', objectFit: 'contain' }} />
-                  <span style={{ fontSize: '12px', fontWeight: 'bold', lineHeight: '1.2' }}>Lab Diagnostic Systems<br/>(SMC) Pvt Ltd</span>
+            <div id="print-area" className="sample-form">
+              <div className="sample-form-head">
+                <div className="sample-form-brand">
+                  <img className="sample-form-logo" src="/images/ldslogo.png" alt="LDS Logo" />
+                  <span className="sample-form-brand-name">Lab Diagnostic Systems<br/>(SMC) Pvt Ltd</span>
                 </div>
-                <div style={{ flex: 1, textAlign: 'right' }}>
-                  <h3 style={{ textTransform: 'uppercase', margin: 0, fontSize: '18px', fontWeight: 'bold', letterSpacing: '0.5px' }}>Raw Material Sampling Form</h3>
+                <div className="sample-form-title-wrap">
+                  <h3 className="sample-form-title">Raw Material Sampling Form</h3>
                 </div>
               </div>
               
-              <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '14px', color: '#000' }}>
+              <table className="sample-form-table">
                 <tbody>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', width: '22%', fontWeight: 'bold' }}>Material Name:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} colSpan="3" contentEditable suppressContentEditableWarning>{printModalRow.ItemName}</td>
+                    <td className="sample-form-label sample-form-label-wide">Material Name:</td>
+                    <td className="sample-form-value" colSpan="3" contentEditable suppressContentEditableWarning>{printModalRow.ItemName}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Supplier Name:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} colSpan="3" contentEditable suppressContentEditableWarning>{sampleForm.SupplierName}</td>
+                    <td className="sample-form-label">Supplier Name:</td>
+                    <td className="sample-form-value" colSpan="3" contentEditable suppressContentEditableWarning>{sampleForm.SupplierName}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Batch/Lot No:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{printModalRow.BatchSerial}</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', width: '20%', fontWeight: 'bold' }}>GRN No & Date:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{sampleForm.DocumentNumber} {sampleForm.SamplingDate ? `& ${sampleForm.SamplingDate}` : ''}</td>
+                    <td className="sample-form-label">Batch/Lot No:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{printModalRow.BatchSerial}</td>
+                    <td className="sample-form-label sample-form-label-grn">GRN No & Date:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{sampleForm.DocumentNumber} {sampleForm.SamplingDate ? `& ${sampleForm.SamplingDate}` : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Mfg. Date:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{printModalRow.ManufactureDate ? new Date(printModalRow.ManufactureDate).toLocaleDateString() : ''}</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Exp. Date:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{printModalRow.ExpiryDate ? new Date(printModalRow.ExpiryDate).toLocaleDateString() : ''}</td>
+                    <td className="sample-form-label">Mfg. Date:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{printModalRow.ManufactureDate ? new Date(printModalRow.ManufactureDate).toLocaleDateString() : ''}</td>
+                    <td className="sample-form-label">Exp. Date:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{printModalRow.ExpiryDate ? new Date(printModalRow.ExpiryDate).toLocaleDateString() : ''}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Total Quantity:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{printModalRow.BatchSerialQty || printModalRow.ActualQty}</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Sample Quantity:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{printModalRow.SampleQty}</td>
+                    <td className="sample-form-label">Total Quantity:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{printModalRow.BatchSerialQty || printModalRow.ActualQty}</td>
+                    <td className="sample-form-label">Sample Quantity:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{printModalRow.SampleQty}</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 30px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0' }} colSpan="2">Sampled by:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 30px', textAlign: 'left', fontWeight: 'bold', backgroundColor: '#f0f0f0' }} colSpan="2">Received by:</td>
+                    <td className="sample-form-section" colSpan="2">Sampled by:</td>
+                    <td className="sample-form-section" colSpan="2">Received by:</td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Name:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning>{sampleForm.SamplingBy}</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Name:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning></td>
+                    <td className="sample-form-label">Name:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning>{sampleForm.SamplingBy}</td>
+                    <td className="sample-form-label">Name:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning></td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Designation:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning></td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Designation:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning></td>
+                    <td className="sample-form-label">Designation:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning></td>
+                    <td className="sample-form-label">Designation:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning></td>
                   </tr>
                   <tr>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', height: '60px', fontWeight: 'bold' }}>Signature/Date:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning></td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', fontWeight: 'bold' }}>Signature/Date:</td>
-                    <td style={{ border: '1px solid #000', padding: '8px 12px', outline: 'none' }} contentEditable suppressContentEditableWarning></td>
+                    <td className="sample-form-label sample-form-sign">Signature/Date:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning></td>
+                    <td className="sample-form-label">Signature/Date:</td>
+                    <td className="sample-form-value" contentEditable suppressContentEditableWarning></td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-          <style>{`
-            @page { size: A4 portrait; margin: 10mm; }
-            
-            @media print {
-              * {
-                overflow: visible !important;
-              }
-
-              html,
-              body {
-                width: 100% !important;
-                height: auto !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-              }
-
-              body * {
-                visibility: hidden !important;
-              }
-
-              #print-area,
-              #print-area * {
-                visibility: visible !important;
-              }
-
-              .modal-overlay,
-              .modal-content {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                height: auto !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                display: block !important;
-                transform: none !important;
-                box-shadow: none !important;
-              }
-
-              .no-print {
-                display: none !important;
-              }
-
-              #print-area {
-                position: relative !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                background: white !important;
-                color: black !important;
-                transform: none !important;
-              }
-
-              #print-area table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-              }
-
-              #print-area table,
-              #print-area td,
-              #print-area th {
-                border: 1px solid #000 !important;
-                color: #000 !important;
-              }
-
-              #print-area img {
-                visibility: visible !important;
-              }
-            }
-          `}</style>
         </div>
       )}
       {showAddSample && (
@@ -519,7 +443,7 @@ const QCSampling = () => {
               {formMode === 'create' ? 'Add New Sample' : formMode === 'view' ? 'View Sample' : 'Edit Sample'}
             </h4>
             {formMode !== 'create' && (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="sample-mode-actions">
                 <Button variant={formMode === 'view' ? 'primary' : 'outline'} onClick={() => setFormMode('view')}>View</Button>
                 <Button variant={formMode === 'edit' ? 'primary' : 'outline'} onClick={() => setFormMode('edit')}>Edit</Button>
               </div>
@@ -551,9 +475,9 @@ const QCSampling = () => {
                     <option value="A/R Credit Memo">A/R Credit Memo</option>
                   </select>
                 </div>
-                <div className="add-sample-field" style={{ position: 'relative' }}>
+                <div className="add-sample-field sample-doc-field">
                   <label className="add-sample-label">Document Entry</label>
-                  <div style={{ flex: 1 }}>
+                  <div className="sample-doc-picker">
                     <ChooseFromList
                       title={`Select Open ${sampleForm.DocumentType}`}
                       apiEndpoint={`/sampling/open-documents`}
@@ -618,7 +542,7 @@ const QCSampling = () => {
             </div>
 
             {/* Body Table */}
-            <div className="add-sample-table-wrapper" style={{ border: 'none', boxShadow: 'none', marginTop: '16px' }}>
+            <div className="add-sample-table-wrapper sample-items-table">
               <Table 
                 data={sampleItems}
                 columns={addSampleColumns}
@@ -641,7 +565,7 @@ const QCSampling = () => {
       )}
 
       <div className="dome-card-wrapper">
-        <div className="section-header-flex" style={{ marginBottom: '16px' }}>
+        <div className="section-header-flex qc-list-header">
           <h3 className="section-title"></h3>
           <div className="qc-sampling-actions">
             {!showAddSample && (

@@ -55,7 +55,7 @@ const QC = () => {
         </div> */}
       </div>
       
-      <div className="qc-content">
+      <div className="qc-content layout-page-padding">
         {activeTab === 'complaints' && <Complaints />}
         {activeTab === 'coa' && <COA />}
         {activeTab === 'template' && <COATemplates />}

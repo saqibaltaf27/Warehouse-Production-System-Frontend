@@ -223,7 +223,7 @@ const AccessPermission = () => {
   }
 
   return (
-    <div className="access-permission-page">
+    <div className="access-permission-page layout-page-padding">
       {/* Header */}
       <div className="ap-header">
         <div className="ap-header-left" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>

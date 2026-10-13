@@ -422,7 +422,7 @@ const ProductionOrders = () => {
       )}
 
       <div
-        className={`po-table-section ${showCreateForm ? "po-table-section-margin" : ""}`}
+        className={`layout-page-padding ${showCreateForm ? "po-table-section-margin" : ""}`}
       >
         <div className="po-table-header">
           <h3 className="po-table-title"></h3>

@@ -40,7 +40,7 @@ const EngineeringDashboard = () => {
   }, []);
 
   return (
-    <div className="engineering-dashboard-container">
+    <div className="engineering-dashboard-container layout-page-padding">
       {/* <div className="inventory-tabs pm-tabs">
         <Tabs variant="underline" tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
       </div> */}

@@ -112,7 +112,7 @@ const PurchaseOrder = () => {
   ];
 
   return (
-    <div className="purchase-order-page">
+    <div className="purchase-order-page layout-page-padding">
       <div className="purchase-order-header">
         <h1></h1>
         <div className="purchase-order-header-actions">

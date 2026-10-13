@@ -141,3 +141,7 @@ button {
 .recharts-surface *:focus {
   outline: none !important;
 }
+
+.layout-page-padding {
+  padding: 20px;
+}

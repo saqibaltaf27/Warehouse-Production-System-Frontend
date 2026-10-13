@@ -236,11 +236,6 @@
 
 /* Table */
 .efficiency-table-wrapper {
-  background: var(--bg-card, #FFFFFF);
-  border-radius: var(--border-radius-lg, 16px);
-  border: 1px solid var(--border-color, #E2E4E8);
-  padding: 24px;
-  margin-top: 24px;
   overflow: hidden;
 }
 
@@ -432,11 +427,7 @@
   }
 }
 
-.section-title {
-  margin: 32px 0 16px 0;
-  font-size: 18px;
-  color: var(--text-primary);
-}
+
 
 .order-details-view {
   display: flex;

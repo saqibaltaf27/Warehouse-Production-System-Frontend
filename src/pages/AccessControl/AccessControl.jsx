@@ -38,7 +38,7 @@ const AccessControl = () => {
   }, [searchTerm]);
 
   return (
-    <div className="access-control-page">
+    <div className="access-control-page layout-page-padding">
       {/* <div className="access-control-header">
         <h1>Access Control Manager</h1>
       </div> */}

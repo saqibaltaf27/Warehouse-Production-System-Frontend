@@ -1290,7 +1290,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="executive-dashboard bg-light">
+    <div className="executive-dashboard  layout-page-padding">
       {/* Filters */}
       <div className="dashboard-filters-bar">
         <div className="d-flex flex-column">

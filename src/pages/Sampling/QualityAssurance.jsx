@@ -286,8 +286,7 @@ const QualityAssurance = () => {
           rows={2}
           value={row['Action'] || ''}
           readOnly
-          className="qc-param-textarea"
-          style={{ backgroundColor: '#f5f5f5' }}
+          className="qc-param-textarea qa-readonly"
         />
       )
     },
@@ -299,8 +298,7 @@ const QualityAssurance = () => {
           rows={2}
           value={row['Criteria'] || ''}
           readOnly
-          className="qc-param-textarea"
-          style={{ backgroundColor: '#f5f5f5' }}
+          className="qc-param-textarea qa-readonly"
         />
       )
     },
@@ -320,7 +318,7 @@ const QualityAssurance = () => {
             }
             setTableData(newData);
           }}
-          style={{ width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
+          className="qa-cell-input"
         >
           <option value="">-</option>
           {equipmentOptions.map((eq, i) => (
@@ -347,7 +345,7 @@ const QualityAssurance = () => {
             newData[rowIndex].Type = e.target.value;
             setTableData(newData);
           }}
-          style={{ width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
+          className="qa-cell-input"
         >
           <option value="M">M - Material</option>
           <option value="P">P - Process</option>
@@ -366,7 +364,7 @@ const QualityAssurance = () => {
             newData[rowIndex]['Observed Value 1'] = e.target.value;
             setTableData(newData);
           }}
-          style={{ width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
+          className="qa-cell-input"
         />
       )
     },
@@ -382,7 +380,7 @@ const QualityAssurance = () => {
             newData[rowIndex]['Observed Value 2'] = e.target.value;
             setTableData(newData);
           }}
-          style={{ width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
+          className="qa-cell-input"
         />
       )
     },
@@ -398,14 +396,14 @@ const QualityAssurance = () => {
             newData[rowIndex]['Observed Value 3'] = e.target.value;
             setTableData(newData);
           }}
-          style={{ width: '100%', padding: '4px', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
+          className="qa-cell-input"
         />
       )
     }
   ];
 
   return (
-    <div className="qc-sampling-container fade-in-up" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="qc-sampling-container fade-in-up">
       
       {showForm && (
         <div className="add-sample-wrapper">
@@ -419,7 +417,7 @@ const QualityAssurance = () => {
           <div className="add-sample-body">
             {!selectedRecord ? (
               <div className="add-sample-form">
-                <div className="add-sample-grid" style={{ marginBottom: '24px' }}>
+                <div className="add-sample-grid qa-section-gap">
                   <div className="add-sample-col">
                     <div className="add-sample-field">
                       <label className="add-sample-label">QC Type</label>
@@ -461,7 +459,7 @@ const QualityAssurance = () => {
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">ItemCode</label>
-                      <div style={{ flex: 1 }}>
+                      <div className="qa-picker">
                         <ChooseFromList
                           title="Select Item"
                           apiEndpoint={`/quality/items`}
@@ -664,7 +662,7 @@ const QualityAssurance = () => {
 
                
 
-                <div className="add-sample-table-wrapper" style={{ border: 'none', boxShadow: 'none', marginBottom: '24px' }}>
+                <div className="add-sample-table-wrapper qa-plain-table">
                   <Table 
                     data={tableData}
                     columns={detailColumns}
@@ -721,16 +719,16 @@ const QualityAssurance = () => {
                       </select>
                     </div>
                     
-                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
+                    <div className="qa-actions">
                       <Button variant="primary">OK</Button>
                       <Button variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
                     </div>
                   </div>
 
                   <div className="add-sample-col">
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>QC Decision</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">QC Decision</label>
                         <select className="add-sample-input" value={qcDecision} onChange={e => setQcDecision(e.target.value)}>
                           <option value="A">Accepted</option>
                           <option value="R">Rejected</option>
@@ -738,26 +736,26 @@ const QualityAssurance = () => {
                           <option value="CR">Conditionally Rejected</option>
                         </select>
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>QC Remarks</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">QC Remarks</label>
                         <input type="text" className="add-sample-input" value={qcRemarks} onChange={e => setQcRemarks(e.target.value)} />
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted Qty</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Accepted Qty</label>
                         <input type="text" className="add-sample-input" value={acceptedQty} onChange={e => setAcceptedQty(e.target.value)} />
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected Qty</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejected Qty</label>
                         <input type="text" className="add-sample-input" value={rejectedQty} onChange={e => setRejectedQty(e.target.value)} />
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Release Warehouse</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Release Warehouse</label>
                         <select className="add-sample-input" value={releaseWarehouse} onChange={e => setReleaseWarehouse(e.target.value)}>
                           <option value="">Select Warehouse</option>
                           {warehouseOptions.map(whs => (
@@ -765,8 +763,8 @@ const QualityAssurance = () => {
                           ))}
                         </select>
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejection Warehouse</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejection Warehouse</label>
                         <select className="add-sample-input" value={rejectionWarehouse} onChange={e => setRejectionWarehouse(e.target.value)}>
                           <option value="">Select Warehouse</option>
                           {warehouseOptions.map(whs => (
@@ -776,18 +774,18 @@ const QualityAssurance = () => {
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted ITR</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Accepted ITR</label>
                         <input type="text" className="add-sample-input" disabled value={acceptedITR} />
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected ITR</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejected ITR</label>
                         <input type="text" className="add-sample-input" disabled value={rejectedITR} />
                       </div>
                     </div>
 
-                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div className="qa-actions qa-actions-end">
                       {!selectedRecord ? (
                         <Button variant="primary" onClick={handleSaveQuality}>Save Quality Record</Button>
                       ) : (
@@ -804,7 +802,7 @@ const QualityAssurance = () => {
               </div>
             ) : (
               <div>
-                <div className="add-sample-grid" style={{ marginBottom: '24px' }}>
+                <div className="add-sample-grid qa-section-gap">
                   <div className="add-sample-col">
                     <div className="add-sample-field">
                       <label className="add-sample-label">Item</label>
@@ -828,8 +826,8 @@ const QualityAssurance = () => {
                   </div>
                 </div>
                 
-                <h4 style={{ marginBottom: '12px', color: '#333' }}>Parameters</h4>
-                <div className="add-sample-table-wrapper" style={{ border: 'none', boxShadow: 'none', marginBottom: '24px' }}>
+                <h4 className="qa-section-title">Parameters</h4>
+                <div className="add-sample-table-wrapper qa-plain-table">
                   <Table 
                     data={recordDetails}
                     columns={detailColumns}
@@ -838,7 +836,7 @@ const QualityAssurance = () => {
                   />
                 </div>
 
-                <div className="add-sample-grid" style={{ marginBottom: '24px' }}>
+                <div className="add-sample-grid qa-section-gap">
                   <div className="add-sample-col">
                     <div className="add-sample-field">
                       <label className="add-sample-label">Sample By</label>
@@ -863,40 +861,40 @@ const QualityAssurance = () => {
                   </div>
 
                   <div className="add-sample-col">
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted Qty</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Accepted Qty</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Accepted Qty'] || ''} />
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected Qty</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejected Qty</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejected Qty'] || ''} />
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Release Warehouse</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Release Warehouse</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Release Warehouse'] || ''} />
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejection Warehouse</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejection Warehouse</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejection Warehouse'] || ''} />
                       </div>
                     </div>
                     
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Accepted ITR</label>
+                    <div className="qa-pair">
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Accepted ITR</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Accepted ITR'] || ''} />
                       </div>
-                      <div className="add-sample-field" style={{ flex: 1 }}>
-                        <label className="add-sample-label" style={{ width: '100px' }}>Rejected ITR</label>
+                      <div className="add-sample-field qa-pair-field">
+                        <label className="add-sample-label qa-pair-label">Rejected ITR</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejected ITR'] || ''} />
                       </div>
                     </div>
                     
-                    <div style={{ marginTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div className="qa-actions qa-actions-end">
                       <Button variant="secondary">Release Sticker</Button>
                       <Button variant="secondary">Rejected Sticker</Button>
                       <Button variant="secondary">COA</Button>
@@ -910,10 +908,10 @@ const QualityAssurance = () => {
         </div>
       )}
 
-      <div className="dome-card-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px 0' }}>
+      <div className="dome-card-wrapper qa-card">
+        <div className="qa-toolbar">
           <h3 className="section-title"></h3>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div className="qa-toolbar-actions">
             <Button variant="primary" onClick={handleAddQuality}>
               Add Quality
             </Button>

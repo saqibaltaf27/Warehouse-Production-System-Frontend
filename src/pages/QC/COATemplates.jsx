@@ -354,7 +354,6 @@ const COATemplates = () => {
 
       {/* Saved Templates Table */}
       <div className="coa-document-container coa-template-container">
-        <h2 className="coa-template-section-title">Saved Templates</h2>
         <Table 
           data={savedTemplates}
           columns={tableColumns}

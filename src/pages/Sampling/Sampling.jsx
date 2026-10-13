@@ -64,7 +64,7 @@ const Sampling = () => {
   }, [tabs, activeTab]);
 
   return (
-    <div className="sampling-page-container">
+    <div className="sampling-page-container layout-page-padding">
       <div className="sampling-tabs-wrapper">
         {/* <Tabs 
           variant="underline"
@@ -73,7 +73,7 @@ const Sampling = () => {
           onTabChange={handleTabChange} 
         /> */}
       </div>
-      <div className="sampling-tab-content">
+      <div className="sampling-tab-content layout-page-padding">
         {activeTab === 'qc' && (
           <QCSampling />
         )}
