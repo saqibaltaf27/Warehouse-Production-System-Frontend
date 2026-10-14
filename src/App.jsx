@@ -37,33 +37,13 @@ const SimplePlaceholder = () => (
 );
 
 const DefaultRedirect = () => {
-  const { allowedModules, loadingPermissions } = usePermission();
-  const { user } = useAuth();
-  
+  const { loadingPermissions } = usePermission();
+
   if (loadingPermissions) {
     return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#64748b' }}>Loading...</div>;
   }
-  
-  if (user?.isSuperAdmin) {
-    return <Navigate to="/production?tab=dashboard" replace />;
-  }
 
-  const menuItems = [
-    { path: '/production?tab=dashboard', main_module: 'Production Dashboard' },
-    { path: '/engineering-dashboard', main_module: 'Engineering Dashboard' },
-    { path: '/inventory', main_module: 'Inventory' },
-    { path: '/machine-efficiency', main_module: 'Machine Efficiency' },
-    { path: '/production', main_module: 'Production' },
-    { path: '/qc', main_module: 'QC' },
-  ];
-
-  for (const item of menuItems) {
-    if (allowedModules.has(item.main_module)) {
-      return <Navigate to={item.path} replace />;
-    }
-  }
-
-  return <Navigate to="/production?tab=dashboard" replace />;
+  return <Navigate to="/workspace" replace />;
 };
 function AppContent() {
   const { user } = useAuth();
