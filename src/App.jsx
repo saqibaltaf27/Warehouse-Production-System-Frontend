@@ -30,21 +30,13 @@ import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { LoadingProvider } from './context/LoadingContext.jsx';
-import { PermissionProvider, usePermission, ProtectedRoute } from './context/permissioncheck.jsx';
+import { PermissionProvider, ProtectedRoute } from './context/permissioncheck.jsx';
 // Simple placeholder for other routes
 const SimplePlaceholder = () => (
   <></>
 );
 
-const DefaultRedirect = () => {
-  const { loadingPermissions } = usePermission();
-
-  if (loadingPermissions) {
-    return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', color: '#64748b' }}>Loading...</div>;
-  }
-
-  return <Navigate to="/workspace" replace />;
-};
+const DefaultRedirect = () => <Navigate to="/workspace" replace />;
 function AppContent() {
   const { user } = useAuth();
 
@@ -64,7 +56,7 @@ function AppContent() {
             <Route path="dashboard" element={<ProtectedRoute requiredRoute="/dashboard"><Dashboard /></ProtectedRoute>} />
             <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
-            <Route path="workspace" element={<ProtectedRoute requiredRoute="/production"><MyWorkspace /></ProtectedRoute>} />
+            <Route path="workspace" element={<MyWorkspace />} />
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
             <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />

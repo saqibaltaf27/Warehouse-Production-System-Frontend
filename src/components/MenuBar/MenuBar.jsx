@@ -23,7 +23,7 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
   const [expandedMenu, setExpandedMenu] = useState(null);
   const [openFlyoutTitle, setOpenFlyoutTitle] = useState(null);
   const [flyoutDismissed, setFlyoutDismissed] = useState(false);
-  const { allowedModules, loadingPermissions } = usePermission();
+  const { allowedModules, allowedSubModules, allowedChildModules, loadingPermissions } = usePermission();
   const location = useLocation();
   const profileMenuRef = useRef(null);
 
@@ -53,7 +53,7 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     {
       title: "My Workspace",
       path: "/workspace",
-      main_module: "Production",
+      public: true,
       icon: <IconSettings size={18} stroke={1.5} />, 
     },
     {
@@ -62,21 +62,22 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "Production",
       icon: <IconSettings size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
-        { title: 'Monthly Report', path: '/production?tab=quality-control', tabKey: 'quality-control' },
-        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
-        { title: 'Purchase Request', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },     
+        { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard', sub_module: 'Dashboard' },
+        { title: 'Monthly Report', path: '/production?tab=quality-control', tabKey: 'quality-control', sub_module: 'Monthly Report' },
+        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders', sub_module: 'Production Orders' },
+        { title: 'Purchase Request', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Request' },
         {
           title: 'Production Planning',
+          sub_module: 'Production Planning',
           subItems: [
-            { title: 'Production Planning', path: '/production?tab=production-planning&planTab=production-order', tabKey: 'production-order' },
-            { title: 'Man Effiency', path: '/production?tab=production-planning&planTab=man-effiency', tabKey: 'man-effiency' },
-            { title: 'Machine Efficiency', path: '/production?tab=production-planning&planTab=machine-efficiency', tabKey: 'machine-efficiency' },
-            { title: 'Material Shortages', path: '/production?tab=production-planning&planTab=shortages', tabKey: 'shortages' },
-            { title: 'Batch Expiry', path: '/production?tab=production-planning&planTab=expiry', tabKey: 'expiry' },
+            { title: 'Production Planning', path: '/production?tab=production-planning&planTab=production-order', tabKey: 'production-order', child_module: 'Production Planning' },
+            { title: 'Man Effiency', path: '/production?tab=production-planning&planTab=man-effiency', tabKey: 'man-effiency', child_module: 'Man Effiency' },
+            { title: 'Machine Efficiency', path: '/production?tab=production-planning&planTab=machine-efficiency', tabKey: 'machine-efficiency', child_module: 'Machine Efficiency' },
+            { title: 'Material Shortages', path: '/production?tab=production-planning&planTab=shortages', tabKey: 'shortages', child_module: 'Material Shortages' },
+            { title: 'Batch Expiry', path: '/production?tab=production-planning&planTab=expiry', tabKey: 'expiry', child_module: 'Batch Expiry' },
           ]
         },
-        { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
+        { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis', sub_module: 'Cost Analysis' },
        //{ title: 'Production Trend', path: '/production?tab=production-trend', tabKey: 'production-trend' },
        
       ]
@@ -87,16 +88,17 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "QC",
       icon: <IconChecklist size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Complaints', path: '/qc?tab=complaints', tabKey: 'complaints' },
-        { title: 'COA', path: '/qc?tab=coa', tabKey: 'coa' },
-        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template' },
+        { title: 'Complaints', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complaints' },
+        { title: 'COA', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'COA' },
+        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
         { 
-          title: 'Sampling', 
+          title: 'Sampling',
+          sub_module: 'Samplings',
           subItems: [
-            { title: 'Sampling', path: '/sampling?tab=qc', tabKey: 'qc' },
-            { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection' },
-            { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance' },
-            { title: 'QC Parameters', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters' },
+            { title: 'Sampling', path: '/sampling?tab=qc', tabKey: 'qc', child_module: 'Sampling' },
+            { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection', child_module: 'Under Inspection' },
+            { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance', child_module: 'Quality Assurance' },
+            { title: 'QC Parameters', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters', child_module: 'QC Parameters' },
           ]
         },
       ]
@@ -107,9 +109,9 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "Engineering Dashboard",
       icon: <IconTool size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Dashboard', path: '/engineering-dashboard?tab=dashboard', tabKey: 'dashboard' },
-        { title: 'Line wise Equipments & PM', path: '/engineering-dashboard?tab=equipment-pm', tabKey: 'equipment-pm' },
-        { title: 'Machine', path: '/machine', tabKey: 'machine' },
+        { title: 'Dashboard', path: '/engineering-dashboard?tab=dashboard', tabKey: 'dashboard', sub_module: 'Dashboard' },
+        { title: 'Line wise Equipments & PM', path: '/engineering-dashboard?tab=equipment-pm', tabKey: 'equipment-pm', sub_module: 'Line wise Equipments & PM' },
+        { title: 'Machine', path: '/machine', tabKey: 'machine', sub_module: 'Machine' },
       ]
     },
     {
@@ -118,8 +120,8 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "Inventory",
       icon: <IconBox size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Inventory Overview', path: '/inventory?tab=overview', tabKey: 'overview' },
-        { title: 'Item Master', path: '/inventory?tab=master', tabKey: 'master' },
+        { title: 'Inventory Overview', path: '/inventory?tab=overview', tabKey: 'overview', sub_module: 'Inventory Overview' },
+        { title: 'Item Master', path: '/inventory?tab=master', tabKey: 'master', sub_module: 'Item Master' },
       ]
     },
 
@@ -130,7 +132,7 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       icon: <IconReportMoney size={18} stroke={1.5} />,
       subItems: [
        // { title: 'Overview', path: '/costing/overview', tabKey: 'overview', main_module: 'Costing' },
-        { title: 'Staff', path: '/staff', tabKey: 'staff', main_module: 'Staff' },
+        { title: 'Staff', path: '/staff', tabKey: 'staff', sub_module: 'Staff', main_module: 'Staff' },
       ]
     },
   
@@ -146,13 +148,51 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       icon: <IconSettingsAutomation size={18} stroke={1.5} />,
     });
   } else if (!loadingPermissions) {
-    visibleMenuItems = menuItems.filter((item) =>
-      allowedModules.has(item.main_module) ||
-      (item.subItems && item.subItems.some((sub) =>
-        allowedModules.has(sub.main_module) ||
-        allowedModules.has(sub.title)
-      ))
-    );
+    const allowed = (set, ...names) => names.some((name) => name && set.has(name));
+
+    const childAllowed = (child) =>
+      allowed(allowedChildModules, child.child_module, child.title);
+
+    const filterSubItems = (subItems) => subItems.flatMap((sub) => {
+      if (sub.subItems) {
+        const children = sub.subItems.filter(childAllowed);
+        const groupAllowed = allowed(allowedSubModules, sub.sub_module, sub.title);
+        if (!groupAllowed && children.length === 0) return [];
+        return [{ ...sub, subItems: children }];
+      }
+
+      if (!sub.sub_module && !sub.child_module) return [sub];
+
+      const subAllowed =
+        allowed(allowedSubModules, sub.sub_module, sub.title) ||
+        allowed(allowedChildModules, sub.child_module, sub.title) ||
+        allowed(allowedModules, sub.main_module);
+      return subAllowed ? [sub] : [];
+    });
+
+    visibleMenuItems = menuItems.flatMap((item) => {
+      if (item.public) return [item];
+
+      const declaredNames = [];
+      (item.subItems || []).forEach((sub) => {
+        [sub.sub_module, sub.child_module, sub.title].forEach((name) => sub.sub_module && name && declaredNames.push(name));
+        (sub.subItems || []).forEach((child) => {
+          [child.sub_module, child.child_module, child.title].forEach((name) => name && declaredNames.push(name));
+        });
+      });
+      const hasGranularAccess = declaredNames.some(
+        (name) => allowedSubModules.has(name) || allowedChildModules.has(name)
+      );
+      const mainAllowed =
+        allowedModules.has(item.main_module) ||
+        (item.subItems || []).some((sub) => allowedModules.has(sub.main_module) || allowedModules.has(sub.title));
+
+      if (!item.subItems) return mainAllowed ? [item] : [];
+      if (mainAllowed && !hasGranularAccess) return [item];
+
+      const subItems = filterSubItems(item.subItems);
+      return subItems.length > 0 ? [{ ...item, subItems }] : [];
+    });
   } else {
     visibleMenuItems = [];
   }

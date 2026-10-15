@@ -56,6 +56,8 @@ export const PermissionProvider = ({ children }) => {
               }
               if (perm.Route) {
                 allowedRouteSet.add(perm.Route);
+                const routePath = perm.Route.split('?')[0];
+                if (routePath) allowedRouteSet.add(routePath);
               }
             }
           });
