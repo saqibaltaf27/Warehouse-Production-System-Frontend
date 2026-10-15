@@ -211,7 +211,7 @@ a.workspace-notice-row:hover {
   max-width: 100%;
   padding: 8px 10px;
   border: 1px solid var(--border-color);
-  border-radius: 6px;
+  border-radius: 2px;
   background: var(--dashboard-surface);
   font-size: 13px;
 }

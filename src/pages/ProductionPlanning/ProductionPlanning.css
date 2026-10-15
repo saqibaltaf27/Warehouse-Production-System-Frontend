@@ -132,7 +132,7 @@
   padding: 8px 16px;
   background-color: #3b82f6;
   color: #fff;
-  border-radius: 6px;
+  border-radius: 2px;
   border: none;
   cursor: pointer;
   display: flex;
@@ -266,7 +266,7 @@
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 0.875rem;
   box-sizing: border-box;
   outline: none;
@@ -282,7 +282,7 @@
   color: #ef4444;
   border: 1px solid #fecaca;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 500;
@@ -303,7 +303,7 @@
   background: #ffffff;
   border: 1px solid #d1d5db;
   padding: 6px 12px;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
@@ -326,7 +326,7 @@
   padding: 10px 16px;
   background: #fff;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
@@ -342,7 +342,7 @@
   background: #3b82f6;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 500;
@@ -361,6 +361,7 @@
 .plan-employee-item {
   padding: 2px 0;
 }
+
 /* Add Today Plan Page Styles */
 .add-today-plan-page {
   min-height: 100vh;
@@ -377,7 +378,8 @@
 .add-today-plan-back-btn {
   background: none;
   border: none;
-  color: #1e3a8a; /* Dark blue color resembling the image */
+  color: #1e3a8a;
+  /* Dark blue color resembling the image */
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -536,7 +538,8 @@
 
 .vertical-tabs-content {
   flex-grow: 1;
-  min-width: 0; /* Prevents flexbox overflow */
+  min-width: 0;
+  /* Prevents flexbox overflow */
 }
 
 /* Expandable Cells */
@@ -548,9 +551,11 @@
   align-items: center;
   gap: 4px;
 }
+
 .expandable-cell-list {
   margin-top: 6px;
 }
+
 .expandable-cell-jd-text {
   color: #6b7280;
   font-size: 0.85em;
@@ -562,6 +567,7 @@
   border-radius: 6px !important;
   border: 1px solid #d1d5db !important;
 }
+
 .react-select__menu-portal {
   z-index: 9999 !important;
 }

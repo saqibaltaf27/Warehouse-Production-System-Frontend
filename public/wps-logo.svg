@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 172 40" role="img" aria-labelledby="title">
-  <title id="title">WPS Warehouse Production System</title>
-  <rect x="1" y="1" width="38" height="38" rx="11" fill="#1B47DB"/>
-  <path d="M9 29V17l11-7 11 7v12M14 29V20h12v9M9 29h22M14 16h12M20 20v9" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"/>
-  <text x="50" y="28" fill="#232E32" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="700" letter-spacing="-1.1">WPS</text>
-</svg>

@@ -145,7 +145,7 @@
 
 .pie-legend-list::-webkit-scrollbar-thumb {
   background: var(--border-color, #e2e4e8);
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .pie-legend-card {
@@ -176,7 +176,7 @@
 .pie-legend-badge {
   width: 24px;
   height: 24px;
-  border-radius: 6px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,6 +192,7 @@
 .pie-legend-color-0 {
   background-color: rgba(131, 56, 236, 0.12);
 }
+
 .pie-legend-color-0 .pie-legend-badge-dot {
   background-color: #8338EC;
 }
@@ -199,6 +200,7 @@
 .pie-legend-color-1 {
   background-color: rgba(255, 0, 122, 0.12);
 }
+
 .pie-legend-color-1 .pie-legend-badge-dot {
   background-color: #FF007A;
 }
@@ -206,6 +208,7 @@
 .pie-legend-color-2 {
   background-color: rgba(255, 184, 0, 0.14);
 }
+
 .pie-legend-color-2 .pie-legend-badge-dot {
   background-color: #FFB800;
 }
@@ -213,6 +216,7 @@
 .pie-legend-color-3 {
   background-color: rgba(27, 71, 219, 0.12);
 }
+
 .pie-legend-color-3 .pie-legend-badge-dot {
   background-color: var(--primary-blue, #1B47DB);
 }
@@ -220,6 +224,7 @@
 .pie-legend-color-4 {
   background-color: rgba(16, 185, 129, 0.12);
 }
+
 .pie-legend-color-4 .pie-legend-badge-dot {
   background-color: var(--color-success, #10B981);
 }
@@ -227,6 +232,7 @@
 .pie-legend-color-5 {
   background-color: rgba(105, 151, 228, 0.15);
 }
+
 .pie-legend-color-5 .pie-legend-badge-dot {
   background-color: var(--secondary-blue, #6997E4);
 }
@@ -234,6 +240,7 @@
 .pie-legend-color-6 {
   background-color: rgba(251, 86, 7, 0.12);
 }
+
 .pie-legend-color-6 .pie-legend-badge-dot {
   background-color: #FB5607;
 }
@@ -241,6 +248,7 @@
 .pie-legend-color-7 {
   background-color: rgba(121, 128, 137, 0.12);
 }
+
 .pie-legend-color-7 .pie-legend-badge-dot {
   background-color: var(--text-secondary, #798089);
 }
@@ -357,4 +365,3 @@
     min-height: 180px;
   }
 }
-

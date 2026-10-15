@@ -54,7 +54,8 @@
   font-size: 13px;
 }
 
-.coa-document input, .coa-document textarea {
+.coa-document input,
+.coa-document textarea {
   background: transparent;
   border: none;
   color: #333;
@@ -97,13 +98,23 @@
   border-right: 1px solid #333;
 }
 
-.coa-title-section h2, .coa-title-section h3, .coa-title-section h4 {
+.coa-title-section h2,
+.coa-title-section h3,
+.coa-title-section h4 {
   margin: 5px 0;
 }
 
-.coa-title-section h2 { font-size: 16px; }
-.coa-title-section h3 { font-size: 14px; }
-.coa-title-section h4 { font-size: 14px; }
+.coa-title-section h2 {
+  font-size: 16px;
+}
+
+.coa-title-section h3 {
+  font-size: 14px;
+}
+
+.coa-title-section h4 {
+  font-size: 14px;
+}
 
 .coa-form-info {
   width: 20%;
@@ -119,6 +130,7 @@
   display: flex;
   margin-bottom: 5px;
 }
+
 .coa-form-row label {
   white-space: nowrap;
   margin-right: 5px;
@@ -162,7 +174,8 @@
   border-collapse: collapse;
 }
 
-.coa-table th, .coa-table td {
+.coa-table th,
+.coa-table td {
   border: 1px solid #333;
   padding: 8px;
   text-align: center;
@@ -190,6 +203,7 @@
   cursor: pointer;
   font-weight: bold;
 }
+
 .coa-add-row-btn:hover {
   background-color: #e0e0e0;
 }
@@ -424,7 +438,7 @@
   background: #e0e7ff;
   color: #4f46e5;
   border: none;
-  border-radius: 6px;
+  border-radius: 2px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -450,7 +464,7 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  
+
   .no-print,
   .coa-screen-only {
     display: none !important;
@@ -477,7 +491,7 @@
     width: 100% !important;
     margin: 0 !important;
   }
-  
+
   /* Ensure the container fits on one page */
   .coa-document-container {
     page-break-inside: avoid;
@@ -486,7 +500,7 @@
     max-width: none !important;
     margin: 0 !important;
   }
-  
+
   .coa-document-wrapper {
     margin: 0 !important;
     padding: 0 !important;
@@ -496,7 +510,7 @@
   .coa-table-section {
     padding: 10px 10px 0px 10px;
   }
-  
+
   .coa-details-section {
     padding: 10px;
   }
@@ -520,7 +534,7 @@
   background-color: #4a86e8;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 2px;
   cursor: pointer;
   font-weight: bold;
 }

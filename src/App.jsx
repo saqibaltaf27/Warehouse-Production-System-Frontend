@@ -25,7 +25,7 @@ import MyWorkspace from './pages/MyWorkspace/MyWorkspace.jsx';
 import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import Staff from './pages/Staff/Staff.jsx';
 import Sampling from './pages/Sampling/Sampling.jsx';
-import CostingOverview from './pages/Costing/CostingOverview.jsx';
+import Costing from './pages/Costing/Costing.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -81,10 +81,8 @@ function AppContent() {
               <Route path="permission-control" element={<PermissionControl />} />
               <Route path="access-permission/:empid" element={<AccessPermission />} />
             </Route>
-            <Route path="costing">
-              <Route index element={<Navigate to="/costing/overview" replace />} />
-              <Route path="overview" element={<CostingOverview />} />
-            </Route>
+            <Route path="costing" element={<Costing />} />
+            <Route path="costing/overview" element={<Navigate to="/costing?tab=dashboard" replace />} />
             <Route path="staff" element={<ProtectedRoute requiredRoute="/staff"><Staff /></ProtectedRoute>} />
             <Route path="sampling" element={<ProtectedRoute requiredRoute="/sampling"><Sampling /></ProtectedRoute>} />
             <Route path="settings" element={<SimplePlaceholder title="Settings" />} />

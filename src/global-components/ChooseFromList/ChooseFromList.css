@@ -16,13 +16,14 @@
   align-items: center;
   background: white;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 2px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.cfl-input-group:focus-within, .cfl-input-group:hover {
+.cfl-input-group:focus-within,
+.cfl-input-group:hover {
   border-color: #3b82f6;
 }
 
@@ -136,7 +137,7 @@
   align-items: center;
   gap: 10px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 2px;
   padding: 8px 12px;
 }
 
@@ -151,7 +152,7 @@
 .cfl-table-container {
   overflow-y: auto;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 2px;
   flex: 1;
   min-height: 0;
 }
@@ -189,7 +190,8 @@
   background: #f1f5f9;
 }
 
-.cfl-loading, .cfl-empty {
+.cfl-loading,
+.cfl-empty {
   padding: 40px;
   text-align: center;
   color: #64748b;

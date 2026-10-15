@@ -44,7 +44,7 @@
   height: 38px;
   padding: 8px 12px 8px 36px;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 2px;
   font-size: 14px;
   color: #1e293b;
   background-color: #f8fafc;
@@ -58,5 +58,3 @@
   color: #1e293b;
   margin: 0;
 }
-
-

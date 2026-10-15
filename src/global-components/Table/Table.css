@@ -152,7 +152,7 @@
   margin: 0 2px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 2px;
   cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
 }
@@ -190,6 +190,7 @@
 }
 
 @media (max-width: 768px) {
+
   .dome-table th,
   .dome-table td {
     padding-right: 10px;

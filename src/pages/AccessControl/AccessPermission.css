@@ -1,4 +1,3 @@
-
 .ap-loading {
   display: flex;
   justify-content: center;
@@ -31,7 +30,7 @@
   padding: 6px 12px;
   background: white;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 2px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
@@ -61,7 +60,7 @@
 
 .ap-btn {
   padding: 8px 16px;
-  border-radius: 6px;
+  border-radius: 2px;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -72,6 +71,7 @@
   background: #f0f0f0;
   color: #333;
 }
+
 .ap-btn-reset:hover {
   background: #e4e4e4;
 }
@@ -82,30 +82,40 @@
 }
 
 .ap-btn-add {
-  background: #9ab4a6; /* Dull green */
+  background: #9ab4a6;
+  /* Dull green */
   color: white;
 }
+
 .ap-btn-add.highlight {
-  background: #023e25; /* Dark Green from mockup */
+  background: #023e25;
+  /* Dark Green from mockup */
 }
+
 .ap-btn-add.highlight:hover {
   background: #012b1a;
 }
+
 .ap-btn-add:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 .ap-btn-remove {
-  background: #d4a3a3; /* Darker dull red for readability */
+  background: #d4a3a3;
+  /* Darker dull red for readability */
   color: white;
 }
+
 .ap-btn-remove.highlight-remove {
-  background: #dc3545; /* Strong standard danger red */
+  background: #dc3545;
+  /* Strong standard danger red */
 }
+
 .ap-btn-remove.highlight-remove:hover {
   background: #c82333;
 }
+
 .ap-btn-remove:disabled {
   opacity: 0.65;
   cursor: not-allowed;
@@ -152,6 +162,7 @@
   font-size: 1.1rem;
   color: #1a1a1a;
 }
+
 .ap-content-title p {
   margin: 0;
   font-size: 0.85rem;
@@ -173,7 +184,7 @@
 .ap-module-selector select {
   padding: 8px 12px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: 2px;
   min-width: 200px;
   font-size: 0.9rem;
 }
@@ -190,7 +201,7 @@
   gap: 8px;
   padding: 8px;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 2px;
   transition: background 0.2s;
   margin-bottom: 4px;
 }
@@ -241,7 +252,7 @@
   gap: 12px;
   padding: 12px 16px;
   border: 1px solid #eaeaea;
-  border-radius: 6px;
+  border-radius: 2px;
   background: #fafafa;
   transition: border-color 0.2s;
 }
@@ -260,7 +271,8 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #007bff; /* Custom blue accent */
+  accent-color: #007bff;
+  /* Custom blue accent */
 }
 
 .ap-permission-info {
@@ -296,7 +308,7 @@
 .ap-access-text {
   background: #e9ecef;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 2px;
   font-size: 0.75rem;
 }
 
