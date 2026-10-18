@@ -81,7 +81,21 @@ export const API_ENDPOINTS = {
     SALES_ORDERS: '/production-orders/sales-orders',
     OPEN_PRODUCTION_ORDERS: '/production-orders/open',
     CUSTOMERS: '/production-orders/customers',
-    PAGINATED_ORDERS: (page, limit, search = '') => `/production-orders/paginated?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`,
+    PAGINATED_ORDERS: (page, limit, search = '', filters = {}, sortConfig = null) => {
+      const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+      if (search && search.trim()) params.append('search', search.trim());
+      if (filters.status) params.append('status', filters.status);
+      if (filters.project) params.append('project', filters.project);
+      if (filters.product) params.append('product', filters.product);
+      if (filters.warehouse) params.append('warehouse', filters.warehouse);
+      if (filters.fromDate) params.append('fromDate', filters.fromDate);
+      if (filters.toDate) params.append('toDate', filters.toDate);
+      if (sortConfig && sortConfig.key) {
+        params.append('sortBy', sortConfig.key);
+        params.append('sortOrder', sortConfig.direction === 'ascending' || sortConfig.direction === 'asc' ? 'asc' : 'desc');
+      }
+      return `/production-orders/paginated?${params.toString()}`;
+    },
     DETAILS: (itemCode) => `/production-orders/${encodeURIComponent(itemCode)}`,
     DETAILS_BY_DOCNUM: (docNum) => `/production-orders/details-by-docnum/${docNum}`,
     BOM_DETAILS: (itemCode) => `/production-orders/bom/${encodeURIComponent(itemCode)}`,

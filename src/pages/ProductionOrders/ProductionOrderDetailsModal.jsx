@@ -52,10 +52,10 @@ const ProductionOrderDetailsModal = ({ isOpen, onClose, docNum }) => {
     <div className="so-modal-overlay">
       <div className="so-modal-content po-details-modal">
         <div className="so-modal-header">
-          <h3>Production Order Details - Doc No. {docNum}</h3>
+          <h3>Production Order # {docNum}</h3>
           <button onClick={onClose} className="so-modal-close">&times;</button>
         </div>
-        
+
         <div className="so-modal-body">
           {loading ? (
             <div>Loading details...</div>
@@ -63,19 +63,60 @@ const ProductionOrderDetailsModal = ({ isOpen, onClose, docNum }) => {
             <div className="po-modal-error-text">{error}</div>
           ) : details ? (
             <div className="po-details-container">
+
               <div className="po-header-details">
-                <div><strong>Item No.:</strong> {header.ProductNo}</div>
-                <div><strong>Item Name:</strong> {header.ProductDescription}</div>
-                <div><strong>Status:</strong> {header.Status}</div>
-                <div><strong>Type:</strong> {header.Type}</div>
-                <div><strong>Planned Quantity:</strong> {header.PlannedQuantity} {header.UoMName}</div>
-                <div><strong>Project:</strong> {header.Project}</div>
-                <div><strong>Order Date:</strong> {formatDate(header.OrderDate)}</div>
-                <div><strong>Due Date:</strong> {formatDate(header.DueDate)}</div>
-                <div><strong>Warehouse:</strong> {header.Warehouse}</div>
-                <div><strong>Priority:</strong> {header.Priority}</div>
+                <div className="po-detail-item">
+                  <strong>Item No.:</strong>
+                  <span>{header.ProductNo}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Item Name:</strong>
+                  <span>{header.ProductDescription}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Status:</strong>
+                  <span>{header.Status}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Type:</strong>
+                  <span>{header.Type}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Planned Quantity:</strong>
+                  <span>{header.PlannedQuantity} {header.UoMName}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Project:</strong>
+                  <span>{header.Project}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Order Date:</strong>
+                  <span>{formatDate(header.OrderDate)}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Due Date:</strong>
+                  <span>{formatDate(header.DueDate)}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Warehouse:</strong>
+                  <span>{header.Warehouse}</span>
+                </div>
+
+                <div className="po-detail-item">
+                  <strong>Priority:</strong>
+                  <span>{header.Priority}</span>
+                </div>
               </div>
-              
+
+
               <h4>Components</h4>
               <div className="so-table-container po-mt-10 po-details-table-container">
                 <table className="so-table">

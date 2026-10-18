@@ -13,6 +13,7 @@
   --secondary-color: #94B5E3;
   --accent-purple: #C6C3D7;
   --muted-lavender: #C6C3D7;
+  --row-hover: #2455750F;
 
   --bg-main: #F4F5F8;
   --bg-dashboard: #EBEBEC;
@@ -41,7 +42,7 @@
   --color-warning-light: #FEF3C7;
 
   /* Typography */
-  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: 'Helvetica', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-size-xs: 11px;
   --font-size-sm: 13px;
   --font-size-base: 14px;

@@ -42,8 +42,9 @@ const Layout = () => {
   const moduleTitles = {
     "/workspace": "My Workspace",
     "/production": "Production",
-    "/production-plan/add": "Add Production Plan",
+    "/production-plan/add": "Create Production Plan",
     "/production-plan/edit": "Edit Production Plan",
+    "/production-plan/view": "View Production Plan",
     "/qc": "Quality Control",
     "/engineering-dashboard": "Engineering Dashboard",
     "/inventory": "Inventory",
@@ -62,8 +63,10 @@ const Layout = () => {
   const tabTitles = {
     'dashboard': 'Dashboard',
     'production-orders': 'Production Orders',
-    'purchase-order': 'Purchase Requests',
+    'purchase-order': 'Purchase Orders',
     'production-planning': 'Production Planning',
+    'material-shortages': 'Material Shortages',
+    'batch-expiry': 'Batch Expiry',
     'cost-analysis': 'Cost Analysis',
     'quality-control': 'Monthly Reports',
     'complaints': 'Complain Management',

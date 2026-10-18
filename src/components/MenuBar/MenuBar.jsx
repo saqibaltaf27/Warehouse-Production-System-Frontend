@@ -50,22 +50,15 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       subItems: [
         { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
         { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
-        {
-          title: 'Production Plans',
-          subItems: [
-            { title: 'Production Planning', path: '/production?tab=production-planning&planTab=production-order', tabKey: 'production-order' },
-            { title: 'Man Effiency', path: '/production?tab=production-planning&planTab=man-effiency', tabKey: 'man-effiency' },
-            { title: 'Machine Efficiency', path: '/production?tab=production-planning&planTab=machine-efficiency', tabKey: 'machine-efficiency' },
-          ]
-        },
-        { title: 'Purchase Requests', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },
+        { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning' },
+        { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },
 
         {
           title: 'Reports',
           subItems: [
             { title: 'Production Summary', path: '/production?tab=quality-control', tabKey: 'quality-control' },
-            { title: 'Material Shortages', path: '/production?tab=production-planning&planTab=shortages', tabKey: 'shortages' },
-            { title: 'Batch Expiry', path: '/production?tab=production-planning&planTab=expiry', tabKey: 'expiry' },
+            { title: 'Material Shortages', path: '/production?tab=material-shortages', tabKey: 'material-shortages' },
+            { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry' },
           ]
         },
         { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },

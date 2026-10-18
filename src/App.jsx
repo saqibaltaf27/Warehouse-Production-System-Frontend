@@ -68,6 +68,7 @@ function AppContent() {
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
             <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
+            <Route path="production-plan/view" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="inventory" element={<ProtectedRoute requiredRoute="/inventory"><Inventory /></ProtectedRoute>} />
             <Route path="inventory/item-master/:itemCode" element={<ProtectedRoute requiredRoute="/inventory"><ItemMasterView /></ProtectedRoute>} />
             <Route path="orders" element={<SimplePlaceholder title="Orders" />} />

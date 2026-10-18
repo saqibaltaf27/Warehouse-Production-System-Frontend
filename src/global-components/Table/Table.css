@@ -3,7 +3,7 @@
   width: 100%;
   min-width: 0;
   flex-direction: column;
-  color: #0f2745;
+  color: #000000;
 }
 
 .dome-table-wrapper {
@@ -11,8 +11,7 @@
   overflow-x: auto;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 2px;
   scrollbar-color: #9fb0c4 #eef3f8;
   scrollbar-width: thin;
 }
@@ -75,14 +74,11 @@
   top: 0;
   z-index: 1;
   padding: 8px 12px;
-  color: #6b7280;
+  color: #2c2c2c;
   background: #f3f4f6;
   border-bottom: 1px solid #e5e7eb;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  line-height: 1.15;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
   user-select: none;
 }
@@ -100,9 +96,6 @@
   transition: background-color 150ms ease;
 }
 
-.dome-table td:last-child {
-  /* No special right border to remove anymore */
-}
 
 .dome-table tbody tr td {
   background: #ffffff;
@@ -114,7 +107,7 @@
 
 .dome-table tbody tr:hover td,
 .dome-table tbody tr.dome-table-row--clickable:hover td {
-  background: #f9fafb;
+  background: var(--row-hover);
 }
 
 .dome-table tr.dome-table-row--clickable {

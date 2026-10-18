@@ -7,13 +7,13 @@ import {
 } from '@tabler/icons-react';
 import './Pagination.css';
 
-const PAGE_SIZES = [5, 10, 20, 50, 100];
+const PAGE_SIZES = [10, 20, 50, 100];
 
 const Pagination = ({
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
-  pageSize = 10,
+  pageSize = 20,
   onPageChange,
   onPageSizeChange,
 }) => {
