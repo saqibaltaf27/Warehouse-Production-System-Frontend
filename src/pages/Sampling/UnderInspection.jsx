@@ -481,7 +481,7 @@ const UnderInspection = () => {
         </div>
       )}
 
-      <div className="dome-card-wrapper">
+      {!showAddSample && <div className="dome-card-wrapper">
         <div className="section-header-flex" style={{ marginBottom: '16px' }}>
           <h3 className="section-title"></h3>
         </div>
@@ -498,7 +498,7 @@ const UnderInspection = () => {
           showActions={false}
           onRowClick={handleRowClick}
         />
-      </div>
+      </div>}
     </div>
   );
 };

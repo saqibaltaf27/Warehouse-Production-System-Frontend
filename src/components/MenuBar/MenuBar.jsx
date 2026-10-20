@@ -48,7 +48,8 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       main_module: "Production",
       icon: <IconSettings size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
+        // { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
+        { title: 'Production Dashboard', path: '/production?tab=quality-control', tabKey: 'quality-control' },      
         { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
         { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning' },
         { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },
@@ -56,13 +57,12 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         {
           title: 'Reports',
           subItems: [
-            { title: 'Production Summary', path: '/production?tab=quality-control', tabKey: 'quality-control' },
             { title: 'Critical Material', path: '/production?tab=critical-material', tabKey: 'critical-material' },
             { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry' },
             { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity' },
           ]
         },
-        { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
+        // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
 
       ]
     },

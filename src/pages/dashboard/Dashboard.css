@@ -1,9 +1,12 @@
 .executive-dashboard {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   min-height: 100%;
-  margin-top: 20px;
+  margin: 0;
+}
+
+.executive-dashboard > .po-filter-toolbar-card {
+  margin-bottom: 0.75rem;
 }
 
 .dashboard-header {
@@ -927,7 +930,9 @@
 .mb-4 {
   margin-bottom: 1rem;
 }
-
+.mb-2 {
+  margin-bottom: 0.75rem;
+}
 .d-flex {
   display: flex;
 }
@@ -968,8 +973,8 @@
 
 /* Dense Layout */
 .row-dense {
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.7rem;
+  margin-bottom: 0.7rem;
 }
 
 .row-dense .dashboard-col-flex-1 {

@@ -8,7 +8,9 @@ import Table from '../../global-components/Table/Table';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import toast, { Toaster } from 'react-hot-toast';
 import { IconEdit, IconPlus } from '@tabler/icons-react';
-import './COA.css'; // Reusing COA styles where appropriate
+import './COA.css';
+import '../Sampling/Sampling.css';
+import '../ProductionOrders/ProductionOrders.css';
 
 const COATemplates = () => {
   const { user } = useAuth();
@@ -94,13 +96,29 @@ const COATemplates = () => {
   };
 
   const customSelectStyles = {
+    container: (base) => ({
+      ...base,
+      width: '100%',
+    }),
     control: (base, state) => ({
       ...base,
+      width: '100%',
       background: '#fff',
-      border: state.isFocused ? '1px solid #3b82f6' : '1px solid #e5e7eb',
-      borderRadius: '8px',
+      border: state.isFocused ? '1px solid #1b47db' : '1px solid #ccc',
+      borderRadius: '2px',
       boxShadow: 'none',
-      minHeight: '42px',
+      minHeight: '26px',
+      height: '26px',
+      fontSize: '12px',
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      height: '24px',
+      padding: '0 8px',
+    }),
+    indicatorsContainer: (base) => ({
+      ...base,
+      height: '24px',
     }),
     menuPortal: base => ({ ...base, zIndex: 9999 })
   };
@@ -254,38 +272,40 @@ const COATemplates = () => {
       </div>
 
       {showCreateForm && (
-        <div className="coa-document-container coa-template-container coa-template-container-animated">
-          
-          <div>
-            <h2 className="coa-template-section-title">
-              {formData.product && savedTemplates.some(t => t.ItemCode === formData.product.value) ? 'Update COA Template' : 'Create COA Template'}
-            </h2>
+        <div className="add-sample-wrapper">
+          <h2 className="add-sample-title">
+            {formData.product && savedTemplates.some(t => t.ItemCode === formData.product.value) ? 'Update COA Template' : 'Create COA Template'}
+          </h2>
+
+          <div className="add-sample-grid">
+            <div className="add-sample-col" style={{ maxWidth: '100%' }}>
+              <div className="add-sample-field">
+                <label className="add-sample-label">Product</label>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <AsyncSelect
+                    cacheOptions
+                    defaultOptions
+                    loadOptions={fetchProducts}
+                    onChange={(selected) => {
+                      setFormData(prev => ({ ...prev, product: selected }));
+                      if (selected) setShowError(false);
+                    }}
+                    value={formData.product}
+                    styles={customSelectStyles}
+                    placeholder="Search and select a product..."
+                    isClearable
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                  />
+                  {showError && <span className="coa-template-error">Product is required</span>}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Product Selection */}
-        <div className="coa-template-field-group">
-          <label className="coa-template-label">Product</label>
-          <AsyncSelect
-            cacheOptions
-            defaultOptions
-            loadOptions={fetchProducts}
-            onChange={(selected) => {
-              setFormData(prev => ({ ...prev, product: selected }));
-              if (selected) setShowError(false);
-            }}
-            value={formData.product}
-            styles={customSelectStyles}
-            placeholder="Search and select a product..."
-            isClearable
-            menuPortalTarget={document.body}
-            menuPosition="fixed"
-          />
-          {showError && <span className="coa-template-error">Product is required</span>}
-        </div>
-
         {/* Tests Table */}
-        <div className="coa-table-section coa-template-table-container">
-          <table className="coa-table coa-template-table">
+        <div className="po-grid-container" style={{ minHeight: 'auto' }}>
+          <table className="po-table" style={{ whiteSpace: 'normal' }}>
             <thead>
               <tr>
                 <th className="coa-template-th-sn">S.#</th>
@@ -342,7 +362,7 @@ const COATemplates = () => {
           <Button variant="secondary" size="sm" onClick={addTestRow}>+ Add Row</Button>
         </div>
 
-        <div className="coa-template-footer">
+        <div className="add-sample-footer">
           <Button variant="outline" onClick={() => setShowCreateForm(false)}>Cancel</Button>
           <Button variant="primary" onClick={handleSave} isLoading={isSaving}>
             {formData.product && savedTemplates.some(t => t.ItemCode === formData.product.value) ? 'Save Changes' : 'Save Template'}
@@ -353,7 +373,7 @@ const COATemplates = () => {
       )}
 
       {/* Saved Templates Table */}
-      <div className="coa-document-container coa-template-container">
+      {!showCreateForm && <div className="coa-document-container coa-template-container">
         <Table 
           data={savedTemplates}
           columns={tableColumns}
@@ -361,7 +381,7 @@ const COATemplates = () => {
           showActions={false}
           onRowClick={handleRowClick}
         />
-      </div>
+      </div>}
 
       {/* Template Details Modal */}
       {selectedTemplate && (

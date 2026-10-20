@@ -87,6 +87,12 @@ axiosInstance.interceptors.response.use(
       stopGlobalLoading();
     }
 
+    // A failed login is a bad email or password, not an expired session.
+    if (error.response?.status === 401 && originalRequest?.url === API_ENDPOINTS.AUTH.LOGIN) {
+      stopGlobalLoading();
+      return Promise.reject(error);
+    }
+
     // If the error is 401 (Unauthorized) and we haven't already retried this request
     if (error.response?.status === 401 && !originalRequest._retry) {
       
