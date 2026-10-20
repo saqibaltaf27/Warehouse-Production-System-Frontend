@@ -57,8 +57,9 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           title: 'Reports',
           subItems: [
             { title: 'Production Summary', path: '/production?tab=quality-control', tabKey: 'quality-control' },
-            { title: 'Material Shortages', path: '/production?tab=material-shortages', tabKey: 'material-shortages' },
+            { title: 'Critical Material', path: '/production?tab=critical-material', tabKey: 'critical-material' },
             { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry' },
+            { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity' },
           ]
         },
         { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },

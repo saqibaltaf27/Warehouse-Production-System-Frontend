@@ -99,6 +99,7 @@ export const API_ENDPOINTS = {
     DETAILS: (itemCode) => `/production-orders/${encodeURIComponent(itemCode)}`,
     DETAILS_BY_DOCNUM: (docNum) => `/production-orders/details-by-docnum/${docNum}`,
     BOM_DETAILS: (itemCode) => `/production-orders/bom/${encodeURIComponent(itemCode)}`,
+    MATERIAL_CAPACITY: '/production-orders/material-capacity',
   },
 
   COMPLAINTS: {

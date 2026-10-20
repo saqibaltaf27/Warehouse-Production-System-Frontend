@@ -11,6 +11,7 @@ import CostAnalysis from '../CostAnalysis/CostAnalysis';
 import ProductionOverview from '../ProductionOverview/ProductionOverview';
 import MaterialShortages from '../ProductionPlanning/MaterialShortages';
 import BatchExpiry from '../ProductionPlanning/BatchExpiry';
+import MaterialCapacityReport from '../ProductionPlanning/MaterialCapacityReport';
 import './Production.css';
 
 const Production = () => {
@@ -25,11 +26,15 @@ const Production = () => {
   });
 
   useEffect(() => {
+    if (tabParam === 'material-shortages') {
+      navigate('/production?tab=critical-material', { replace: true });
+      return;
+    }
     if (tabParam && tabParam !== activeTab) {
       setActiveTab(tabParam);
       sessionStorage.setItem('mainProductionActiveTab', tabParam);
     }
-  }, [tabParam]);
+  }, [tabParam, activeTab, navigate]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -68,8 +73,9 @@ const Production = () => {
         {activeTab === 'dashboard' && <Dashboard />}
         {activeTab === 'purchase-order' && <PurchaseOrder />}
         {activeTab === 'production-planning' && <ProductionPlanning />}
-        {activeTab === 'material-shortages' && <MaterialShortages />}
+        {(activeTab === 'critical-material' || activeTab === 'material-shortages') && <MaterialShortages />}
         {activeTab === 'batch-expiry' && <BatchExpiry />}
+        {activeTab === 'material-capacity' && <MaterialCapacityReport />}
         {activeTab === 'production-trend' && <ProductionTrend />}
         {activeTab === 'production-orders' && <ProductionOrders />}
         {activeTab === 'production-template' && <ProductionTemplate />}
