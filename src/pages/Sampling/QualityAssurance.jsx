@@ -908,6 +908,7 @@ const QualityAssurance = () => {
         </div>
       )}
 
+      {!showForm && (
       <div className="dome-card-wrapper qa-card">
         <div className="qa-toolbar">
           <h3 className="section-title"></h3>
@@ -931,6 +932,7 @@ const QualityAssurance = () => {
           onItemsPerPageChange={setLimit}
         />
       </div>
+      )}
     </div>
   );
 };

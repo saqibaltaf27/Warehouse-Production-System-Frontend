@@ -50,7 +50,7 @@ const Layout = () => {
     "/inventory": "Inventory",
     "/machine": "Machine",
     "/machine-efficiency": "Machine Efficiency",
-    "/cost-analysis": "Cost Analysis",
+    // "/cost-analysis": "Cost Analysis",
     "/staff": "Staff",
     "/sampling": "Sampling",
     "/access-control": "Access Control",

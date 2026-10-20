@@ -7,6 +7,7 @@ import { API_ENDPOINTS } from '../../apis/endpoints';
 import Button from '../../global-components/Button/Button';
 import { IconArrowLeft, IconCalendar, IconTrash, IconPlus } from '@tabler/icons-react';
 import './ProductionPlanning.css';
+import '../Sampling/Sampling.css';
 
 const getTodayDate = () => new Date().toISOString().split('T')[0];
 
@@ -418,17 +419,17 @@ const formatDate = (dateString) => {
 };
 
   return (
-    <div className="plan-detail-view-container">
+    <div className="add-sample-wrapper layout-page-padding">
       {/* Header bar: Plan Date on left, View All Plans on right */}
-      <div className="plan-header-bar">
+      <div className="add-sample-header section-header-flex">
         <div className="plan-header-date-wrapper">
-          <strong>Plan Date:</strong>
+          <label className="add-sample-label">Plan Date:</label>
           {isReadOnly ? (
             <span className="plan-header-date-display">{formatDate(planFormData.date)}</span>
           ) : (
             <input
               type="date"
-              className="plan-header-date-input"
+              className="add-sample-input"
               value={planFormData.date}
               onChange={(e) => setPlanFormData({ ...planFormData, date: e.target.value })}
             />
@@ -445,16 +446,16 @@ const formatDate = (dateString) => {
       </div>
 
       {/* 2-Column Details Grid */}
-      <div className="plan-details-grid">
+      <div className="add-sample-grid">
         {/* Left Column */}
-        <div className="plan-details-column">
-          <div className="plan-detail-row">
-            <strong>Line:</strong>
+        <div className="add-sample-col">
+          <div className="add-sample-field">
+            <label className="add-sample-label">Line:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.line || '-'}</span>
             ) : (
               <select
-                className="plan-detail-input"
+                className="add-sample-input"
                 value={planFormData.line}
                 onChange={(e) => setPlanFormData({ ...planFormData, line: e.target.value })}
               >
@@ -470,14 +471,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Supervisor:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Supervisor:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.supervisor || '-'}</span>
             ) : (
               <input
                 type="text"
-                className="plan-detail-input"
+                className="add-sample-input"
                 value={planFormData.supervisor}
                 onChange={(e) => setPlanFormData({ ...planFormData, supervisor: e.target.value })}
                 placeholder="Enter supervisor name"
@@ -485,11 +486,12 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>PO:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">PO:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.po || '-'}</span>
             ) : (
+              <div style={{ flex: 1, minWidth: 0 }}>
               <Select
                 options={openPOs.map(po => ({ value: po.DocNum, label: po.DocNum.toString() }))}
                 value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
@@ -500,39 +502,45 @@ const formatDate = (dateString) => {
                 menuPortalTarget={document.body}
                 menuPosition="fixed"
                 styles={{
+                  container: (base) => ({
+                    ...base,
+                    width: '100%',
+                  }),
                   control: (base, state) => ({
                     ...base,
-                    border: state.isFocused ? '1px solid #1b47db' : '1px solid #e5e7eb',
-                    borderRadius: '3px',
-                    minHeight: '32px',
-                    height: '32px',
-                    fontSize: '13px',
+                    width: '100%',
+                    border: state.isFocused ? '1px solid #1b47db' : '1px solid #ccc',
+                    borderRadius: '2px',
+                    minHeight: '26px',
+                    height: '26px',
+                    fontSize: '12px',
                     boxShadow: 'none',
-                    backgroundColor: '#f3f4f6',
+                    backgroundColor: '#fff',
                   }),
                   valueContainer: (base) => ({
                     ...base,
                     padding: '0 8px',
-                    height: '30px',
+                    height: '24px',
                   }),
                   indicatorsContainer: (base) => ({
                     ...base,
-                    height: '30px',
+                    height: '24px',
                   }),
                   menuPortal: base => ({ ...base, zIndex: 9999 })
                 }}
               />
+              </div>
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Shift:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Shift:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.shift || '-'}</span>
             ) : (
               <input
                 type="text"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="shift"
                 value={planFormData.shift}
                 onChange={handlePlanFormChange}
@@ -541,14 +549,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Planned Manpower:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Planned Manpower:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.plannedManpower !== '' && planFormData.plannedManpower != null ? planFormData.plannedManpower : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="plannedManpower"
                 value={planFormData.plannedManpower}
                 onChange={handlePlanFormChange}
@@ -557,14 +565,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Actual Manpower:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Actual Manpower:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.actualManpower !== '' && planFormData.actualManpower != null ? planFormData.actualManpower : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="actualManpower"
                 value={planFormData.actualManpower}
                 onChange={handlePlanFormChange}
@@ -573,14 +581,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Working Hours:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Working Hours:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.workingHours !== '' && planFormData.workingHours != null ? planFormData.workingHours : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="workingHours"
                 value={planFormData.workingHours}
                 onChange={handlePlanFormChange}
@@ -591,15 +599,15 @@ const formatDate = (dateString) => {
         </div>
 
         {/* Right Column */}
-        <div className="plan-details-column">
-          <div className="plan-detail-row">
-            <strong>Production Qty:</strong>
+        <div className="add-sample-col">
+          <div className="add-sample-field">
+            <label className="add-sample-label">Production Qty:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.productionQty !== '' && planFormData.productionQty != null ? planFormData.productionQty : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="productionQty"
                 value={planFormData.productionQty}
                 onChange={handlePlanFormChange}
@@ -608,14 +616,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Std Units / Man-Hour:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Std Units / Man-Hour:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.standardUnitsPerHour !== '' && planFormData.standardUnitsPerHour != null ? planFormData.standardUnitsPerHour : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="standardUnitsPerHour"
                 value={planFormData.standardUnitsPerHour}
                 onChange={handlePlanFormChange}
@@ -624,14 +632,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Total Man-Hours:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Total Man-Hours:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.totalManHours !== '' && planFormData.totalManHours != null ? planFormData.totalManHours : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="totalManHours"
                 value={planFormData.totalManHours}
                 onChange={handlePlanFormChange}
@@ -640,14 +648,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Units / Man-Hour:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Units / Man-Hour:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.unitsPerManHour !== '' && planFormData.unitsPerManHour != null ? planFormData.unitsPerManHour : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="unitsPerManHour"
                 value={planFormData.unitsPerManHour}
                 onChange={handlePlanFormChange}
@@ -656,14 +664,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Productivity %:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Productivity %:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.productivity !== '' && planFormData.productivity != null ? `${planFormData.productivity}%` : '-'}</span>
             ) : (
               <input
                 type="number"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="productivity"
                 value={planFormData.productivity}
                 onChange={handlePlanFormChange}
@@ -672,14 +680,14 @@ const formatDate = (dateString) => {
             )}
           </div>
 
-          <div className="plan-detail-row" style={{ marginTop: '12px' }}>
-            <strong>Remarks:</strong>
+          <div className="add-sample-field">
+            <label className="add-sample-label">Remarks:</label>
             {isReadOnly ? (
               <span className="plan-detail-val">{planFormData.remarks || '-'}</span>
             ) : (
               <input
                 type="text"
-                className="plan-detail-input"
+                className="add-sample-input"
                 name="remarks"
                 value={planFormData.remarks}
                 onChange={handlePlanFormChange}
@@ -788,7 +796,7 @@ const formatDate = (dateString) => {
       </div>
 
       {/* Assigned Employees */}
-      <div className="plan-table-section" style={{ marginTop: '32px' }}>
+      <div className="plan-table-section">
         <div className="plan-table-header-row" style={{ flexWrap: 'wrap', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h3 style={{ margin: 0 }}>Assigned Employees</h3>
@@ -990,7 +998,7 @@ const formatDate = (dateString) => {
 
       {/* Footer Actions (Cancel / Save or Update) */}
       {!isReadOnly && (
-        <div className="plan-footer-actions">
+        <div className="add-sample-footer">
           <Button
             variant="secondary"
             size="sm"

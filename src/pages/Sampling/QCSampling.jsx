@@ -564,7 +564,7 @@ const QCSampling = () => {
         </div>
       )}
 
-      <div className="dome-card-wrapper">
+      {!showAddSample && <div className="dome-card-wrapper">
         <div className="section-header-flex qc-list-header">
           <h3 className="section-title"></h3>
           <div className="qc-sampling-actions">
@@ -594,7 +594,7 @@ const QCSampling = () => {
           showActions={false}
           onRowClick={handleRowClick}
         />
-      </div>
+      </div>}
     </div>
   );
 };
