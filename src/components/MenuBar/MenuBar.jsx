@@ -1,43 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   IconSearch,
   IconChevronRight,
-  IconHelp,
   IconSettings,
   IconChecklist,
   IconTool,
   IconBox,
+  IconStack2,
   IconEngine,
   IconUsers,
   IconFlask,
   IconSettingsAutomation,
   IconReportMoney
 } from "@tabler/icons-react";
-import BrandLogo from "../../global-components/BrandLogo/BrandLogo";
 import "./MenuBar.css";
 import { usePermission } from "../../context/permissioncheck";
 
-const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+const MenuBar = ({ onNavigate, user, isOpen }) => {
+  const [searchTerm, setSearchTerm] = useState("");
   const [expandedMenu, setExpandedMenu] = useState(null);
   const [openFlyoutTitle, setOpenFlyoutTitle] = useState(null);
   const [flyoutDismissed, setFlyoutDismissed] = useState(false);
   const { allowedModules, allowedSubModules, allowedChildModules, loadingPermissions } = usePermission();
   const location = useLocation();
-  const profileMenuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     setOpenFlyoutTitle(null);
@@ -53,8 +39,8 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     {
       title: "My Workspace",
       path: "/workspace",
-      public: true,
-      icon: <IconSettings size={18} stroke={1.5} />, 
+      main_module: "Production",
+      icon: <IconStack2 size={18} stroke={1.5} />,
     },
     {
       title: "Production",
@@ -62,24 +48,22 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "Production",
       icon: <IconSettings size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard', sub_module: 'Dashboard' },
-        { title: 'Monthly Report', path: '/production?tab=quality-control', tabKey: 'quality-control', sub_module: 'Monthly Report' },
-        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders', sub_module: 'Production Orders' },
-        { title: 'Purchase Request', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Request' },
+        // { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
+        { title: 'Production Dashboard', path: '/production?tab=quality-control', tabKey: 'quality-control' },      
+        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
+        { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning' },
+        { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },
+
         {
-          title: 'Production Planning',
-          sub_module: 'Production Planning',
+          title: 'Reports',
           subItems: [
-            { title: 'Production Planning', path: '/production?tab=production-planning&planTab=production-order', tabKey: 'production-order', child_module: 'Production Planning' },
-            { title: 'Man Effiency', path: '/production?tab=production-planning&planTab=man-effiency', tabKey: 'man-effiency', child_module: 'Man Effiency' },
-            { title: 'Machine Efficiency', path: '/production?tab=production-planning&planTab=machine-efficiency', tabKey: 'machine-efficiency', child_module: 'Machine Efficiency' },
-            { title: 'Material Shortages', path: '/production?tab=production-planning&planTab=shortages', tabKey: 'shortages', child_module: 'Material Shortages' },
-            { title: 'Batch Expiry', path: '/production?tab=production-planning&planTab=expiry', tabKey: 'expiry', child_module: 'Batch Expiry' },
+            { title: 'Critical Material', path: '/production?tab=critical-material', tabKey: 'critical-material' },
+            { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry' },
+            { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity' },
           ]
         },
-        { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis', sub_module: 'Cost Analysis' },
-       //{ title: 'Production Trend', path: '/production?tab=production-trend', tabKey: 'production-trend' },
-       
+        // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
+
       ]
     },
     {
@@ -88,19 +72,18 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
       main_module: "QC",
       icon: <IconChecklist size={18} stroke={1.5} />,
       subItems: [
-        { title: 'Complaints', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complaints' },
-        { title: 'COA', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'COA' },
-        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
-        { 
-          title: 'Sampling',
-          sub_module: 'Samplings',
+        {
+          title: 'Sample Management',
           subItems: [
-            { title: 'Sampling', path: '/sampling?tab=qc', tabKey: 'qc', child_module: 'Sampling' },
-            { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection', child_module: 'Under Inspection' },
-            { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance', child_module: 'Quality Assurance' },
-            { title: 'QC Parameters', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters', child_module: 'QC Parameters' },
+            { title: 'Quality Sampling', path: '/sampling?tab=qc', tabKey: 'qc' },
+            { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection' },
+            { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance' },
+            { title: 'QC Parameters', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters' },
           ]
         },
+        { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints' },
+        { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa' },
+        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template' },
       ]
     },
     {
@@ -126,16 +109,54 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     },
 
     {
-      title: "Costing",
+      title: "Cost Overview",
       path: "/costing",
       main_module: "Costing",
       icon: <IconReportMoney size={18} stroke={1.5} />,
       subItems: [
-       // { title: 'Overview', path: '/costing/overview', tabKey: 'overview', main_module: 'Costing' },
-        { title: 'Staff', path: '/staff', tabKey: 'staff', sub_module: 'Staff', main_module: 'Staff' },
+        {
+          title: 'Dashboard',
+          path: '/costing?tab=dashboard',
+          tabKey: 'tab=dashboard'
+        },
+        {
+          title: 'HR Cost',
+          path: '/costing?tab=hr-cost&sub=management',
+          tabKey: 'tab=hr-cost',
+          subItems: [
+            { title: 'Management', path: '/costing?tab=hr-cost&sub=management', tabKey: 'sub=management' },
+            { title: 'Direct HR', path: '/costing?tab=hr-cost&sub=direct-hr', tabKey: 'sub=direct-hr' },
+            { title: 'Quality', path: '/costing?tab=hr-cost&sub=quality', tabKey: 'sub=quality' },
+          ]
+        },
+        {
+          title: 'Material Cost',
+          path: '/costing?tab=material-cost',
+          tabKey: 'tab=material-cost'
+        },
+        {
+          title: 'Quality Testing Cost',
+          path: '/costing?tab=quality-testing-cost',
+          tabKey: 'tab=quality-testing-cost'
+        },
+        {
+          title: 'Factory Overhead',
+          path: '/costing?tab=factory-overhead&sub=repair-maintenance',
+          tabKey: 'tab=factory-overhead',
+          subItems: [
+            { title: 'Repair & maintenance', path: '/costing?tab=factory-overhead&sub=repair-maintenance', tabKey: 'sub=repair-maintenance' },
+            { title: 'Stationary & printing', path: '/costing?tab=factory-overhead&sub=stationary-printing', tabKey: 'sub=stationary-printing' },
+            { title: 'Generator/Diesel', path: '/costing?tab=factory-overhead&sub=generator-diesel', tabKey: 'sub=generator-diesel' },
+            { title: 'DRAP', path: '/costing?tab=factory-overhead&sub=drap', tabKey: 'sub=drap' },
+            { title: 'Utilities', path: '/costing?tab=factory-overhead&sub=utilities', tabKey: 'sub=utilities' },
+            { title: 'Pest Control', path: '/costing?tab=factory-overhead&sub=pest-control', tabKey: 'sub=pest-control' },
+            { title: 'Facilitation', path: '/costing?tab=factory-overhead&sub=facilitation', tabKey: 'sub=facilitation' },
+            { title: 'Depreciation', path: '/costing?tab=factory-overhead&sub=depreciation', tabKey: 'sub=depreciation' },
+          ]
+        },
       ]
     },
-  
+
   ];
 
   let visibleMenuItems = menuItems;
@@ -197,36 +218,28 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
     visibleMenuItems = [];
   }
 
-  const firstName = user?.FirstName || "";
-  const lastName = user?.LastName || "";
-  const fullName = `${firstName} ${lastName}`.trim() || "Admin User";
-  const roleName = user?.DesignationName || user?.RoleName || "Manager";
 
-  let initials = "AD";
-  if (firstName) {
-    initials = firstName.charAt(0).toUpperCase();
-    if (lastName) {
-      initials += lastName.charAt(0).toUpperCase();
-    }
-  }
+
+  const displayedItems = searchTerm.trim()
+    ? visibleMenuItems.filter((item) => {
+      const matchTitle = item.title.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchSub = item.subItems?.some((sub) =>
+        sub.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      return matchTitle || matchSub;
+    })
+    : visibleMenuItems;
 
   return (
     <aside className={`left-sidebar-container ${isOpen ? "open" : ""}`}>
-      <div className="sidebar-header-section">
-        {/*
-        <div className="sidebar-brand-wrapper">
-          <BrandLogo size="sm" />
-        </div>
-        */}
-      </div>
 
       <div className="sidebar-scrollable-content">
         <div className="sidebar-nav-section">
           <nav className="sidebar-nav-list">
-            {visibleMenuItems.map((item, index) => {
+            {displayedItems.map((item, index) => {
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedMenu === item.title;
-              
+
               const isGroupActive = location.pathname.startsWith(item.path) || (hasSubItems && item.subItems.some(sub => {
                 if (sub.subItems) return sub.subItems.some(ss => ss.path && location.pathname.startsWith(ss.path.split('?')[0]));
                 return sub.path && location.pathname.startsWith(sub.path.split('?')[0]);
@@ -277,6 +290,12 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
                             {hasSubSubItems ? (
                               (() => {
                                 const isOpen = openFlyoutTitle === subItem.title;
+                                const isFlySubActive = subItem.subItems?.some(flyItem =>
+                                  flyItem.path &&
+                                  (flyItem.path.includes('?')
+                                    ? location.pathname === flyItem.path.split('?')[0] && (flyItem.tabKey ? location.search.includes(flyItem.tabKey) : true)
+                                    : location.pathname === flyItem.path)
+                                );
 
                                 return (
                                   <div
@@ -288,7 +307,7 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
                                   >
                                     <button
                                       type="button"
-                                      className={`sidebar-subnav-item sidebar-subnav-toggle sidebar-subnav-flyout-trigger ${isOpen ? 'open' : ''}`}
+                                      className={`sidebar-subnav-item sidebar-subnav-toggle sidebar-subnav-flyout-trigger ${isOpen ? 'open' : ''} ${isFlySubActive ? 'active' : ''}`}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         setOpenFlyoutTitle(openFlyoutTitle === subItem.title ? null : subItem.title);
@@ -349,39 +368,6 @@ const MenuBar = ({ onLogout, onNavigate, user, isOpen }) => {
         </div>
       </div>
 
-      <div className="sidebar-footer">
-        {/* <nav className="sidebar-footer-nav">
-          <button className="sidebar-footer-item">
-            <IconHelp size={18} stroke={1.5} />
-            <span>Help & Support</span>
-          </button>
-          <button className="sidebar-footer-item">
-            <IconSettings size={18} stroke={1.5} />
-            <span>Settings</span>
-          </button>
-        </nav> */}
-
-        <div className="sidebar-profile-wrap" ref={profileMenuRef}>
-          <div
-            className="sidebar-profile-card"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-          >
-            <div className="profile-avatar-circle">{initials}</div>
-            <div className="profile-info-text">
-              <span className="profile-name-text">{fullName}</span>
-              <span className="profile-role-text">{roleName}</span>
-            </div>
-          </div>
-          
-          {showProfileMenu && (
-            <div className="profile-dropdown-menu">
-              <button onClick={onLogout} className="dropdown-logout-btn">
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
     </aside>
   );
 };

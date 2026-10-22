@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Select from "react-select";
 import {
   IconRefresh,
   IconAlertTriangle,
@@ -25,6 +26,87 @@ import { API_ENDPOINTS } from "../../apis/endpoints";
 import Card from "../../global-components/Card/Card";
 import Table from "../../global-components/Table/Table";
 import "./Dashboard.css";
+import "../ProductionOrders/ProductionOrders.css";
+
+const filterSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: "38px",
+    height: "38px",
+    fontSize: "13px",
+    borderRadius: "2px",
+    borderColor: state.isFocused ? "var(--primary-blue)" : "#cbd5e1",
+    boxShadow: "none",
+    backgroundColor: "#ffffff",
+    cursor: "text",
+    "&:hover": {
+      borderColor: state.isFocused ? "var(--primary-blue)" : "#94a3b8",
+    },
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    height: "38px",
+    padding: "0 8px",
+    display: "flex",
+    alignItems: "center",
+  }),
+  input: (base) => ({
+    ...base,
+    margin: "0",
+    padding: "0",
+    color: "#1e293b",
+  }),
+  indicatorsContainer: (base) => ({
+    ...base,
+    height: "38px",
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    padding: "4px 6px",
+    color: "#64748b",
+    "&:hover": { color: "#1e293b" },
+  }),
+  clearIndicator: (base) => ({
+    ...base,
+    padding: "4px",
+    color: "#94a3b8",
+    "&:hover": { color: "#ef4444" },
+  }),
+  menu: (base) => ({
+    ...base,
+    fontSize: "13px",
+    borderRadius: "2px",
+    zIndex: 9999,
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
+    border: "1px solid #e2e8f0",
+  }),
+  menuPortal: (base) => ({
+    ...base,
+    zIndex: 9999,
+  }),
+  option: (base, state) => ({
+    ...base,
+    fontSize: "13px",
+    padding: "8px 12px",
+    backgroundColor: state.isSelected
+      ? "var(--primary-blue)"
+      : state.isFocused
+        ? "#f1f5f9"
+        : "#ffffff",
+    color: state.isSelected ? "#ffffff" : "#1e293b",
+    cursor: "pointer",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: "#94a3b8",
+    fontSize: "13px",
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: "#1e293b",
+    fontSize: "13px",
+  }),
+};
 
 const formatCurrency = (val) => {
   if (val === undefined || val === null) return "0.00";
@@ -223,7 +305,7 @@ const CustomDashboardCard = ({ items = [] }) => {
   ];
 
   return (
-    <div className="mb-4">
+    <div className="mb-2">
       <CustomDashboardCard items={kpiItems} />
     </div>
   );
@@ -1285,46 +1367,77 @@ export default function Dashboard() {
     fetchWarehouses();
   }, []);
 
-  const handleFilterChange = (e) => {
-    setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const warehouseOptions = [
+    { value: "All", label: "All Warehouses" },
+    ...warehouses.map((w) => ({ value: w.code, label: w.name })),
+  ];
+
+  const hasActiveFilters =
+    filters.warehouse !== "All" ||
+    filters.startDate !== defaultDate ||
+    filters.endDate !== defaultDate;
+
+  const handleResetFilters = () => {
+    setFilters({
+      startDate: defaultDate,
+      endDate: defaultDate,
+      warehouse: "All",
+    });
   };
 
   return (
     <div className="executive-dashboard  layout-page-padding">
       {/* Filters */}
-      <div className="dashboard-filters-bar">
-        <div className="d-flex flex-column">
-          <label>Start Date</label>
-          <input
-            type="date"
-            name="startDate"
-            value={filters.startDate}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="d-flex flex-column">
-          <label>End Date</label>
-          <input
-            type="date"
-            name="endDate"
-            value={filters.endDate}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <div className="d-flex flex-column">
-          <label>Warehouse</label>
-          <select
-            name="warehouse"
-            value={filters.warehouse}
-            onChange={handleFilterChange}
-          >
-            <option value="All">All Warehouses</option>
-            {warehouses.map((w) => (
-              <option key={w.code} value={w.code}>
-                {w.name}
-              </option>
-            ))}
-          </select>
+      <div className="po-filter-toolbar-card">
+        <div className="po-filter-toolbar-grid" style={{ justifyContent: "flex-end" }}>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Start Date</label>
+            <input
+              type="date"
+              className="po-filter-date-input"
+              value={filters.startDate}
+              onChange={(e) => handleFilterChange("startDate", e.target.value)}
+            />
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">End Date</label>
+            <input
+              type="date"
+              className="po-filter-date-input"
+              value={filters.endDate}
+              onChange={(e) => handleFilterChange("endDate", e.target.value)}
+            />
+          </div>
+          <div className="po-filter-item" style={{ minWidth: "200px" }}>
+            <label className="po-filter-label">Warehouse</label>
+            <Select
+              value={warehouseOptions.find((opt) => opt.value === filters.warehouse) || warehouseOptions[0]}
+              onChange={(opt) => handleFilterChange("warehouse", opt ? opt.value : "All")}
+              options={warehouseOptions}
+              placeholder="All Warehouses"
+              isClearable
+              isSearchable
+              menuPortalTarget={document.body}
+              styles={filterSelectStyles}
+            />
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <button
+              type="button"
+              className="po-filter-reset-btn"
+              onClick={handleResetFilters}
+              disabled={!hasActiveFilters}
+              title={hasActiveFilters ? "Reset all filters" : "No filters applied"}
+            >
+              <IconRefresh size={16} />
+              Reset
+            </button>
+          </div>
         </div>
       </div>
 

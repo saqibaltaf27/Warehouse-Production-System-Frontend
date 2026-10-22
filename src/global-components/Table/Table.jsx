@@ -12,7 +12,7 @@ const Table = ({
   showActions = true,
   showPagination = true,
   currentPage = 1,
-  pageSize = 10,
+  pageSize = 20,
   onPageChange,
   onItemsPerPageChange,
   onRowClick,
@@ -21,8 +21,11 @@ const Table = ({
   rowHasSubComponent,
   title,
   headerAction,
+  sortConfig: externalSortConfig,
+  onSortChange,
 }) => {
-  const [sortConfig, setSortConfig] = useState(null);
+  const [internalSortConfig, setInternalSortConfig] = useState(null);
+  const sortConfig = externalSortConfig !== undefined ? externalSortConfig : internalSortConfig;
   const [expandedRows, setExpandedRows] = useState({});
 
   const toggleRow = (rowIndex) => {
@@ -32,12 +35,16 @@ const Table = ({
   const totalPages = Math.ceil(totalEntries / pageSize) || 1;
 
   const sortedData = useMemo(() => {
+    if (onSortChange) {
+      // Server-side sorting is handled by the caller/API across all pages
+      return data;
+    }
     let sortableItems = [...data];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
-        
+
         if (valA === valB) return 0;
         if (valA == null) return sortConfig.direction === 'ascending' ? -1 : 1;
         if (valB == null) return sortConfig.direction === 'ascending' ? 1 : -1;
@@ -56,12 +63,12 @@ const Table = ({
         const parsedB = parseValue(valB);
 
         if (typeof parsedA === 'number' && typeof parsedB === 'number') {
-           return sortConfig.direction === 'ascending' ? parsedA - parsedB : parsedB - parsedA;
+          return sortConfig.direction === 'ascending' ? parsedA - parsedB : parsedB - parsedA;
         }
-        
+
         const strA = String(valA).toLowerCase();
         const strB = String(valB).toLowerCase();
-        
+
         if (strA < strB) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -72,7 +79,7 @@ const Table = ({
       });
     }
     return sortableItems;
-  }, [data, sortConfig]);
+  }, [data, sortConfig, onSortChange]);
 
   const requestSort = (key) => {
     if (!key) return;
@@ -80,7 +87,12 @@ const Table = ({
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
     }
-    setSortConfig({ key, direction });
+    const newConfig = { key, direction };
+    if (onSortChange) {
+      onSortChange(newConfig);
+    } else {
+      setInternalSortConfig(newConfig);
+    }
   };
 
   const handleAction = (action, row) => {
@@ -149,10 +161,10 @@ const Table = ({
             ) : sortedData.length > 0 ? (
               sortedData.map((rowItem, rowIndex) => (
                 <React.Fragment key={rowIndex}>
-                  <tr 
+                  <tr
                     className={onRowClick ? 'dome-table-row--clickable' : ''}
                     onClick={(e) => {
-                      if (e.target.closest('.dome-table-actions') || e.target.closest('.dome-table-expand-toggle')) return;
+                      if (e.target.closest('.dome-table-actions') || e.target.closest('.dome-table-expand-toggle') || e.target.closest('button')) return;
                       if (onRowClick) onRowClick(rowItem, rowIndex);
                     }}
                   >
@@ -177,28 +189,28 @@ const Table = ({
                     ))}
                     {showActions && (
                       <td className="dome-table-actions">
-                        <button 
+                        <button
                           className="dome-table-action-btn dome-table-action-btn--info"
                           onClick={() => handleAction('info', rowItem)}
                           title="Info"
                         >
                           <IconInfoCircle size={16} stroke={2} />
                         </button>
-                        <button 
+                        <button
                           className="dome-table-action-btn dome-table-action-btn--list"
                           onClick={() => handleAction('list', rowItem)}
                           title="List"
                         >
                           <IconListDetails size={16} stroke={2} />
                         </button>
-                        <button 
+                        <button
                           className="dome-table-action-btn dome-table-action-btn--check"
                           onClick={() => handleAction('check', rowItem)}
                           title="Check"
                         >
                           <IconCheck size={16} stroke={2} />
                         </button>
-                        <button 
+                        <button
                           className="dome-table-action-btn dome-table-action-btn--delete"
                           onClick={() => handleAction('delete', rowItem)}
                           title="Delete"

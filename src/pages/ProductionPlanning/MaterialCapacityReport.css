@@ -1,0 +1,339 @@
+/* Material Capacity Report Styles */
+.material-capacity-page {
+  position: relative;
+  min-height: 100%;
+  width: 100%;
+  padding: 20px;
+}
+
+.material-capacity-container {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Badges */
+.mcr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.mcr-capacity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mcr-capacity-positive {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.mcr-capacity-zero {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* Limiting component cell */
+.mcr-bottleneck-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcr-bottleneck-code {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 12.5px;
+}
+
+.mcr-bottleneck-name {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+/* View BOM button */
+.mcr-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.mcr-view-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.mcr-view-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+/* Right-Side Absolute Full-Height BOM Modal / Drawer */
+.mcr-modal-container {
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 55vw;
+  max-width: 90vw;
+  height: 100%;
+  /* min-height: 110%; */
+  background: #ffffff;
+  border-left: 1px solid #cbd5e1;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.18);
+  animation: mcrSlideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1051;
+}
+
+@keyframes mcrSlideInRight {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mcr-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  flex-shrink: 0;
+}
+
+.mcr-modal-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mcr-modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mcr-modal-subtitle {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.mcr-modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.mcr-modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.mcr-modal-body {
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.mcr-modal-info-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 40px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.mcr-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mcr-info-block-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.mcr-info-block-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Simulation Box */
+.mcr-simulation-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mcr-simulation-box label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.mcr-simulation-box input {
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #94a3b8;
+  border-radius: 3px;
+}
+
+/* Modal Table */
+.mcr-bom-table-wrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  overflow-x: auto;
+  background: #ffffff;
+}
+
+.mcr-bom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.mcr-bom-table th {
+  background-color: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  text-align: left;
+  padding: 9px 11px;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.mcr-bom-table td {
+  padding: 9px 11px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.mcr-bom-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.mcr-bom-table tr.mcr-row-bottleneck td,
+.mcr-bom-table tr.mcr-row-negative td {
+  background-color: #fff1f2 !important;
+}
+
+.mcr-bom-table tr.mcr-row-positive td {
+  background-color: #f0fdf4 !important;
+}
+
+.mcr-bom-table tr.mcr-row-bottleneck:hover td,
+.mcr-bom-table tr.mcr-row-negative:hover td {
+  background-color: #ffe4e6 !important;
+}
+
+.mcr-bom-table tr.mcr-row-positive:hover td {
+  background-color: #dcfce7 !important;
+}
+
+.mcr-tag-bottleneck {
+  background: #ffe4e6;
+  color: #be123c;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  display: inline-block;
+}
+
+.mcr-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  background-color: #f8fafc;
+  position: sticky;
+  bottom: 0;
+  z-index: 25;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.mcr-btn-secondary {
+  padding: 7px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.mcr-btn-secondary:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}

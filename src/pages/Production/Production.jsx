@@ -9,6 +9,9 @@ import ProductionTemplate from '../ProductionTemplate/ProductionTemplate';
 import Dashboard from '../dashboard/Dashboard';
 import CostAnalysis from '../CostAnalysis/CostAnalysis';
 import ProductionOverview from '../ProductionOverview/ProductionOverview';
+import MaterialShortages from '../ProductionPlanning/MaterialShortages';
+import BatchExpiry from '../ProductionPlanning/BatchExpiry';
+import MaterialCapacityReport from '../ProductionPlanning/MaterialCapacityReport';
 import './Production.css';
 
 const Production = () => {
@@ -23,11 +26,15 @@ const Production = () => {
   });
 
   useEffect(() => {
+    if (tabParam === 'material-shortages') {
+      navigate('/production?tab=critical-material', { replace: true });
+      return;
+    }
     if (tabParam && tabParam !== activeTab) {
       setActiveTab(tabParam);
       sessionStorage.setItem('mainProductionActiveTab', tabParam);
     }
-  }, [tabParam]);
+  }, [tabParam, activeTab, navigate]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
@@ -46,7 +53,7 @@ const Production = () => {
     { key: 'cost-analysis', label: 'Cost Analysis' },
     { key: 'production-orders', label: 'Production Orders' },
     { key: 'production-planning', label: 'Production Planning' },
-    { key: 'purchase-order', label: 'Purchase Request' },
+    { key: 'purchase-order', label: 'Purchase Orders' },
    // { key: 'production-trend', label: 'Production Trend' },
    { key: 'quality-control', label: 'Overview' },
     // { key: 'production-template', label: 'Production Template' },
@@ -66,6 +73,9 @@ const Production = () => {
         {activeTab === 'dashboard' && <Dashboard />}
         {activeTab === 'purchase-order' && <PurchaseOrder />}
         {activeTab === 'production-planning' && <ProductionPlanning />}
+        {(activeTab === 'critical-material' || activeTab === 'material-shortages') && <MaterialShortages />}
+        {activeTab === 'batch-expiry' && <BatchExpiry />}
+        {activeTab === 'material-capacity' && <MaterialCapacityReport />}
         {activeTab === 'production-trend' && <ProductionTrend />}
         {activeTab === 'production-orders' && <ProductionOrders />}
         {activeTab === 'production-template' && <ProductionTemplate />}

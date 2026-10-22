@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import Button from '../../global-components/Button/Button';
-import Input from '../../global-components/Input/Input';
-import BrandLogo from '../../global-components/BrandLogo/BrandLogo';
+import {
+  IconMail,
+  IconLock,
+  IconEye,
+  IconEyeOff,
+  IconLoader2
+} from '@tabler/icons-react';
 import './Login.css';
 
 const Login = () => {
@@ -11,6 +15,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -46,93 +51,138 @@ const Login = () => {
   };
 
   return (
-    <main className="login-container">
-      <section className="login-card-layout" aria-label="PMS sign in">
-        <div className="login-form-panel">
-          <div className="login-form-brand">
-            <BrandLogo size="sm" />
-            <span className="login-secure-label">Secure workspace</span>
+    <main className="login-page-container">
+      {/* Left Column: Sign In Form */}
+      <section className="login-form-column" aria-label="Sign in form">
+        <div className="login-form-inner">
+          {/* Brand Logo Badge */}
+          <div className="login-brand-header">
+            <div className="login-brand-badge">
+              <img
+                src="/images/ldslogo.png"
+                alt="LDS Logo"
+                className="login-brand-logo-img"
+              />
+            </div>
           </div>
 
-          <div className="login-form-header">
-            <span className="login-eyebrow">Warehouse Production System</span>
-            <h1 className="form-title">Welcome back</h1>
-            <p className="form-subtitle">Sign in to manage your warehouse operations.</p>
-          </div>
+          <h1 className="login-main-title">Sign in</h1>
 
-          <form onSubmit={handleSubmit} className="login-form">
+          <form onSubmit={handleSubmit} className="login-form-body" noValidate>
             {error && (
-              <div className="login-error-alert" role="alert">
-                {error}
+              <div className="login-error-message" role="alert">
+                <span>{error}</span>
               </div>
             )}
 
-            <Input
-              id="email"
-              type="email"
-              label="Email Address"
-              placeholder="operator@wps.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isLoading}
-              autoComplete="email"
-              required
-            />
+            {/* Email Input */}
+            <div className="login-field-group">
+              <label htmlFor="email" className="login-field-label">
+                Email Address
+              </label>
+              <div className="login-field-wrapper">
+                <span className="login-field-icon">
+                  <IconMail size={18} stroke={1.5} />
+                </span>
+                <input
+                  id="email"
+                  type="email"
+                  className="login-text-input"
+                  placeholder="operator@ldspharma.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            </div>
 
-            <Input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              autoComplete="current-password"
-              required
-              rightElement={(
+            {/* Password Input */}
+            <div className="login-field-group">
+              <label htmlFor="password" className="login-field-label">
+                Password
+              </label>
+              <div className="login-field-wrapper">
+                <span className="login-field-icon">
+                  <IconLock size={18} stroke={1.5} />
+                </span>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="login-text-input has-toggle"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  autoComplete="current-password"
+                  required
+                />
                 <button
                   type="button"
-                  className="password-toggle-btn"
+                  className="login-toggle-password-btn"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? 'Hide' : 'Show'}
+                  {showPassword ? (
+                    <IconEyeOff size={18} stroke={1.6} />
+                  ) : (
+                    <IconEye size={18} stroke={1.6} />
+                  )}
                 </button>
-              )}
-            />
+              </div>
+            </div>
 
-            <Button
+            {/* Remember Me Option */}
+            <div className="login-remember-row">
+              <label className="login-remember-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
+                  className="login-native-checkbox"
+                />
+                <span className="login-checkbox-text">Remember me</span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
               type="submit"
-              variant="primary"
-              isLoading={isLoading}
+              className="login-action-btn"
               disabled={isLoading}
-              className="login-submit-btn"
             >
-              Sign In to Terminal
-            </Button>
+              {isLoading ? (
+                <span className="login-btn-loading-content">
+                  <IconLoader2 size={18} className="login-btn-spinner" />
+                  <span>Signing in...</span>
+                </span>
+              ) : (
+                'Sign in'
+              )}
+            </button>
           </form>
+        </div>
+      </section>
 
-          <div className="login-footer">
-            <p>© 2026 PMS (Production Management System).</p>
+      {/* Right Column: Hero Architecture Showcase */}
+      <aside className="login-hero-column" aria-label="LDS Overview">
+        <div className="login-hero-card">
+          <div className="login-hero-image-overlay" />
+
+          {/* Bottom Hero Content */}
+          <div className="login-hero-bottom-content">
+            <h2 className="login-hero-heading">
+              Get your production lifecycle streamlined today
+            </h2>
+            <p className="login-hero-subtext">
+              LDS Production Management System | ViSole Group of Companies
+            </p>
           </div>
         </div>
-
-        <aside className="login-visual-panel">
-          <div className="visual-overlay" />
-          <div className="visual-content">
-            <BrandLogo size="lg" variant="inverse" />
-            <div className="visual-message">
-              <span className="visual-kicker">Operations, connected</span>
-              <h2>Keep every<br />movement in sync.</h2>
-              <p>One calm workspace for production, inventory, and delivery teams.</p>
-            </div>
-            <div className="visual-status">
-              <span className="visual-status-dot" />
-              <span>Warehouse network ready</span>
-            </div>
-          </div>
-        </aside>
-      </section>
+      </aside>
     </main>
   );
 };
