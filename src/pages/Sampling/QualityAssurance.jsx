@@ -4,11 +4,15 @@ import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
 import toast from 'react-hot-toast';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Sampling.css';
 
 const QualityAssurance = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [samplingNo, setSamplingNo] = useState('');
   
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -113,6 +117,110 @@ const QualityAssurance = () => {
       console.error("Error fetching warehouses:", err);
     }
   };
+
+  const loadItem = async (val, label, preferredBatch = '', lineSampleQty = '') => {
+    setItemCode(val || '');
+    setItemName(label || '');
+    if (lineSampleQty !== '') setSampleQty(String(lineSampleQty));
+    if (!val) {
+      setSampleQty('');
+      setTableData([]);
+      setBatchOptions([]);
+      setSelectedBatch('');
+      setBatchQty('');
+      setBatchMfgDate('');
+      setBatchExpDate('');
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-by-code`, { params: { itemCode: val } });
+      if (res.data?.success) {
+        const itemData = res.data.data;
+        const masterName = res.data.itemName;
+        if (masterName && masterName !== '*') setItemName(masterName);
+        else if (label && label !== '*') setItemName(label);
+        setSampleQty(
+          lineSampleQty !== ''
+            ? String(lineSampleQty)
+            : (itemData.U_SampleSize !== null ? String(itemData.U_SampleSize) : '1.0000')
+        );
+        if (res.data.lines) {
+          setTableData(res.data.lines.map(line => ({
+            'Parameter Line': line.LineId,
+            'Parameter Code': line.U_PrmCode,
+            'Parameter Name': line.U_PrmName,
+            'Action': line.U_Action,
+            'Criteria': line.U_Criteria,
+            'Equipment Code': line.U_EqpCode,
+            'Equipment Name': line.U_EqpName,
+            'UOM': line.U_PrmUom,
+            'Std Value': line.U_StdValue,
+            'Min Value': line.U_MinValue,
+            'Max Value': line.U_MaxValue,
+            'Type': line.U_Type,
+            'Observed Value 1': '',
+            'Observed Value 2': '',
+            'Observed Value 3': ''
+          })));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch item details:', err);
+      if (lineSampleQty === '') setSampleQty('');
+      setTableData([]);
+    }
+
+    try {
+      const batchRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-batches`, { params: { itemCode: val } });
+      if (batchRes.data?.success) {
+        const batches = batchRes.data.data || [];
+        setBatchOptions(batches);
+        const match = preferredBatch
+          ? batches.find(batch => batch.BatchSerial === preferredBatch)
+          : null;
+        const chosen = match || batches[0];
+        if (chosen) {
+          setSelectedBatch(chosen.BatchSerial);
+          setBatchQty(chosen.Qty);
+          setBatchMfgDate(chosen.MnfDate ? new Date(chosen.MnfDate).toISOString().split('T')[0] : '');
+          setBatchExpDate(chosen.ExpDate ? new Date(chosen.ExpDate).toISOString().split('T')[0] : '');
+        } else {
+          setSelectedBatch(preferredBatch || '');
+          setBatchQty('');
+          setBatchMfgDate('');
+          setBatchExpDate('');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch item batches:', err);
+      setBatchOptions([]);
+      setSelectedBatch('');
+      setBatchQty('');
+      setBatchMfgDate('');
+      setBatchExpDate('');
+    }
+  };
+
+  useEffect(() => {
+    const no = searchParams.get('samplingNo');
+    const code = searchParams.get('itemCode');
+    if (!no && !code) return;
+    setSelectedRecord(null);
+    if (no) setSamplingNo(no);
+    setShowForm(true);
+    if (code) {
+      loadItem(
+        code,
+        searchParams.get('itemName') || '',
+        searchParams.get('batch') || '',
+        searchParams.get('sampleQty') || ''
+      );
+    }
+    const next = new URLSearchParams(searchParams);
+    ['samplingNo', 'itemCode', 'itemName', 'batch', 'sampleQty'].forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  }, [searchParams]);
 
   useEffect(() => {
     fetchQualityRecords(page, statusFilter);
@@ -244,6 +352,7 @@ const QualityAssurance = () => {
         rejectionWarehouse,
         acceptedITR,
         rejectedITR,
+        samplingNo: samplingNo || null,
         empId: user ? (user.empId || user.EmpID || user.id || user.emp_id) : null,
         empName: user ? (user.firstName ? `${user.firstName} ${user.lastName || ''}` : user.username) : null,
       };
@@ -408,9 +517,12 @@ const QualityAssurance = () => {
       {showForm && (
         <div className="add-sample-wrapper">
           <div className="add-sample-header section-header-flex">
-            <h4 className="add-sample-title">
-              {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : 'Add Quality Record'}
-            </h4>
+            <div className="qc-sampling-actions">
+              <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+              <h4 className="add-sample-title">
+                {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : `Add Quality Record${samplingNo ? ` — ${samplingNo}` : ''}`}
+              </h4>
+            </div>
             <Button variant="secondary" onClick={() => setShowForm(false)}>Close</Button>
           </div>
 
@@ -419,6 +531,10 @@ const QualityAssurance = () => {
               <div className="add-sample-form">
                 <div className="add-sample-grid qa-section-gap">
                   <div className="add-sample-col">
+                    <div className="add-sample-field">
+                      <label className="add-sample-label">Sampling No</label>
+                      <input type="text" className="add-sample-input" value={samplingNo} disabled />
+                    </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">QC Type</label>
                       <select 
@@ -471,78 +587,7 @@ const QualityAssurance = () => {
                           labelKey="ItemName"
                           value={itemCode}
                           displayValue={itemCode}
-                          onChange={async (val, label, row) => {
-                            setItemCode(val);
-                            setItemName(label);
-                            if (val) {
-                              try {
-                                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-by-code`, { params: { itemCode: val } });
-                                if (res.data?.success) {
-                                  const itemData = res.data.data;
-                                  setSampleQty(itemData.U_SampleSize !== null ? String(itemData.U_SampleSize) : '1.0000');
-
-                                  if (res.data.lines) {
-                                    const mappedLines = res.data.lines.map(line => ({
-                                      'Parameter Line': line.LineId,
-                                      'Parameter Code': line.U_PrmCode,
-                                      'Parameter Name': line.U_PrmName,
-                                      'Action': line.U_Action,
-                                      'Criteria': line.U_Criteria,
-                                      'Equipment Code': line.U_EqpCode,
-                                      'Equipment Name': line.U_EqpName,
-                                      'UOM': line.U_PrmUom,
-                                      'Std Value': line.U_StdValue,
-                                      'Min Value': line.U_MinValue,
-                                      'Max Value': line.U_MaxValue,
-                                      'Type': line.U_Type,
-                                      'Observed Value 1': '',
-                                      'Observed Value 2': '',
-                                      'Observed Value 3': ''
-                                    }));
-                                    setTableData(mappedLines);
-                                  }
-                                }
-                              } catch (err) {
-                                console.error('Failed to fetch item details:', err);
-                                setSampleQty('');
-                                setTableData([]);
-                              }
-                              
-                              try {
-                                const batchRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-batches`, { params: { itemCode: val } });
-                                if (batchRes.data?.success) {
-                                  setBatchOptions(batchRes.data.data);
-                                  if (batchRes.data.data.length > 0) {
-                                    const firstBatch = batchRes.data.data[0];
-                                    setSelectedBatch(firstBatch.BatchSerial);
-                                    setBatchQty(firstBatch.Qty);
-                                    setBatchMfgDate(firstBatch.MnfDate ? new Date(firstBatch.MnfDate).toISOString().split('T')[0] : '');
-                                    setBatchExpDate(firstBatch.ExpDate ? new Date(firstBatch.ExpDate).toISOString().split('T')[0] : '');
-                                  } else {
-                                    setSelectedBatch('');
-                                    setBatchQty('');
-                                    setBatchMfgDate('');
-                                    setBatchExpDate('');
-                                  }
-                                }
-                              } catch (err) {
-                                console.error('Failed to fetch item batches:', err);
-                                setBatchOptions([]);
-                                setSelectedBatch('');
-                                setBatchQty('');
-                                setBatchMfgDate('');
-                                setBatchExpDate('');
-                              }
-                            } else {
-                              setSampleQty('');
-                              setTableData([]);
-                              setBatchOptions([]);
-                              setSelectedBatch('');
-                              setBatchQty('');
-                              setBatchMfgDate('');
-                              setBatchExpDate('');
-                            }
-                          }}
+                          onChange={(val, label) => loadItem(val, label)}
                           placeholder="Search ItemCode..."
                         />
                       </div>
