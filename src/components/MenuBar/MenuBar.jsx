@@ -73,7 +73,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       icon: <IconChecklist size={18} stroke={1.5} />,
       subItems: [
         {
-          title: 'Sample Management',
+          title: 'Quality Testing',
           subItems: [
             { title: 'Create Sample', path: '/sampling?tab=qc&create=1', tabKey: 'create=1' },         
             { title: 'Sample Management', path: '/sampling?tab=qc&view=list', tabKey: 'view=list' },

@@ -17,6 +17,17 @@ const QCSampling = () => {
   const [totalRecords, setTotalRecords] = useState(0);
   const [showAddSample, setShowAddSample] = useState(false);
   const [listMode, setListMode] = useState('all');
+  const formatDateInput = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const today = new Date();
+  const [statusFilter, setStatusFilter] = useState('');
+  const [docTypeFilter, setDocTypeFilter] = useState('');
+  const [fromDate, setFromDate] = useState(formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1)));
+  const [toDate, setToDate] = useState(formatDateInput(new Date(today.getFullYear(), today.getMonth() + 1, 0)));
   const [formMode, setFormMode] = useState('create'); // 'create', 'view', 'edit'
   const [qcCounter, setQcCounter] = useState(1); // Local counter for sampling number
   const [printModalRow, setPrintModalRow] = useState(null);
@@ -81,11 +92,10 @@ const QCSampling = () => {
   const fetchSavedSamples = async () => {
     setLoading(true);
     try {
-      const params = { page, limit };
-      if (listMode === 'inspection') {
-        params.status = 'S,UI';
-        params.currentMonth = true;
-      }
+      const params = { page, limit, fromDate, toDate };
+      const status = listMode === 'inspection' ? 'S,UI' : statusFilter;
+      if (status) params.status = status;
+      if (docTypeFilter) params.docType = docTypeFilter;
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
         params
       });
@@ -101,7 +111,7 @@ const QCSampling = () => {
 
   useEffect(() => {
     fetchSavedSamples();
-  }, [page, limit, listMode]);
+  }, [page, limit, listMode, statusFilter, docTypeFilter, fromDate, toDate]);
 
   useEffect(() => {
     if (searchParams.get('create') !== '1') return;
@@ -268,7 +278,8 @@ const QCSampling = () => {
     { key: 'Document Entry', header: 'Document Entry' },
     { key: 'Document No', header: 'Document No' },
     { key: 'Supplier Code', header: 'Supplier Code' },
-    { key: 'Supplier Name', header: 'Supplier Name' }
+    { key: 'Supplier Name', header: 'Supplier Name' },
+    { key: 'Status', header: 'Status' }
   ];
   const addSampleColumns = [
     { key: 'Index', header: '#' },
@@ -668,6 +679,73 @@ const QCSampling = () => {
               </Button>
             )}
           </div>
+        </div>
+
+        <div className="qc-sample-filters">
+          <label className="qc-sample-filter">
+            <span>Status</span>
+            <select
+              className="add-sample-input"
+              value={listMode === 'inspection' ? 'S,UI' : statusFilter}
+              onChange={(e) => {
+                setListMode('all');
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All</option>
+              <option value="S,UI">Sampled / Under Inspection</option>
+              <option value="A">Accepted</option>
+              <option value="UI">Under Inspection</option>
+              <option value="P">Pending</option>
+              <option value="S">Sampled</option>
+              <option value="R">Rejected</option>
+              <option value="CA">Conditionally Accepted</option>
+              <option value="CR">Conditionally Rejected</option>
+              <option value="C">Cancel</option>
+            </select>
+          </label>
+          <label className="qc-sample-filter">
+            <span>Document Type</span>
+            <select
+              className="add-sample-input"
+              value={docTypeFilter}
+              onChange={(e) => {
+                setDocTypeFilter(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All</option>
+              <option value="20">Goods Receipt PO</option>
+              <option value="59">Receipt From Production</option>
+              <option value="16">Sales Return</option>
+              <option value="14">A/R Credit Memo</option>
+            </select>
+          </label>
+          <label className="qc-sample-filter">
+            <span>Start Date</span>
+            <input
+              type="date"
+              className="add-sample-input"
+              value={fromDate}
+              onChange={(e) => {
+                setFromDate(e.target.value);
+                setPage(1);
+              }}
+            />
+          </label>
+          <label className="qc-sample-filter">
+            <span>End Date</span>
+            <input
+              type="date"
+              className="add-sample-input"
+              value={toDate}
+              onChange={(e) => {
+                setToDate(e.target.value);
+                setPage(1);
+              }}
+            />
+          </label>
         </div>
         
         <Table
