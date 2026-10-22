@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { axiosInstance } from "../../apis/axiosinstance";
 import Table from "../../global-components/Table/Table";
 import {
@@ -12,6 +12,7 @@ import {
   PieChart,
   Pie,
   Cell,
+  Legend,
   LineChart,
   Line,
 } from "recharts";
@@ -31,6 +32,30 @@ const kpiIcon = (name) => {
   return <svg {...common}><path d="M7 3h8l2 4v14H5V7l2-4z" /><path d="M8 11h8" /></svg>;
 };
 
+const isoDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const currentCalendarRange = () => {
+  const now = new Date();
+  return {
+    startDate: isoDate(new Date(now.getFullYear(), now.getMonth(), 1)),
+    endDate: isoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+  };
+};
+
+const fiscalStartYear = (date = new Date()) => (date.getMonth() >= 6 ? date.getFullYear() : date.getFullYear() - 1);
+
+const fiscalRange = (startYear) => ({
+  startDate: `${startYear}-07-01`,
+  endDate: `${startYear + 1}-06-30`,
+});
+
+const fiscalLabel = (startYear) => `FY ${String(startYear).slice(-2)}-${String(startYear + 1).slice(-2)}`;
+
 const formatDisplayDate = (value) => {
   if (!value) return "";
   const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -38,29 +63,125 @@ const formatDisplayDate = (value) => {
   return `${Number(match[3])} ${DISPLAY_MONTHS[Number(match[2]) - 1]} ${match[1]}`;
 };
 
-const ProductionAnalytics = ({ analytics, error }) => {
+const TREND_COLORS = ["#1B47DB", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4", "#EC4899", "#84CC16", "#F97316", "#6366F1", "#14B8A6", "#A855F7", "#64748B", "#0EA5E9"];
+
+const qty = (value) => Number(value || 0).toLocaleString();
+
+const TrendHoverBridge = ({ active, label, coordinate, onActive }) => {
+  useEffect(() => {
+    if (active && label && coordinate) onActive({ label, x: coordinate.x, y: coordinate.y });
+    else onActive(null);
+  }, [active, label, coordinate, onActive]);
+  return null;
+};
+
+const ProductionAnalytics = ({ analytics, error, product, onProductChange }) => {
+  const [hover, setHover] = useState(null);
+  const chartRef = useRef(null);
+  const overModal = useRef(false);
+  const closeTimer = useRef(null);
+  const applyHover = useRef((next) => {
+    if (next) {
+      clearTimeout(closeTimer.current);
+      setHover(next);
+      return;
+    }
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => {
+      if (!overModal.current) setHover(null);
+    }, 180);
+  }).current;
+
   if (error) {
     return <p className="overview-analytics-note">{error}</p>;
   }
   if (!analytics) return null;
 
+  const products = analytics.products || [];
+  const lines = product ? products.filter((item) => item.itemName === product) : products;
+  const points = analytics.trend || [];
+  const active = points.find((point) => point.label === hover?.label);
+  const chartWidth = chartRef.current?.clientWidth || 0;
+  const modalLeft = hover ? Math.min(Math.max(hover.x + 14, 8), Math.max(chartWidth - 354, 8)) : 8;
+  const modalTop = hover ? Math.min(Math.max(hover.y - 12, 8), 130) : 8;
+
   return (
     <div className="overview-analytics">
       <h3 className="overview-analytics-title">Production analytics</h3>
       <div className="card summary-table-card">
-        <div className="card-header">Monthly Production Performance Trend</div>
-        <div className="overview-analytics-chart">
+        <div className="card-header overview-table-header">
+          <span>Monthly Production Performance Trend</span>
+          <select value={product} onChange={(event) => onProductChange(event.target.value)}>
+            <option value="">All item groups</option>
+            {products.map((item) => (
+              <option key={item.itemName} value={item.itemName}>{item.itemName}</option>
+            ))}
+          </select>
+        </div>
+        <div className="overview-analytics-chart" ref={chartRef}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={analytics.trend || []}>
+            <LineChart data={points}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="label" />
               <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="plannedQty" name="Planned" stroke="#1B47DB" dot={false} />
-              <Line type="monotone" dataKey="completedQty" name="Completed" stroke="#10B981" dot={false} />
-              <Line type="monotone" dataKey="inProcessQty" name="In process" stroke="#F59E0B" dot={false} />
+              <Tooltip
+                cursor={{ stroke: "#94a3b8", strokeWidth: 1 }}
+                content={<TrendHoverBridge onActive={applyHover} />}
+              />
+              <Legend wrapperStyle={{ fontSize: 11, lineHeight: "16px", paddingTop: 8 }} />
+              {lines.map((item, index) => (
+                <Line
+                  key={item.itemName}
+                  type="monotone"
+                  dataKey={item.itemName}
+                  name={item.itemName}
+                  stroke={TREND_COLORS[index % TREND_COLORS.length]}
+                  strokeWidth={2}
+                  dot={false}
+                  connectNulls
+                />
+              ))}
             </LineChart>
           </ResponsiveContainer>
+          {active && hover && (
+            <div
+              className="overview-trend-modal"
+              style={{ left: modalLeft, top: modalTop }}
+              onMouseEnter={() => {
+                overModal.current = true;
+                clearTimeout(closeTimer.current);
+              }}
+              onMouseLeave={() => {
+                overModal.current = false;
+                setHover(null);
+              }}
+            >
+              <div className="overview-trend-tooltip-month">{active.label}</div>
+              <div className="overview-trend-panel-list">
+                {lines
+                  .filter((item) => (
+                    Number(active[item.itemName])
+                    || Number(active[`${item.itemName}|planned`])
+                    || Number(active[`${item.itemName}|inProcess`])
+                  ))
+                  .map((item) => {
+                    const colorIndex = Math.max(lines.findIndex((line) => line.itemName === item.itemName), 0);
+                    return (
+                      <div key={item.itemName} className="overview-trend-tooltip-product">
+                        <div className="overview-trend-tooltip-name" style={{ color: TREND_COLORS[colorIndex % TREND_COLORS.length] }}>
+                          {item.itemName}
+                        </div>
+                        <div className="overview-trend-tooltip-qty">
+                          <span>Planned {qty(active[`${item.itemName}|planned`])}</span>
+                          <span>In progress {qty(active[`${item.itemName}|inProcess`])}</span>
+                          <span>Completed {qty(active[item.itemName])}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -68,10 +189,11 @@ const ProductionAnalytics = ({ analytics, error }) => {
 };
 
 const ProductionOverview = () => {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const calendarDefault = currentCalendarRange();
+  const [periodMode, setPeriodMode] = useState("calendar");
+  const [fiscalYear, setFiscalYear] = useState(fiscalStartYear());
+  const [startDate, setStartDate] = useState(calendarDefault.startDate);
+  const [endDate, setEndDate] = useState(calendarDefault.endDate);
   const [monthAchievement, setMonthAchievement] = useState({
     dueInMonth: 0,
     closedInMonth: 0,
@@ -89,6 +211,7 @@ const ProductionOverview = () => {
   const [sampleTotal, setSampleTotal] = useState(0);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState("");
+  const [trendProduct, setTrendProduct] = useState("");
   const [sampleStatus, setSampleStatus] = useState([
     { code: "S", label: "Sampled", count: 0 },
     { code: "UI", label: "Under Inspection", count: 0 },
@@ -111,21 +234,8 @@ const ProductionOverview = () => {
   const [costSlots, setCostSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const months = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
-  ];
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
+  const fiscalYears = Array.from({ length: 6 }, (_, index) => fiscalStartYear() - index);
+  const rangeLabel = `${formatDisplayDate(startDate)} to ${formatDisplayDate(endDate)}`;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,7 +243,7 @@ const ProductionOverview = () => {
       try {
         try {
           const analyticsResponse = await axiosInstance.get("/dashboard/monthly-production-analytics", {
-            params: { month: selectedMonth, year: selectedYear },
+            params: { startDate, endDate, item: trendProduct },
           });
           if (analyticsResponse.data?.success) {
             setAnalytics(analyticsResponse.data.data);
@@ -151,7 +261,7 @@ const ProductionOverview = () => {
         }
 
         const response = await axiosInstance.get("/dashboard/qc-overview", {
-          params: { month: selectedMonth, year: selectedYear },
+          params: { startDate, endDate },
         });
         if (response.data && response.data.success) {
           const fetchedData = response.data.data.map((item, index) => {
@@ -182,7 +292,7 @@ const ProductionOverview = () => {
         }
 
         const trendResponse = await axiosInstance.get("/dashboard/top-products-cost-trend", {
-          params: { month: selectedMonth, year: selectedYear },
+          params: { startDate, endDate },
         });
         if (trendResponse.data && trendResponse.data.success) {
           const products = trendResponse.data.data || [];
@@ -196,20 +306,20 @@ const ProductionOverview = () => {
       }
     };
     fetchData();
-  }, [selectedMonth, selectedYear]);
+  }, [startDate, endDate, trendProduct]);
 
   useEffect(() => {
     setOrderPage(1);
     setSamplePage(1);
-  }, [selectedMonth, selectedYear, orderSearch, sampleSearch]);
+  }, [startDate, endDate, orderSearch, sampleSearch]);
 
   useEffect(() => {
     const loadOrders = async () => {
       try {
         const achievementResponse = await axiosInstance.get("/dashboard/monthly-production-achievement", {
           params: {
-            month: selectedMonth,
-            year: selectedYear,
+            startDate,
+            endDate,
             page: orderPage,
             limit: orderPageSize,
             search: orderSearch,
@@ -224,15 +334,15 @@ const ProductionOverview = () => {
       }
     };
     loadOrders();
-  }, [selectedMonth, selectedYear, orderPage, orderPageSize, orderSearch]);
+  }, [startDate, endDate, orderPage, orderPageSize, orderSearch]);
 
   useEffect(() => {
     const loadSamples = async () => {
       try {
         const sampleResponse = await axiosInstance.get("/dashboard/monthly-sample-status", {
           params: {
-            month: selectedMonth,
-            year: selectedYear,
+            startDate,
+            endDate,
             page: samplePage,
             limit: samplePageSize,
             search: sampleSearch,
@@ -248,7 +358,7 @@ const ProductionOverview = () => {
       }
     };
     loadSamples();
-  }, [selectedMonth, selectedYear, samplePage, samplePageSize, sampleSearch]);
+  }, [startDate, endDate, samplePage, samplePageSize, sampleSearch]);
 
   const top5Data = React.useMemo(() => {
     return [...productionSummaryData]
@@ -405,7 +515,7 @@ const ProductionOverview = () => {
 
   return (
     <div className="layout-page-padding production-overview">
-      <div className="overview-status-grid">
+      {/* <div className="overview-status-grid">
         {[
           { label: "All Orders", value: statusSummary.total, tone: "tone-blue", icon: "doc" },
           { label: "Planned", value: statusSummary.Planned, tone: "tone-green", icon: "cal" },
@@ -419,39 +529,86 @@ const ProductionOverview = () => {
             <span className="overview-status-value">{Number(card.value || 0).toLocaleString()}</span>
           </div>
         ))}
-      </div>
+      </div> */}
       <div className="overview-header-container">
         <div className="overview-header">
           <div className="overview-report-top">
             <div>
-              <h2>
+              {/* <h2>
                 Monthly Report -{" "}
                 {months.find((m) => m.value === selectedMonth)?.label}{" "}
                 {selectedYear}
-              </h2>
-              <p className="overview-report-sub">Overview of production orders for the selected month</p>
+              </h2> */}
+              {/* <p className="overview-report-sub">Overview of production orders for the selected month</p> */}
             </div>
             <div className="overview-filters">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              >
-                {months.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <label>
+                Period
+                <select
+                  value={periodMode}
+                  onChange={(event) => {
+                    const mode = event.target.value;
+                    setPeriodMode(mode);
+                    setTrendProduct("");
+                    if (mode === "fiscal") {
+                      const range = fiscalRange(fiscalYear);
+                      setStartDate(range.startDate);
+                      setEndDate(range.endDate);
+                    } else {
+                      const range = currentCalendarRange();
+                      setStartDate(range.startDate);
+                      setEndDate(range.endDate);
+                    }
+                  }}
+                >
+                  <option value="calendar">Calendar</option>
+                  <option value="fiscal">Fiscal year</option>
+                </select>
+              </label>
+              {periodMode === "fiscal" && (
+                <label>
+                  Fiscal year
+                  <select
+                    value={fiscalYear}
+                    onChange={(event) => {
+                      const year = Number(event.target.value);
+                      const range = fiscalRange(year);
+                      setFiscalYear(year);
+                      setStartDate(range.startDate);
+                      setEndDate(range.endDate);
+                      setTrendProduct("");
+                    }}
+                  >
+                    {fiscalYears.map((year) => (
+                      <option key={year} value={year}>{fiscalLabel(year)}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <label>
+                Start date
+                <input
+                  type="date"
+                  value={startDate}
+                  readOnly={periodMode === "fiscal"}
+                  onChange={(event) => {
+                    setTrendProduct("");
+                    setStartDate(event.target.value);
+                  }}
+                />
+              </label>
+              <label>
+                End date
+                <input
+                  type="date"
+                  value={endDate}
+                  readOnly={periodMode === "fiscal"}
+                  onChange={(event) => {
+                    setTrendProduct("");
+                    setEndDate(event.target.value);
+                  }}
+                />
+              </label>
             </div>
           </div>
           <div className="overview-status-grid overview-month-grid">
@@ -499,7 +656,12 @@ const ProductionOverview = () => {
         </div>
       </div>
 
-      <ProductionAnalytics analytics={analytics} error={analyticsError} />
+      <ProductionAnalytics
+        analytics={analytics}
+        error={analyticsError}
+        product={trendProduct}
+        onProductChange={setTrendProduct}
+      />
 
       <div className="overview-layout">
         <div className="overview-column">
@@ -780,7 +942,7 @@ const ProductionOverview = () => {
       <div className="card summary-table-card overview-due-orders">
         <div className="card-header overview-table-header">
           <span>
-            Production orders due in {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
+            Production orders due {rangeLabel}
           </span>
           <input
             className="overview-table-search"
@@ -831,7 +993,7 @@ const ProductionOverview = () => {
       <div className="card summary-table-card overview-due-orders">
         <div className="card-header overview-table-header">
           <span>
-            Samples in {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
+            Samples {rangeLabel}
           </span>
           <input
             className="overview-table-search"
