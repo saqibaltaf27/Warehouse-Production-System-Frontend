@@ -77,9 +77,9 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           subItems: [
             { title: 'Create Sample', path: '/sampling?tab=qc&create=1', tabKey: 'create=1' },         
             { title: 'Sample Management', path: '/sampling?tab=qc&view=list', tabKey: 'view=list' },
-            { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection' },
-            { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance' },
-            { title: 'Testing Standard', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters' },
+            // { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection' },
+            // { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance' },
+             { title: 'Testing Standard', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters' },
           ]
         },
         { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints' },
