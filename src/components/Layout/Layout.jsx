@@ -70,7 +70,7 @@ const Layout = () => {
     'batch-expiry': 'Batch Expiry',
     'material-capacity': 'Material-based Production Capacity',
     'cost-analysis': 'Cost Analysis',
-    'quality-control': 'Monthly Reports',
+    'quality-control': 'Production Dashboard',
     'complaints': 'Complain Management',
     'coa': 'Certificate of Analysis',
     'template': 'COA Templates',
