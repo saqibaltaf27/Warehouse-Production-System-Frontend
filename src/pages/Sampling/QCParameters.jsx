@@ -15,6 +15,14 @@ const QCParameters = () => {
   const [equipmentOptions, setEquipmentOptions] = useState([]);
   const [parameterOptions, setParameterOptions] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [standards, setStandards] = useState([]);
+  const [loadingStandards, setLoadingStandards] = useState(false);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -42,6 +50,44 @@ const QCParameters = () => {
     fetchEquipments();
     fetchParameters();
   }, []);
+
+  const fetchStandards = async () => {
+    setLoadingStandards(true);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/testing-standards`, {
+        params: { page, limit, search: debouncedSearch }
+      });
+      if (res.data?.success) {
+        setStandards(res.data.data || []);
+        setTotalRecords(res.data.pagination?.total || 0);
+      }
+    } catch (err) {
+      console.error("Error fetching testing standards:", err);
+    } finally {
+      setLoadingStandards(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    fetchStandards();
+  }, [page, limit, debouncedSearch]);
+
+  const openNewTest = () => {
+    setItemCode('');
+    setItemName('');
+    setSampleQty('');
+    setTableData([]);
+    setShowForm(true);
+  };
 
   const handleItemSelect = async (val, label, row) => {
     setItemCode(val);
@@ -129,6 +175,8 @@ const QCParameters = () => {
       const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/quality/save-qc-parameters`, payload);
       if (res.data?.success) {
         toast.success("QC Parameters saved successfully!");
+        setShowForm(false);
+        fetchStandards();
       } else {
         toast.error(res.data?.message || "Failed to save QC parameters");
       }
@@ -372,11 +420,55 @@ const QCParameters = () => {
     }
   ];
 
+  const standardColumns = [
+    { key: 'ItemCode', header: 'Item Code' },
+    { key: 'ItemName', header: 'Item Name' },
+    { key: 'ParameterCount', header: 'Parameters' },
+  ];
+
   return (
     <div className="qc-sampling-container fade-in-up qc-sampling-container-inner">
+      {!showForm && (
+        <div className="dome-card-wrapper">
+          <div className="section-header-flex qc-list-header">
+            <h3 className="section-title">Testing Standards</h3>
+            <div className="qc-sampling-actions">
+              <input
+                type="search"
+                className="qc-standards-search"
+                placeholder="Search item code or name"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+              <Button variant="primary" onClick={openNewTest}>Add Test</Button>
+            </div>
+          </div>
+          <Table
+            data={standards}
+            isLoading={loadingStandards}
+            columns={standardColumns}
+            showActions={false}
+            showPagination
+            totalEntries={totalRecords}
+            currentPage={page}
+            pageSize={limit}
+            onPageChange={setPage}
+            onItemsPerPageChange={(size) => {
+              setLimit(size);
+              setPage(1);
+            }}
+            onRowClick={(row) => {
+              handleItemSelect(row.ItemCode, row.ItemName, row);
+              setShowForm(true);
+            }}
+          />
+        </div>
+      )}
+      {showForm && (
       <div className="dome-card-wrapper qc-card-wrapper">
         <div className="qc-header-row">
-          <h3 className="section-title">Manage QC Testing Standards</h3>
+          <h3 className="section-title">Add Test</h3>
+          <Button variant="outline" onClick={() => setShowForm(false)}>Back</Button>
         </div>
 
         <div className="add-sample-grid" style={{ marginBottom: '24px' }}>
@@ -429,6 +521,7 @@ const QCParameters = () => {
           </Button>
         </div>
       </div>
+      )}
     </div>
   );
 };

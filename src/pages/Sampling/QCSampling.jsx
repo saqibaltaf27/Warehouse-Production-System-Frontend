@@ -3,7 +3,9 @@ import axios from 'axios';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { IconFlask } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
 import './Sampling.css';
 
@@ -14,11 +16,14 @@ const QCSampling = () => {
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [showAddSample, setShowAddSample] = useState(false);
+  const [listMode, setListMode] = useState('all');
   const [formMode, setFormMode] = useState('create'); // 'create', 'view', 'edit'
   const [qcCounter, setQcCounter] = useState(1); // Local counter for sampling number
   const [printModalRow, setPrintModalRow] = useState(null);
   
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [sampleForm, setSampleForm] = useState({
     DocumentType: 'Goods Receipt PO',
@@ -76,8 +81,13 @@ const QCSampling = () => {
   const fetchSavedSamples = async () => {
     setLoading(true);
     try {
+      const params = { page, limit };
+      if (listMode === 'inspection') {
+        params.status = 'S,UI';
+        params.currentMonth = true;
+      }
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
-        params: { page, limit }
+        params
       });
       if (res.data?.success) {
         setData(res.data.data);
@@ -91,7 +101,38 @@ const QCSampling = () => {
 
   useEffect(() => {
     fetchSavedSamples();
-  }, [page, limit]);
+  }, [page, limit, listMode]);
+
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') return;
+
+    setFormMode('create');
+    setSampleForm({
+      DocumentType: 'Goods Receipt PO',
+      DocumentEntry: '',
+      DocumentNumber: '',
+      SupplierCode: '',
+      SupplierName: '',
+      SamplingDate: new Date().toISOString().split('T')[0],
+      SamplingBy: user?.firstName || user?.FirstName || '',
+      ProductionNo: '',
+      BatchNo: ''
+    });
+    setSampleItems([]);
+    setShowAddSample(true);
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('create');
+    setSearchParams(next, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (searchParams.get('view') === 'list') {
+      setShowAddSample(false);
+      setListMode('all');
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user && formMode === 'create' && !sampleForm.SamplingBy) {
@@ -357,6 +398,32 @@ const QCSampling = () => {
         </select>
       )
     },
+    {
+      key: 'TestingResult',
+      header: 'Testing Result',
+      render: (row) => (
+        row.Status === 'UI' || row.Status === 'S' ? (
+          <button
+            type="button"
+            className="qc-print-btn"
+            title="Testing Result"
+            onClick={() => {
+              const params = new URLSearchParams({
+                tab: 'quality-assurance',
+                samplingNo: String(qcCounter || ''),
+                itemCode: row.ItemCode || '',
+                itemName: row.ItemName || '',
+                batch: row.BatchSerial || '',
+                sampleQty: row.SampleQty != null ? String(row.SampleQty) : '',
+              });
+              navigate(`/sampling?${params.toString()}`);
+            }}
+          >
+            <IconFlask size={16} stroke={1.75} />
+          </button>
+        ) : null
+      )
+    },
   ];
 
   return (
@@ -528,7 +595,7 @@ const QCSampling = () => {
                 </div>
                 <div className="add-sample-field">
                   <label className="add-sample-label">Sampling By</label>
-                  <input type="text" className="add-sample-input" disabled={formMode === 'view'} value={sampleForm.SamplingBy} onChange={e => setSampleForm({...sampleForm, SamplingBy: e.target.value})} />
+                  <input type="text" className="add-sample-input" disabled value={sampleForm.SamplingBy || user?.FirstName || user?.firstName || ''} />
                 </div>
                 <div className="add-sample-field">
                   <label className="add-sample-label">Production No</label>
@@ -566,12 +633,33 @@ const QCSampling = () => {
 
       {!showAddSample && <div className="dome-card-wrapper">
         <div className="section-header-flex qc-list-header">
-          <h3 className="section-title"></h3>
+          <h3 className="section-title">{listMode === 'inspection' ? 'Under Inspection' : 'Sample Management'}</h3>
           <div className="qc-sampling-actions">
+            {!showAddSample && (
+              <Button
+                variant={listMode === 'inspection' ? 'primary' : 'outline'}
+                onClick={() => {
+                  setListMode(listMode === 'inspection' ? 'all' : 'inspection');
+                  setPage(1);
+                }}
+              >
+                Under Inspection
+              </Button>
+            )}
             {!showAddSample && (
               <Button variant="primary" onClick={() => {
                 setFormMode('create');
-                setSampleForm({ DocumentType: 'Goods Receipt PO', DocumentEntry: '', DocumentNumber: '', SupplierCode: '', SupplierName: '' });
+                setSampleForm({
+                  DocumentType: 'Goods Receipt PO',
+                  DocumentEntry: '',
+                  DocumentNumber: '',
+                  SupplierCode: '',
+                  SupplierName: '',
+                  SamplingDate: new Date().toISOString().split('T')[0],
+                  SamplingBy: user?.FirstName || user?.firstName || '',
+                  ProductionNo: '',
+                  BatchNo: ''
+                });
                 setSampleItems([]);
                 setShowAddSample(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
