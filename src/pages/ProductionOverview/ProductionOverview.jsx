@@ -19,19 +19,23 @@ import "./ProductionOverview.css";
 
 const DISPLAY_MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
+const kpiIcon = (name) => {
+  const common = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+  if (name === "cal") return <svg {...common}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>;
+  if (name === "box") return <svg {...common}><path d="M3 8l9-4 9 4-9 4-9-4z" /><path d="M3 8v8l9 4 9-4V8" /><path d="M12 12v8" /></svg>;
+  if (name === "x") return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M9 9l6 6M15 9l-6 6" /></svg>;
+  if (name === "trend") return <svg {...common}><path d="M4 16l5-5 3 3 7-7" /><path d="M14 7h5v5" /></svg>;
+  if (name === "search") return <svg {...common}><circle cx="11" cy="11" r="6" /><path d="M16 16l4 4" /></svg>;
+  if (name === "check") return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M8 12l2.5 2.5L16 9" /></svg>;
+  if (name === "flask") return <svg {...common}><path d="M9 3h6M10 3v6L5 19a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-10V3" /></svg>;
+  return <svg {...common}><path d="M7 3h8l2 4v14H5V7l2-4z" /><path d="M8 11h8" /></svg>;
+};
+
 const formatDisplayDate = (value) => {
   if (!value) return "";
   const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!match) return String(value).replace(/T.*$/, "");
   return `${Number(match[3])} ${DISPLAY_MONTHS[Number(match[2]) - 1]} ${match[1]}`;
-};
-
-const qty = (value) => Number(value || 0).toLocaleString();
-const rateText = (value) => (value == null ? "Data not available" : `${Number(value).toLocaleString()}%`);
-const changeText = (value, suffix) => {
-  if (value == null) return "No previous-month baseline";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${Number(value).toLocaleString()}${suffix} vs previous month`;
 };
 
 const ProductionAnalytics = ({ analytics, error }) => {
@@ -40,89 +44,11 @@ const ProductionAnalytics = ({ analytics, error }) => {
   }
   if (!analytics) return null;
 
-  const completion = analytics.completion || {};
-  const delayed = analytics.delayed || {};
-  const quality = analytics.quality || {};
-  const comparison = analytics.comparison || {};
-
   return (
     <div className="overview-analytics">
       <h3 className="overview-analytics-title">Production analytics</h3>
-      <p className="overview-analytics-note">
-        Orders due in the selected month, excluding cancelled. Quantities are Planned Qty and Completed Qty on the production order.
-      </p>
-      <div className="overview-status-grid">
-        <div className="overview-status-card">
-          <span className="overview-status-label">Production Completion Rate</span>
-          <span className="overview-status-value">{rateText(completion.rate)}</span>
-          <span className="overview-status-note">{changeText(comparison.completionRate, " pp")}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Remaining Production Quantity</span>
-          <span className="overview-status-value">{qty(completion.remainingQty)}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">In-Process Production Quantity</span>
-          <span className="overview-status-value">{qty(completion.inProcessQty)}</span>
-          <span className="overview-status-note">Released orders still short of planned quantity</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Production Orders In Progress</span>
-          <span className="overview-status-value">{qty(completion.inProgressOrders)}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Average Order Completion Time</span>
-          <span className="overview-status-value">
-            {analytics.averageCompletionDays == null ? "Data not available" : `${analytics.averageCompletionDays} days`}
-          </span>
-          <span className="overview-status-note">
-            {qty(analytics.averageCompletionOrders)} orders closed in this month, start date to close date
-          </span>
-        </div>
-      </div>
-
-      <div className="card summary-table-card">
-        <div className="card-header">Delayed Production Orders</div>
-        <div className="overview-status-grid overview-month-grid">
-          <div className="overview-status-card">
-            <span className="overview-status-label">Total Delayed Orders</span>
-            <span className="overview-status-value">{qty(delayed.totalOrders)}</span>
-            <span className="overview-status-note">{changeText(comparison.delayedOrders, "%")}</span>
-          </div>
-          <div className="overview-status-card">
-            <span className="overview-status-label">Total Overdue Quantity</span>
-            <span className="overview-status-value">{qty(delayed.overdueQty)}</span>
-            <span className="overview-status-note">Sum of remaining quantity. Units can differ by item.</span>
-          </div>
-          <div className="overview-status-card">
-            <span className="overview-status-label">Maximum Days Overdue</span>
-            <span className="overview-status-value">{qty(delayed.maxDaysOverdue)}</span>
-            <span className="overview-status-note">Compared with today, not the end of the selected month</span>
-          </div>
-        </div>
-        <Table
-          data={delayed.orders || []}
-          columns={[
-            { header: "PO No", key: "ProductionOrderNo" },
-            { header: "Product", key: "ProductName" },
-            { header: "Planned Qty", key: "PlannedQty", align: "right" },
-            { header: "Completed Qty", key: "CompletedQty", align: "right" },
-            { header: "Remaining Qty", key: "RemainingQty", align: "right" },
-            { header: "Due Date", key: "DueDate", render: (row) => formatDisplayDate(row.DueDate) },
-            { header: "Status", key: "StatusName" },
-            { header: "Days Overdue", key: "DaysOverdue", align: "right" },
-          ]}
-          totalEntries={(delayed.orders || []).length}
-          showActions={false}
-          showPagination={false}
-        />
-      </div>
-
       <div className="card summary-table-card">
         <div className="card-header">Monthly Production Performance Trend</div>
-        <p className="overview-analytics-note">
-          Last 12 months of orders by due date. Completed quantity is the quantity currently recorded on those orders.
-        </p>
         <div className="overview-analytics-chart">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={analytics.trend || []}>
@@ -135,101 +61,6 @@ const ProductionAnalytics = ({ analytics, error }) => {
               <Line type="monotone" dataKey="inProcessQty" name="In process" stroke="#F59E0B" dot={false} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="card summary-table-card">
-        <div className="card-header">Planned vs Actual Production</div>
-        <Table
-          data={analytics.byProduct || []}
-          columns={[
-            { header: "Item", key: "ItemCode" },
-            { header: "Product", key: "ProductName" },
-            { header: "Planned Qty", key: "PlannedQty", align: "right", render: (row) => qty(row.PlannedQty) },
-            { header: "Completed Qty", key: "CompletedQty", align: "right", render: (row) => qty(row.CompletedQty) },
-            { header: "Remaining Qty", key: "RemainingQty", align: "right", render: (row) => qty(row.RemainingQty) },
-            { header: "Completion", key: "CompletionPct", align: "right", render: (row) => rateText(row.CompletionPct) },
-          ]}
-          totalEntries={(analytics.byProduct || []).length}
-          showActions={false}
-          showPagination={false}
-        />
-      </div>
-
-      <div className="overview-status-grid">
-        <div className="overview-status-card">
-          <span className="overview-status-label">Samples Inspected</span>
-          <span className="overview-status-value">{qty(quality.inspected)}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Accepted Samples</span>
-          <span className="overview-status-value">{qty(quality.accepted)}</span>
-          <span className="overview-status-note">{changeText(comparison.acceptanceRate, " pp")} acceptance</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Rejected Samples</span>
-          <span className="overview-status-value">{qty(quality.rejected)}</span>
-          <span className="overview-status-note">{changeText(comparison.rejectionRate, " pp")} rejection</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Acceptance Rate</span>
-          <span className="overview-status-value">{rateText(quality.acceptanceRate)}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Rejection Rate</span>
-          <span className="overview-status-value">{rateText(quality.rejectionRate)}</span>
-          <span className="overview-status-note">Awaiting inspection: {qty(quality.awaiting)}</span>
-        </div>
-      </div>
-
-      <div className="card summary-table-card">
-        <div className="card-header">Production Performance by Item Group</div>
-        <p className="overview-analytics-note">Grouped separately so different item units are not presented as one combined total.</p>
-        <Table
-          data={analytics.byItemGroup || []}
-          columns={[
-            { header: "Item Group", key: "ItemGroup" },
-            { header: "Planned Qty", key: "PlannedQty", align: "right", render: (row) => qty(row.PlannedQty) },
-            { header: "Completed Qty", key: "CompletedQty", align: "right", render: (row) => qty(row.CompletedQty) },
-            { header: "Remaining Qty", key: "RemainingQty", align: "right", render: (row) => qty(row.RemainingQty) },
-            { header: "Completion", key: "CompletionPct", align: "right", render: (row) => rateText(row.CompletionPct) },
-          ]}
-          totalEntries={(analytics.byItemGroup || []).length}
-          showActions={false}
-          showPagination={false}
-        />
-      </div>
-
-      <div className="card summary-table-card">
-        <div className="card-header">Production Bottlenecks</div>
-        <p className="overview-analytics-note">
-          Backlog only: released orders due this month that are still short of planned quantity. This is not a timed stage analysis.
-        </p>
-        <Table
-          data={analytics.bottlenecks || []}
-          columns={[
-            { header: "Item Group", key: "ItemGroup" },
-            { header: "Open Orders", key: "OrderCount", align: "right" },
-            { header: "Remaining Qty", key: "RemainingQty", align: "right", render: (row) => qty(row.RemainingQty) },
-          ]}
-          totalEntries={(analytics.bottlenecks || []).length}
-          showActions={false}
-          showPagination={false}
-        />
-      </div>
-
-      <div className="overview-status-grid overview-month-grid">
-        <div className="overview-status-card">
-          <span className="overview-status-label">Completed Quantity vs Last Month</span>
-          <span className="overview-status-value">{changeText(comparison.completedQty, "%")}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Closed Orders vs Last Month</span>
-          <span className="overview-status-value">{changeText(comparison.closedOrders, "%")}</span>
-        </div>
-        <div className="overview-status-card">
-          <span className="overview-status-label">Quality Acceptance vs Last Month</span>
-          <span className="overview-status-value">{changeText(comparison.acceptanceRate, " pp")}</span>
         </div>
       </div>
     </div>
@@ -248,6 +79,14 @@ const ProductionOverview = () => {
     orders: [],
   });
   const [sampleRows, setSampleRows] = useState([]);
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderPageSize, setOrderPageSize] = useState(10);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [samplePage, setSamplePage] = useState(1);
+  const [samplePageSize, setSamplePageSize] = useState(10);
+  const [sampleSearch, setSampleSearch] = useState("");
+  const [sampleTotal, setSampleTotal] = useState(0);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState("");
   const [sampleStatus, setSampleStatus] = useState([
@@ -269,6 +108,7 @@ const ProductionOverview = () => {
   });
   const [productionSummaryData, setProductionSummaryData] = useState([]);
   const [costTrendData, setCostTrendData] = useState([]);
+  const [costSlots, setCostSlots] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const months = [
@@ -291,21 +131,6 @@ const ProductionOverview = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const achievementResponse = await axiosInstance.get("/dashboard/monthly-production-achievement", {
-          params: { month: selectedMonth, year: selectedYear },
-        });
-        if (achievementResponse.data?.success) {
-          setMonthAchievement(achievementResponse.data.data);
-        }
-
-        const sampleResponse = await axiosInstance.get("/dashboard/monthly-sample-status", {
-          params: { month: selectedMonth, year: selectedYear },
-        });
-        if (sampleResponse.data?.success) {
-          setSampleStatus(sampleResponse.data.data?.cards || []);
-          setSampleRows(sampleResponse.data.data?.samples || []);
-        }
-
         try {
           const analyticsResponse = await axiosInstance.get("/dashboard/monthly-production-analytics", {
             params: { month: selectedMonth, year: selectedYear },
@@ -360,7 +185,9 @@ const ProductionOverview = () => {
           params: { month: selectedMonth, year: selectedYear },
         });
         if (trendResponse.data && trendResponse.data.success) {
-          setCostTrendData(trendResponse.data.data);
+          const products = trendResponse.data.data || [];
+          setCostTrendData(products);
+          setCostSlots(products.slice(0, 2).map((item) => item.itemCode));
         }
       } catch (error) {
         console.error("Error fetching QC Overview data:", error);
@@ -370,6 +197,58 @@ const ProductionOverview = () => {
     };
     fetchData();
   }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    setOrderPage(1);
+    setSamplePage(1);
+  }, [selectedMonth, selectedYear, orderSearch, sampleSearch]);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const achievementResponse = await axiosInstance.get("/dashboard/monthly-production-achievement", {
+          params: {
+            month: selectedMonth,
+            year: selectedYear,
+            page: orderPage,
+            limit: orderPageSize,
+            search: orderSearch,
+          },
+        });
+        if (achievementResponse.data?.success) {
+          setMonthAchievement(achievementResponse.data.data);
+          setOrderTotal(achievementResponse.data.pagination?.total || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching due production orders:", error);
+      }
+    };
+    loadOrders();
+  }, [selectedMonth, selectedYear, orderPage, orderPageSize, orderSearch]);
+
+  useEffect(() => {
+    const loadSamples = async () => {
+      try {
+        const sampleResponse = await axiosInstance.get("/dashboard/monthly-sample-status", {
+          params: {
+            month: selectedMonth,
+            year: selectedYear,
+            page: samplePage,
+            limit: samplePageSize,
+            search: sampleSearch,
+          },
+        });
+        if (sampleResponse.data?.success) {
+          setSampleStatus(sampleResponse.data.data?.cards || []);
+          setSampleRows(sampleResponse.data.data?.samples || []);
+          setSampleTotal(sampleResponse.data.pagination?.total || 0);
+        }
+      } catch (error) {
+        console.error("Error fetching monthly samples:", error);
+      }
+    };
+    loadSamples();
+  }, [selectedMonth, selectedYear, samplePage, samplePageSize, sampleSearch]);
 
   const top5Data = React.useMemo(() => {
     return [...productionSummaryData]
@@ -415,30 +294,11 @@ const ProductionOverview = () => {
     return { total, data };
   }, [productionSummaryData]);
 
-  const productionStatusData = React.useMemo(() => {
-    const totalCompleted = productionSummaryData.reduce(
-      (acc, curr) => acc + curr.completed,
-      0,
-    );
-    const totalInProcess = productionSummaryData.reduce(
-      (acc, curr) => acc + curr.inProcess,
-      0,
-    );
-    return [
-      { name: "Completed", value: totalCompleted, color: "#10B981" },
-      { name: "In Process", value: totalInProcess, color: "#F59E0B" },
-    ];
-  }, [productionSummaryData]);
-
-
   if (loading) {
     return (
       <div className="overview-loading">Loading...</div>
     );
   }
-
-  const totalStatus =
-    productionStatusData.reduce((acc, curr) => acc + curr.value, 0) || 1; // avoid div by 0
 
   const fmtMoney = (n) =>
     n
@@ -505,19 +365,19 @@ const ProductionOverview = () => {
         </span>
       ),
     },
-    {
+    /* {
       header: "Resource Value (PKR)",
       key: "resourceValue",
       align: "right",
       render: (row) => (row.isTotal ? <strong>{fmtMoney(row.resourceValue)}</strong> : fmtMoney(row.resourceValue)),
-    },
+    }, */
     {
       header: "Production Cost",
       key: "prodCost",
       align: "right",
       render: (row) => (row.isTotal ? <strong>{fmtMoney(row.prodCost)}</strong> : fmtMoney(row.prodCost)),
     },
-    {
+    /* {
       header: "Cost per Box (PKR)",
       key: "costBox",
       align: "right",
@@ -528,20 +388,33 @@ const ProductionOverview = () => {
       key: "costTest",
       align: "right",
       render: (row) => fmtMoney(row.costTest),
-    },
+    }, */
   ];
+
+  const achievementPct = Math.max(0, Math.min(100, Number(monthAchievement.achievement || 0)));
+  const sampleTones = {
+    S: "tone-amber",
+    UI: "tone-violet",
+    A: "tone-green",
+    R: "tone-rose",
+    P: "tone-blue",
+    CA: "tone-green",
+    CR: "tone-rose",
+    C: "tone-slate",
+  };
 
   return (
     <div className="layout-page-padding production-overview">
       <div className="overview-status-grid">
         {[
-          { label: "All Orders", value: statusSummary.total },
-          { label: "Planned", value: statusSummary.Planned },
-          { label: "Released", value: statusSummary.Released },
-          { label: "Closed", value: statusSummary.Closed },
-          { label: "Cancelled", value: statusSummary.Cancelled },
+          { label: "All Orders", value: statusSummary.total, tone: "tone-blue", icon: "doc" },
+          { label: "Planned", value: statusSummary.Planned, tone: "tone-green", icon: "cal" },
+          { label: "Released", value: statusSummary.Released, tone: "tone-violet", icon: "box" },
+          { label: "Closed", value: statusSummary.Closed, tone: "tone-peach", icon: "box" },
+          { label: "Cancelled", value: statusSummary.Cancelled, tone: "tone-rose", icon: "x" },
         ].map((card) => (
-          <div className="overview-status-card" key={card.label}>
+          <div className={`overview-status-card ${card.tone}`} key={card.label}>
+            <span className="overview-kpi-icon">{kpiIcon(card.icon)}</span>
             <span className="overview-status-label">{card.label}</span>
             <span className="overview-status-value">{Number(card.value || 0).toLocaleString()}</span>
           </div>
@@ -549,118 +422,81 @@ const ProductionOverview = () => {
       </div>
       <div className="overview-header-container">
         <div className="overview-header">
-          <h2>
-            Monthly Report -{" "}
-            {months
-              .find((m) => m.value === selectedMonth)
-              ?.label?.toUpperCase()}{" "}
-            {selectedYear}
-          </h2>
+          <div className="overview-report-top">
+            <div>
+              <h2>
+                Monthly Report -{" "}
+                {months.find((m) => m.value === selectedMonth)?.label}{" "}
+                {selectedYear}
+              </h2>
+              <p className="overview-report-sub">Overview of production orders for the selected month</p>
+            </div>
+            <div className="overview-filters">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              >
+                {months.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="overview-status-grid overview-month-grid">
-            <div className="overview-status-card">
+            <div className="overview-status-card tone-blue">
+              <span className="overview-kpi-icon">{kpiIcon("doc")}</span>
               <span className="overview-status-label">Due in month</span>
               <span className="overview-status-value">{Number(monthAchievement.dueInMonth || 0).toLocaleString()}</span>
+              <span className="overview-status-note">Production orders due this month</span>
             </div>
-            <div className="overview-status-card">
+            <div className="overview-status-card tone-rose">
+              <span className="overview-kpi-icon">{kpiIcon("box")}</span>
               <span className="overview-status-label">Closed in month</span>
               <span className="overview-status-value">{Number(monthAchievement.closedInMonth || 0).toLocaleString()}</span>
+              <span className="overview-status-note">Production orders closed this month</span>
             </div>
-            <div className="overview-status-card">
-              <span className="overview-status-label">Production Achievement</span>
-              <span className="overview-status-value">{Number(monthAchievement.achievement || 0).toLocaleString()}%</span>
-              <span className="overview-status-note">Closed POs due this month and closed this month</span>
+            <div className="overview-status-card tone-mint overview-achieve-card">
+              <div>
+                <span className="overview-kpi-icon">{kpiIcon("trend")}</span>
+                <span className="overview-status-label">Production Achievement</span>
+                <span className="overview-status-value">{Number(monthAchievement.achievement || 0).toLocaleString()}%</span>
+                <span className="overview-status-note">Closed POs due this month and closed this month</span>
+              </div>
+              <svg className="overview-ring" viewBox="0 0 44 44" aria-hidden="true">
+                <circle cx="22" cy="22" r="16" className="overview-ring-track" />
+                <circle
+                  cx="22"
+                  cy="22"
+                  r="16"
+                  className="overview-ring-value"
+                  strokeDasharray={`${(achievementPct / 100) * 100.5} 100.5`}
+                />
+                <text x="22" y="25" textAnchor="middle">{achievementPct.toFixed(1)}%</text>
+              </svg>
             </div>
           </div>
           <div className="overview-status-grid overview-sample-grid">
             {sampleStatus.map((card) => (
-              <div className="overview-status-card" key={card.code}>
+              <div className={`overview-status-card ${sampleTones[card.code] || "tone-slate"}`} key={card.code}>
+                <span className="overview-kpi-icon">{kpiIcon(card.code === "UI" ? "search" : card.code === "A" || card.code === "CA" ? "check" : card.code === "R" || card.code === "CR" || card.code === "C" ? "x" : "flask")}</span>
                 <span className="overview-status-label">{card.label}</span>
                 <span className="overview-status-value">{Number(card.count || 0).toLocaleString()}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="overview-filters">
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          >
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="card summary-table-card overview-due-orders">
-        <div className="card-header">Production orders due in this month</div>
-        <Table
-          data={monthAchievement.orders || []}
-          columns={[
-            { header: "PO No", key: "ProductionOrderNo" },
-            { header: "Item", key: "ItemCode" },
-            { header: "Product", key: "ProductName" },
-            { header: "Status", key: "StatusName" },
-            {
-              header: "Due Date",
-              key: "DueDate",
-              render: (row) => formatDisplayDate(row.DueDate),
-            },
-            {
-              header: "Close Date",
-              key: "CloseDate",
-              render: (row) => formatDisplayDate(row.CloseDate),
-            },
-            { header: "Planned Qty", key: "PlannedQty", align: "right" },
-            { header: "Completed Qty", key: "CompletedQty", align: "right" },
-            {
-              header: "Closed in month",
-              key: "ClosedInMonth",
-              render: (row) => (Number(row.ClosedInMonth) === 1 ? "Yes" : "No"),
-            },
-          ]}
-          totalEntries={(monthAchievement.orders || []).length}
-          showActions={false}
-          showPagination={false}
-        />
-      </div>
-
-      <div className="card summary-table-card overview-due-orders">
-        <div className="card-header">Samples in this month</div>
-        <Table
-          data={sampleRows}
-          columns={[
-            { header: "Sampling No", key: "SamplingNo" },
-            {
-              header: "Sampling Date",
-              key: "SamplingDate",
-              render: (row) => formatDisplayDate(row.SamplingDate),
-            },
-            { header: "Item", key: "ItemCode" },
-            { header: "Item Name", key: "ItemName" },
-            { header: "Batch", key: "Batch" },
-            { header: "Sample Qty", key: "SampleQty", align: "right" },
-            { header: "Status", key: "StatusName" },
-            { header: "Document Type", key: "DocumentType" },
-            { header: "Document No", key: "DocumentNo" },
-            { header: "Supplier", key: "SupplierName" },
-          ]}
-          totalEntries={sampleRows.length}
-          showActions={false}
-          showPagination={false}
-        />
       </div>
 
       <ProductionAnalytics analytics={analytics} error={analyticsError} />
@@ -677,18 +513,37 @@ const ProductionOverview = () => {
             showPagination={false}
           />
         </div>
+        </div>
 
-        <div className="card cost-comp-card">
+        <div className="card cost-comp-card overview-cost-full">
           <div className="card-header">
             5. COST COMPARISON TREND (TOP PRODUCED ITEMS)
           </div>
-          <div className="cost-comp-content">
+          <div className="cost-comp-toolbar">
+            <button
+              type="button"
+              className="cost-comp-add"
+              disabled={costSlots.length >= 4 || costSlots.length >= costTrendData.length}
+              onClick={() => {
+                const next = costTrendData.find((item) => !costSlots.includes(item.itemCode));
+                if (next) setCostSlots((current) => [...current, next.itemCode]);
+              }}
+            >
+              Add product
+            </button>
+          </div>
+          <div
+            className="cost-comp-content"
+            style={{ gridTemplateColumns: `repeat(${Math.max(costSlots.length, 1)}, minmax(0, 1fr))` }}
+          >
             {costTrendData.length === 0 ? (
               <div className="overview-empty">
                 No trend data available for this period.
               </div>
             ) : (
-              costTrendData.map((item, index) => {
+              costSlots.map((itemCode, index) => {
+                const item = costTrendData.find((product) => product.itemCode === itemCode);
+                if (!item) return null;
                 const costs = item.trends.map((t) => t.cost).filter((c) => c > 0);
                 let highestCost = 0;
                 let lowestCost = 0;
@@ -711,9 +566,35 @@ const ProductionOverview = () => {
                 }
 
                 return (
-                  <div className="cost-comp-section" key={item.itemName}>
-                    <div className="sub-header">
-                      {String.fromCharCode(65 + index)}. {item.itemName.toUpperCase()} - COST PER BOX TREND
+                  <div className="cost-comp-section" key={item.itemCode}>
+                    <div className="cost-comp-section-head">
+                      <span>{String.fromCharCode(65 + index)}.</span>
+                      <select
+                        value={item.itemCode}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setCostSlots((current) => current.map((code, slotIndex) => (slotIndex === index ? value : code)));
+                        }}
+                      >
+                        {costTrendData.map((product) => (
+                          <option
+                            key={product.itemCode}
+                            value={product.itemCode}
+                            disabled={costSlots.includes(product.itemCode) && product.itemCode !== item.itemCode}
+                          >
+                            {product.itemName}
+                          </option>
+                        ))}
+                      </select>
+                      {index >= 2 && (
+                        <button
+                          type="button"
+                          className="cost-comp-remove"
+                          onClick={() => setCostSlots((current) => current.filter((_, slotIndex) => slotIndex !== index))}
+                        >
+                          Remove
+                        </button>
+                      )}
                     </div>
                     <div className="cost-comp-row">
                       <div className="cost-table-wrap">
@@ -794,7 +675,6 @@ const ProductionOverview = () => {
               })
             )}
           </div>
-        </div>
         </div>
 
         <div className="overview-column">
@@ -894,62 +774,102 @@ const ProductionOverview = () => {
           </div>
         </div>
 
-        <div className="card status-card">
-          <div className="card-header">
-            4. PRODUCTION STATUS (ALL ITEMS)
-          </div>
-          <div className="status-content">
-            <div className="chart-container-donut">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={productionStatusData}
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {productionStatusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="status-legend">
-              <div className="legend-item">
-                <svg className="legend-color" viewBox="0 0 12 12" aria-hidden="true">
-                  <circle cx="6" cy="6" r="6" fill={productionStatusData[0].color} />
-                </svg>
-                <span className="legend-name">Completed</span>
-                <span className="legend-value">
-                  {productionStatusData[0].value.toLocaleString()} (
-                  {(
-                    (productionStatusData[0].value / totalStatus) *
-                    100
-                  ).toFixed(1)}
-                  %)
-                </span>
-              </div>
-              <div className="legend-item">
-                <svg className="legend-color" viewBox="0 0 12 12" aria-hidden="true">
-                  <circle cx="6" cy="6" r="6" fill={productionStatusData[1].color} />
-                </svg>
-                <span className="legend-name">In Process</span>
-                <span className="legend-value">
-                  {productionStatusData[1].value.toLocaleString()} (
-                  {(
-                    (productionStatusData[1].value / totalStatus) *
-                    100
-                  ).toFixed(1)}
-                  %)
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
+      </div>
+
+      <div className="card summary-table-card overview-due-orders">
+        <div className="card-header overview-table-header">
+          <span>
+            Production orders due in {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
+          </span>
+          <input
+            className="overview-table-search"
+            type="search"
+            placeholder="Search"
+            value={orderSearch}
+            onChange={(e) => setOrderSearch(e.target.value)}
+          />
         </div>
+        <Table
+          data={monthAchievement.orders || []}
+          columns={[
+            { header: "PO No", key: "ProductionOrderNo" },
+            { header: "Item", key: "ItemCode" },
+            { header: "Product", key: "ProductName" },
+            { header: "Status", key: "StatusName" },
+            {
+              header: "Due Date",
+              key: "DueDate",
+              render: (row) => formatDisplayDate(row.DueDate),
+            },
+            {
+              header: "Close Date",
+              key: "CloseDate",
+              render: (row) => formatDisplayDate(row.CloseDate),
+            },
+            { header: "Planned Qty", key: "PlannedQty", align: "right" },
+            { header: "Completed Qty", key: "CompletedQty", align: "right" },
+            {
+              header: "Closed in month",
+              key: "ClosedInMonth",
+              render: (row) => (Number(row.ClosedInMonth) === 1 ? "Yes" : "No"),
+            },
+          ]}
+          totalEntries={orderTotal}
+          showActions={false}
+          showPagination={true}
+          currentPage={orderPage}
+          pageSize={orderPageSize}
+          onPageChange={setOrderPage}
+          onItemsPerPageChange={(size) => {
+            setOrderPageSize(size);
+            setOrderPage(1);
+          }}
+        />
+      </div>
+
+      <div className="card summary-table-card overview-due-orders">
+        <div className="card-header overview-table-header">
+          <span>
+            Samples in {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
+          </span>
+          <input
+            className="overview-table-search"
+            type="search"
+            placeholder="Search"
+            value={sampleSearch}
+            onChange={(e) => setSampleSearch(e.target.value)}
+          />
+        </div>
+        <Table
+          data={sampleRows}
+          columns={[
+            { header: "Sampling No", key: "SamplingNo" },
+            {
+              header: "Sampling Date",
+              key: "SamplingDate",
+              render: (row) => formatDisplayDate(row.SamplingDate),
+            },
+            { header: "Item", key: "ItemCode" },
+            { header: "Item Name", key: "ItemName" },
+            { header: "Batch", key: "Batch" },
+            { header: "Sample Qty", key: "SampleQty", align: "right" },
+            { header: "Status", key: "StatusName" },
+            { header: "Document Type", key: "DocumentType" },
+            { header: "Document No", key: "DocumentNo" },
+            { header: "Supplier", key: "SupplierName" },
+          ]}
+          totalEntries={sampleTotal}
+          showActions={false}
+          showPagination={true}
+          currentPage={samplePage}
+          pageSize={samplePageSize}
+          onPageChange={setSamplePage}
+          onItemsPerPageChange={(size) => {
+            setSamplePageSize(size);
+            setSamplePage(1);
+          }}
+        />
       </div>
     </div>
   );
