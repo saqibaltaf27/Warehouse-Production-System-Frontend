@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import { axiosInstance } from '../../apis/axiosinstance';
@@ -15,6 +16,7 @@ const getTodayFormattedUpper = () => {
 };
 
 const COA = () => {
+  const [batchOptions, setBatchOptions] = useState([]);
   const [formData, setFormData] = useState({
     formNo: '',
     issueDate: getTodayFormatted(),
@@ -136,24 +138,27 @@ const COA = () => {
 
       if (data.success && data.data) {
         const details = data.data;
+        const batches = Array.isArray(details.batches) ? details.batches : [];
+        const firstBatch = batches[0];
+        setBatchOptions(batches);
 
         setFormData(prev => ({
           ...prev,
           product: details['PRODUCT'] || '',
-          batch: details['BATCH'] || '',
-          batchSize: details['BATCH SIZE'] || '',
-          sopNo: details['BMR NO.'] || '',
+          batch: firstBatch?.batch || details['BATCH'] || '',
+          batchSize: firstBatch?.batchSize || details['BATCH SIZE'] || '',
+          sopNo: firstBatch?.bmrNo || details['BMR NO.'] || '',
           processStage: details['PROCESS STAGE'] || '',
           catNo: details['CAT NO.'] || '',
           packSize: details['PACK SIZE'] || '',
-          mfgDate: formatDate(details['MFG DATE']) || '',
-          expDate: formatDate(details['EXP DATE']) || '',
+          mfgDate: formatDate(firstBatch?.mfgDate || details['MFG DATE']) || '',
+          expDate: formatDate(firstBatch?.expDate || details['EXP DATE']) || '',
           dateReported: formatDate(details['DATE REPORTED']) || '',
           composition: details['COMPOSITION'] || prev.composition,
           reg: details['REG'] || prev.reg,
           revisionNo: details['REVISION NO.'] || prev.revisionNo,
           tests: presetTests,
-          remarks: prev.remarks // Keep existing remarks
+          remarks: prev.remarks
         }));
       }
     } catch (error) {
@@ -269,7 +274,28 @@ const COA = () => {
               </div>
               <div className="coa-detail-row">
                 <label>BATCH:</label>
-                <input type="text" value={formData.batch} onChange={(e) => handleInputChange(e, 'batch')} />
+                <div className="coa-print-only">{formData.batch}</div>
+                <div className="coa-item-select-container coa-screen-only">
+                  <Select
+                    value={formData.batch ? { value: formData.batch, label: formData.batch } : null}
+                    onChange={(selected) => {
+                      const match = batchOptions.find((batch) => batch.batch === selected?.value);
+                      setFormData(prev => ({
+                        ...prev,
+                        batch: selected ? selected.value : '',
+                        batchSize: match?.batchSize || prev.batchSize,
+                        sopNo: match?.bmrNo || prev.sopNo,
+                        mfgDate: match ? formatDate(match.mfgDate) : prev.mfgDate,
+                        expDate: match ? formatDate(match.expDate) : prev.expDate,
+                      }));
+                    }}
+                    options={batchOptions.map((batch) => ({ value: batch.batch, label: batch.batch }))}
+                    styles={customSelectStyles}
+                    placeholder="Select batch..."
+                    isClearable
+                    isSearchable
+                  />
+                </div>
               </div>
               <div className="coa-detail-row">
                 <label>BATCH SIZE:</label>

@@ -431,7 +431,7 @@ const QCParameters = () => {
       {!showForm && (
         <div className="dome-card-wrapper">
           <div className="section-header-flex qc-list-header">
-            <h3 className="section-title">Testing Standards</h3>
+            <h3 className="section-title"></h3>
             <div className="qc-sampling-actions">
               <input
                 type="search"

@@ -76,7 +76,7 @@ const Layout = () => {
     'template': 'COA Templates',
     'qc': 'Sampling',
     'Under Inspection': 'Under Inspection',
-    'quality-assurance': 'Quality Assurance',
+    'qc-test-report': 'QC Test Report',
     'QC Parameters': 'QC Parameters',
     'equipment-pm': 'Line wise Equipments & PM',
     'machine': 'Machine',
