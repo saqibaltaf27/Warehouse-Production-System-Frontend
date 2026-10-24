@@ -247,7 +247,7 @@ export default function ChooseFromList({
                                       <span>
                                         {drillLoading
                                           ? 'Loading items...'
-                                          : `${drillLines.length} item${drillLines.length === 1 ? '' : 's'}`}
+                                          :''}
                                       </span>
                                     </div>
                                     {drillLoading ? null : drillLines.length === 0 ? (

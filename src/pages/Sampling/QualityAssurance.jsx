@@ -338,6 +338,14 @@ const QualityAssurance = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const leaveQualityForm = () => {
+    if (samplingNo && !selectedRecord) {
+      navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(samplingNo)}`);
+      return;
+    }
+    setShowForm(false);
+  };
+
   const handleSaveQuality = async () => {
     if (!itemCode) {
       toast.error("Please select an item.");
@@ -540,7 +548,7 @@ const QualityAssurance = () => {
         <div className="add-sample-wrapper">
           <div className="add-sample-header section-header-flex">
             <div className="qc-sampling-actions">
-              <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+              <Button variant="outline" onClick={leaveQualityForm}>Back</Button>
               <h4 className="add-sample-title">
                 {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : `Add Quality Test${samplingNo ? ` — ${samplingNo}` : ''}`}
               </h4>
@@ -787,7 +795,7 @@ const QualityAssurance = () => {
                     
                     <div className="qa-actions">
                       <Button variant="primary">OK</Button>
-                      <Button variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                      <Button variant="secondary" onClick={leaveQualityForm}>Cancel</Button>
                     </div>
                   </div>
 
@@ -853,7 +861,7 @@ const QualityAssurance = () => {
 
                     <div className="qa-actions qa-actions-end">
                       {!selectedRecord ? (
-                        <Button variant="primary" onClick={handleSaveQuality}>Save Quality Record</Button>
+                        <Button variant="primary" onClick={handleSaveQuality}>Create Quality Test</Button>
                       ) : (
                         <>
                           <Button variant="secondary">Release Sticker</Button>
@@ -980,7 +988,7 @@ const QualityAssurance = () => {
           <h3 className="section-title"></h3>
           <div className="qa-toolbar-actions">
             <Button variant="primary" onClick={handleAddQuality}>
-              Add Quality Test
+              Add Test Report
             </Button>
           </div>
         </div>

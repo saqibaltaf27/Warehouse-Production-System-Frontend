@@ -104,7 +104,19 @@ const docTypeOptions = [
   { value: '14', label: 'A/R Credit Memo' },
 ];
 
+const QC_SAMPLING_FILTERS_KEY = 'qcSamplingFilters';
+
+const readSavedSamplingFilters = () => {
+  try {
+    const raw = sessionStorage.getItem(QC_SAMPLING_FILTERS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 const QCSampling = () => {
+  const savedFilters = readSavedSamplingFilters();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -115,10 +127,10 @@ const QCSampling = () => {
   const initialDates = currentMonthRange();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [docTypeFilter, setDocTypeFilter] = useState('');
-  const [fromDate, setFromDate] = useState(initialDates.fromDate);
-  const [toDate, setToDate] = useState(initialDates.toDate);
+  const [statusFilter, setStatusFilter] = useState(savedFilters?.statusFilter || '');
+  const [docTypeFilter, setDocTypeFilter] = useState(savedFilters?.docTypeFilter || '');
+  const [fromDate, setFromDate] = useState(savedFilters?.fromDate || initialDates.fromDate);
+  const [toDate, setToDate] = useState(savedFilters?.toDate || initialDates.toDate);
   const [formMode, setFormMode] = useState('create'); // 'create', 'view', 'edit'
   const [qcCounter, setQcCounter] = useState(1); // Local counter for sampling number
   const [printModalRow, setPrintModalRow] = useState(null);
@@ -230,6 +242,15 @@ const QCSampling = () => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  useEffect(() => {
+    sessionStorage.setItem(QC_SAMPLING_FILTERS_KEY, JSON.stringify({
+      statusFilter,
+      docTypeFilter,
+      fromDate,
+      toDate,
+    }));
+  }, [statusFilter, docTypeFilter, fromDate, toDate]);
 
   useEffect(() => {
     setPage(1);
@@ -396,6 +417,15 @@ const QCSampling = () => {
       console.error("Failed to load saved sample details", err);
     }
   };
+
+  useEffect(() => {
+    const openSample = searchParams.get('openSample');
+    if (!openSample) return;
+    handleRowClick({ 'Sampling No': openSample });
+    const next = new URLSearchParams(searchParams);
+    next.delete('openSample');
+    setSearchParams(next, { replace: true });
+  }, [searchParams]);
 
   const savedSampleColumns = [
     { key: 'Sampling No', header: 'Sampling No' },
@@ -769,11 +799,9 @@ const QCSampling = () => {
           </div>
           
           <div className="add-sample-footer">
-            {/* Footer */}
-            <Button variant="danger" disabled={loading} onClick={() => setShowAddSample(false)}>Cancel</Button>
             {formMode !== 'view' && (
               <Button variant="primary" disabled={loading} onClick={handleSave}>
-                {loading ? 'Saving...' : 'Save Changes'}
+                {loading ? 'Creating' : 'Create Sample'}
               </Button>
             )}
           </div>
