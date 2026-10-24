@@ -45,7 +45,7 @@ const Sampling = () => {
   const allTabs = [
     { key: 'qc', label: 'Sampling', sub_module: 'QC Sampling' },
     { key: 'Under Inspection', label: 'Under Inspection', sub_module: 'Under Inspection' },
-    { key: 'quality-assurance', label: 'Quality', sub_module: 'Quality' },
+    { key: 'qc-test-report', label: 'QC Test Report', sub_module: 'Quality' },
     { key: 'QC Parameters', label: 'QC Parameters', sub_module: 'QC Parameters' },
   ];
 
@@ -73,14 +73,14 @@ const Sampling = () => {
           onTabChange={handleTabChange} 
         /> */}
       </div>
-      <div className="sampling-tab-content layout-page-padding">
+      <div className="sampling-tab-content ">
         {activeTab === 'qc' && (
           <QCSampling />
         )}
         {activeTab === 'Under Inspection' && (
           <UnderInspection />
         )}
-        {activeTab === 'quality-assurance' && (
+        {activeTab === 'qc-test-report' && (
           <QualityAssurance />
         )}
         {activeTab === 'QC Parameters' && (

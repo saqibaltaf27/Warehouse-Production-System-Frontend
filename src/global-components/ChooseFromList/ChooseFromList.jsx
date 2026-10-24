@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { IconSearch, IconX } from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconSearch, IconX } from '@tabler/icons-react';
 import { axiosInstance } from '../../apis/axiosinstance';
 import Pagination from '../Pagination/Pagination';
 import './ChooseFromList.css';
@@ -18,6 +18,7 @@ export default function ChooseFromList({
   placeholder = 'Click to select...',
   disabled = false,
   label = '',
+  drillDown = null,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
@@ -28,6 +29,9 @@ export default function ChooseFromList({
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [isBackendPaginated, setIsBackendPaginated] = useState(false);
+  const [expandedKey, setExpandedKey] = useState(null);
+  const [drillLines, setDrillLines] = useState([]);
+  const [drillLoading, setDrillLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!apiEndpoint) return;
@@ -88,6 +92,54 @@ export default function ChooseFromList({
   const handleSelect = (row) => {
     onChange?.(row[valueKey], row[labelKey], row);
     setIsOpen(false);
+    setExpandedKey(null);
+  };
+
+  const toggleDrill = async (row) => {
+    if (!drillDown) return;
+
+    const key = row[drillDown.entryKey || valueKey];
+    if (expandedKey === key) {
+      setExpandedKey(null);
+      setDrillLines([]);
+      return;
+    }
+
+    setExpandedKey(key);
+    setDrillLines([]);
+    setDrillLoading(true);
+    try {
+      const response = await axiosInstance.get(drillDown.endpoint, {
+        params: { ...(drillDown.extraParams || {}), docEntry: key },
+      });
+      const lines = response.data?.data?.lines || [];
+      const byLine = new Map();
+      lines.forEach((line) => {
+        const lineKey = `${line.ItemCode || ''}::${line.BaseLine ?? ''}`;
+        if (byLine.has(lineKey)) return;
+        byLine.set(lineKey, {
+          ItemCode: line.ItemCode || '',
+          ItemName: line.ItemName || '',
+          Quantity: Number(line.ActualQty) || 0,
+        });
+      });
+      const grouped = new Map();
+      byLine.forEach((line) => {
+        const current = grouped.get(line.ItemCode) || {
+          ItemCode: line.ItemCode,
+          ItemName: line.ItemName,
+          Quantity: 0,
+        };
+        current.Quantity += line.Quantity;
+        grouped.set(line.ItemCode, current);
+      });
+      setDrillLines([...grouped.values()]);
+    } catch (err) {
+      console.error('CFL drill-down error:', err);
+      setDrillLines([]);
+    } finally {
+      setDrillLoading(false);
+    }
   };
 
   const handleClear = (e) => {
@@ -155,19 +207,78 @@ export default function ChooseFromList({
                   <table className="cfl-table">
                     <thead>
                       <tr>
+                        {drillDown && <th className="cfl-expand-col" />}
                         {columns.map((col, idx) => (
                           <th key={idx}>{col.header}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {(isBackendPaginated ? data : data.slice((page - 1) * pageSize, page * pageSize)).map((row, rIdx) => (
-                        <tr key={rIdx} onClick={() => handleSelect(row)}>
-                          {columns.map((col, cIdx) => (
-                            <td key={cIdx}>{row[col.key] || '-'}</td>
-                          ))}
-                        </tr>
-                      ))}
+                      {(isBackendPaginated ? data : data.slice((page - 1) * pageSize, page * pageSize)).map((row, rIdx) => {
+                        const rowKey = row[drillDown?.entryKey || valueKey];
+                        const isExpanded = drillDown && expandedKey === rowKey;
+                        return (
+                          <React.Fragment key={rIdx}>
+                            <tr className={isExpanded ? 'cfl-row-expanded' : ''} onClick={() => handleSelect(row)}>
+                              {drillDown && (
+                                <td className="cfl-expand-col">
+                                  <button
+                                    type="button"
+                                    className="cfl-expand-btn"
+                                    title={isExpanded ? 'Hide items' : 'Show items'}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleDrill(row);
+                                    }}
+                                  >
+                                    {isExpanded ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                                  </button>
+                                </td>
+                              )}
+                              {columns.map((col, cIdx) => (
+                                <td key={cIdx}>{col.render ? col.render(row) : (row[col.key] ?? '-')}</td>
+                              ))}
+                            </tr>
+                            {isExpanded && (
+                              <tr className="cfl-drill-row">
+                                <td colSpan={columns.length + 1}>
+                                  <div className="cfl-drill">
+                                    <div className="cfl-drill-head">
+                                      <span>
+                                        {drillLoading
+                                          ? 'Loading items...'
+                                          :''}
+                                      </span>
+                                    </div>
+                                    {drillLoading ? null : drillLines.length === 0 ? (
+                                      <div className="cfl-drill-loading">No items on this document.</div>
+                                    ) : (
+                                      <table className="cfl-drill-table">
+                                        <thead>
+                                          <tr>
+                                            <th>Item Code</th>
+                                            <th>Item Name</th>
+                                            <th>Quantity</th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                          {drillLines.map((line) => (
+                                            <tr key={line.ItemCode}>
+                                              <td>{line.ItemCode || '-'}</td>
+                                              <td>{line.ItemName || '-'}</td>
+                                              <td>{Number.isInteger(line.Quantity) ? line.Quantity : line.Quantity.toLocaleString()}</td>
+                                            </tr>
+                                          ))}
+                                        </tbody>
+                                      </table>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}

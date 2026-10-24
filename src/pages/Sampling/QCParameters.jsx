@@ -431,7 +431,7 @@ const QCParameters = () => {
       {!showForm && (
         <div className="dome-card-wrapper">
           <div className="section-header-flex qc-list-header">
-            <h3 className="section-title">Testing Standards</h3>
+            <h3 className="section-title"></h3>
             <div className="qc-sampling-actions">
               <input
                 type="search"
@@ -440,7 +440,7 @@ const QCParameters = () => {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
-              <Button variant="primary" onClick={openNewTest}>Add Test</Button>
+              <Button variant="primary" onClick={openNewTest}>Add Testing Standard</Button>
             </div>
           </div>
           <Table
@@ -517,7 +517,7 @@ const QCParameters = () => {
             Add Row
           </Button>
           <Button variant="primary" onClick={handleSave} disabled={!itemCode || isSaving}>
-            {isSaving ? 'Saving...' : 'Save Configuration'}
+            {isSaving ? 'Saving...' : 'Save QC Parameters'}
           </Button>
         </div>
       </div>

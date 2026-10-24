@@ -85,7 +85,7 @@
 .cfl-modal-content {
   background: white;
   width: 90vw;
-  max-width: 700px;
+  max-width: 1000px;
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
   display: flex;
@@ -201,4 +201,88 @@
 .cfl-pagination-wrapper {
   flex-shrink: 0;
   margin-top: 4px;
+}
+
+.cfl-expand-col {
+  width: 36px;
+  padding-left: 8px;
+  padding-right: 0;
+}
+
+.cfl-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #cbd5e1;
+  border-radius: 2px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.cfl-expand-btn:hover {
+  border-color: var(--primary-blue, #1d4ed8);
+  color: var(--primary-blue, #1d4ed8);
+}
+
+.cfl-table tbody tr.cfl-row-expanded {
+  background: #eff6ff;
+}
+
+.cfl-table tbody tr.cfl-drill-row,
+.cfl-table tbody tr.cfl-drill-row:hover {
+  background: #f8fafc;
+  cursor: default;
+}
+
+.cfl-drill {
+  padding: 4px 8px 8px 28px;
+}
+
+.cfl-drill-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.cfl-drill-select {
+  border: none;
+  background: var(--primary-blue, #1d4ed8);
+  color: #fff;
+  border-radius: 2px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.cfl-drill-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.cfl-drill-table th,
+.cfl-drill-table td {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cfl-drill-table th {
+  color: #64748b;
+  font-weight: 600;
+  background: #fff;
+}
+
+.cfl-drill-loading {
+  padding: 8px 0;
+  color: #64748b;
+  font-size: 0.85rem;
 }

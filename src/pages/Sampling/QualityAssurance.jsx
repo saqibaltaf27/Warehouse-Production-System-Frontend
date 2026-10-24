@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import './Sampling.css';
+import '../ProductionOrders/ProductionOrders.css';
 
 const QualityAssurance = () => {
   const { user } = useAuth();
@@ -54,13 +55,20 @@ const QualityAssurance = () => {
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [decisionOptions, setDecisionOptions] = useState([]);
 
-  const fetchQualityRecords = async (pageNum = 1, currentStatusFilter = statusFilter) => {
+  const fetchQualityRecords = async (pageNum = 1, currentStatusFilter = statusFilter, search = debouncedSearch) => {
     setLoading(true);
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-records`, {
-        params: { page: pageNum, limit, status: currentStatusFilter }
+        params: {
+          page: pageNum,
+          limit,
+          ...(currentStatusFilter ? { status: currentStatusFilter } : {}),
+          ...(search ? { search } : {}),
+        }
       });
       if (res.data?.success) {
         setData(res.data.data);
@@ -118,7 +126,7 @@ const QualityAssurance = () => {
     }
   };
 
-  const loadItem = async (val, label, preferredBatch = '', lineSampleQty = '') => {
+  const loadItem = async (val, label, preferredBatch = '', lineSampleQty = '', samplingNumber = '') => {
     setItemCode(val || '');
     setItemName(label || '');
     if (lineSampleQty !== '') setSampleQty(String(lineSampleQty));
@@ -134,17 +142,22 @@ const QualityAssurance = () => {
     }
 
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-by-code`, { params: { itemCode: val } });
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/item-by-code`, {
+        params: { itemCode: val, ...(samplingNumber ? { samplingNo: samplingNumber } : {}) }
+      });
       if (res.data?.success) {
-        const itemData = res.data.data;
+        const itemData = res.data.data || {};
         const masterName = res.data.itemName;
         if (masterName && masterName !== '*') setItemName(masterName);
         else if (label && label !== '*') setItemName(label);
-        setSampleQty(
-          lineSampleQty !== ''
-            ? String(lineSampleQty)
-            : (itemData.U_SampleSize !== null ? String(itemData.U_SampleSize) : '1.0000')
-        );
+        const fromLine = lineSampleQty !== '' ? String(lineSampleQty) : '';
+        const fromSample = res.data.sampleQty != null && Number(res.data.sampleQty) !== 0
+          ? String(res.data.sampleQty)
+          : '';
+        const fromMaster = itemData.U_SampleSize != null && itemData.U_SampleSize !== ''
+          ? String(itemData.U_SampleSize)
+          : '';
+        setSampleQty(fromLine || fromSample || fromMaster);
         if (res.data.lines) {
           setTableData(res.data.lines.map(line => ({
             'Parameter Line': line.LineId,
@@ -214,7 +227,8 @@ const QualityAssurance = () => {
         code,
         searchParams.get('itemName') || '',
         searchParams.get('batch') || '',
-        searchParams.get('sampleQty') || ''
+        searchParams.get('sampleQty') || '',
+        no || ''
       );
     }
     const next = new URLSearchParams(searchParams);
@@ -223,12 +237,20 @@ const QualityAssurance = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchQualityRecords(page, statusFilter);
+    const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
     fetchEquipments();
     fetchEmployees();
     fetchDecisionOptions();
     fetchWarehouses();
-  }, [page, statusFilter]);
+  }, []);
+
+  useEffect(() => {
+    fetchQualityRecords(page, statusFilter, debouncedSearch);
+  }, [page, limit, statusFilter, debouncedSearch]);
 
   const handleRowClick = async (row) => {
     setSelectedRecord(row);
@@ -316,6 +338,14 @@ const QualityAssurance = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const leaveQualityForm = () => {
+    if (samplingNo && !selectedRecord) {
+      navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(samplingNo)}`);
+      return;
+    }
+    setShowForm(false);
+  };
+
   const handleSaveQuality = async () => {
     if (!itemCode) {
       toast.error("Please select an item.");
@@ -373,9 +403,9 @@ const QualityAssurance = () => {
 
   const mainColumns = [
     { key: 'Document Number', header: 'Doc Num' },
+    { key: 'Sample Number', header: 'Sample Number' },
     { key: 'QC Type', header: 'QC Type' },
     { key: 'Type', header: 'Type' },
-    { key: 'Request Number', header: 'Request No' },
     { key: 'BaseType', header: 'Base Type' },
     { key: 'Item Code', header: 'Item Code' },
     { key: 'Item Name', header: 'Item Name' },
@@ -518,13 +548,12 @@ const QualityAssurance = () => {
         <div className="add-sample-wrapper">
           <div className="add-sample-header section-header-flex">
             <div className="qc-sampling-actions">
-              <Button variant="outline" onClick={() => navigate(-1)}>Back</Button>
+              <Button variant="outline" onClick={leaveQualityForm}>Back</Button>
               <h4 className="add-sample-title">
-                {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : `Add Quality Record${samplingNo ? ` — ${samplingNo}` : ''}`}
+                {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : `Add Quality Test${samplingNo ? ` — ${samplingNo}` : ''}`}
               </h4>
             </div>
-            <Button variant="secondary" onClick={() => setShowForm(false)}>Close</Button>
-          </div>
+            </div>
 
           <div className="add-sample-body">
             {!selectedRecord ? (
@@ -766,7 +795,7 @@ const QualityAssurance = () => {
                     
                     <div className="qa-actions">
                       <Button variant="primary">OK</Button>
-                      <Button variant="secondary" onClick={() => setShowForm(false)}>Cancel</Button>
+                      <Button variant="secondary" onClick={leaveQualityForm}>Cancel</Button>
                     </div>
                   </div>
 
@@ -832,7 +861,7 @@ const QualityAssurance = () => {
 
                     <div className="qa-actions qa-actions-end">
                       {!selectedRecord ? (
-                        <Button variant="primary" onClick={handleSaveQuality}>Save Quality Record</Button>
+                        <Button variant="primary" onClick={handleSaveQuality}>Create Quality Test</Button>
                       ) : (
                         <>
                           <Button variant="secondary">Release Sticker</Button>
@@ -959,8 +988,42 @@ const QualityAssurance = () => {
           <h3 className="section-title"></h3>
           <div className="qa-toolbar-actions">
             <Button variant="primary" onClick={handleAddQuality}>
-              Add Quality
+              Add Test Report
             </Button>
+          </div>
+        </div>
+
+        <div className="po-filter-toolbar-card">
+          <div className="po-filter-toolbar-grid">
+            <div className="po-filter-item po-filter-search-box">
+              <label className="po-filter-label">Search</label>
+              <input
+                type="text"
+                placeholder="Sample no, doc no, item code or name"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setPage(1);
+                }}
+                className="po-filter-search-input"
+              />
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">QC Decision</label>
+              <select
+                className="po-filter-date-input"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All Decisions</option>
+                {decisionOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

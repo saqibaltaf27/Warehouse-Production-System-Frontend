@@ -39,7 +39,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
     {
       title: "My Workspace",
       path: "/workspace",
-      main_module: "Production",
+      public: true,
       icon: <IconStack2 size={18} stroke={1.5} />,
     },
     {
@@ -49,17 +49,18 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       icon: <IconSettings size={18} stroke={1.5} />,
       subItems: [
         // { title: 'Dashboard', path: '/production?tab=dashboard', tabKey: 'dashboard' },
-        { title: 'Production Dashboard', path: '/production?tab=quality-control', tabKey: 'quality-control' },      
-        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders' },
-        { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning' },
-        { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order' },
+        { title: 'Production Dashboard', path: '/production?tab=quality-control', tabKey: 'quality-control', sub_module: 'Production Dashboard' },
+        { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders', sub_module: 'Production Orders' },
+        { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning', sub_module: 'Production Plans' },
+        { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Orders' },
 
         {
           title: 'Reports',
+          sub_module: 'Reports',
           subItems: [
-            { title: 'Critical Material', path: '/production?tab=critical-material', tabKey: 'critical-material' },
-            { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry' },
-            { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity' },
+            { title: 'Critical Material', path: '/production?tab=critical-material', tabKey: 'critical-material', child_module: 'Critical Material' },
+            { title: 'Batch Expiry', path: '/production?tab=batch-expiry', tabKey: 'batch-expiry', child_module: 'Batch Expiry' },
+            { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity', child_module: 'Material-based Capacity' },
           ]
         },
         // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
@@ -73,18 +74,19 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       icon: <IconChecklist size={18} stroke={1.5} />,
       subItems: [
         {
-          title: 'Sample Management',
+          title: 'Quality Testing',
+          sub_module: 'Quality Testing',
           subItems: [
-            { title: 'Create Sample', path: '/sampling?tab=qc&create=1', tabKey: 'create=1' },         
-            { title: 'Sample Management', path: '/sampling?tab=qc&view=list', tabKey: 'view=list' },
+            { title: 'Create Sample', path: '/sampling?tab=qc&create=1', tabKey: 'create=1', child_module: 'Create Sample' },
+            { title: 'Sample Management', path: '/sampling?tab=qc&view=list', tabKey: 'view=list', child_module: 'Sample Management' },
             // { title: 'Under Inspection', path: '/sampling?tab=Under Inspection', tabKey: 'Under Inspection' },
-            // { title: 'Quality Assurance', path: '/sampling?tab=quality-assurance', tabKey: 'quality-assurance' },
-             { title: 'Testing Standard', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters' },
+            { title: 'QC Test Report', path: '/sampling?tab=qc-test-report', tabKey: 'qc-test-report', child_module: 'QC Test Report' },
+            { title: 'Testing Standard', path: '/sampling?tab=QC Parameters', tabKey: 'QC Parameters', child_module: 'Testing Standard' },
           ]
         },
-        { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints' },
-        { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa' },
-        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template' },
+        { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complain Management' },
+        { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
+        { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
       ]
     },
     {
@@ -118,41 +120,46 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         {
           title: 'Dashboard',
           path: '/costing?tab=dashboard',
-          tabKey: 'tab=dashboard'
+          tabKey: 'tab=dashboard',
+          sub_module: 'Costing Dashboard'
         },
         {
           title: 'HR Cost',
           path: '/costing?tab=hr-cost&sub=management',
           tabKey: 'tab=hr-cost',
+          sub_module: 'HR Cost',
           subItems: [
-            { title: 'Management', path: '/costing?tab=hr-cost&sub=management', tabKey: 'sub=management' },
-            { title: 'Direct HR', path: '/costing?tab=hr-cost&sub=direct-hr', tabKey: 'sub=direct-hr' },
-            { title: 'Quality', path: '/costing?tab=hr-cost&sub=quality', tabKey: 'sub=quality' },
+            { title: 'Management', path: '/costing?tab=hr-cost&sub=management', tabKey: 'sub=management', child_module: 'Management' },
+            { title: 'Direct HR', path: '/costing?tab=hr-cost&sub=direct-hr', tabKey: 'sub=direct-hr', child_module: 'Direct HR' },
+            { title: 'Quality', path: '/costing?tab=hr-cost&sub=quality', tabKey: 'sub=quality', child_module: 'Quality' },
           ]
         },
         {
           title: 'Material Cost',
           path: '/costing?tab=material-cost',
-          tabKey: 'tab=material-cost'
+          tabKey: 'tab=material-cost',
+          sub_module: 'Material Cost'
         },
         {
           title: 'Quality Testing Cost',
           path: '/costing?tab=quality-testing-cost',
-          tabKey: 'tab=quality-testing-cost'
+          tabKey: 'tab=quality-testing-cost',
+          sub_module: 'Quality Testing Cost'
         },
         {
           title: 'Factory Overhead',
           path: '/costing?tab=factory-overhead&sub=repair-maintenance',
           tabKey: 'tab=factory-overhead',
+          sub_module: 'Factory Overhead',
           subItems: [
-            { title: 'Repair & maintenance', path: '/costing?tab=factory-overhead&sub=repair-maintenance', tabKey: 'sub=repair-maintenance' },
-            { title: 'Stationary & printing', path: '/costing?tab=factory-overhead&sub=stationary-printing', tabKey: 'sub=stationary-printing' },
-            { title: 'Generator/Diesel', path: '/costing?tab=factory-overhead&sub=generator-diesel', tabKey: 'sub=generator-diesel' },
-            { title: 'DRAP', path: '/costing?tab=factory-overhead&sub=drap', tabKey: 'sub=drap' },
-            { title: 'Utilities', path: '/costing?tab=factory-overhead&sub=utilities', tabKey: 'sub=utilities' },
-            { title: 'Pest Control', path: '/costing?tab=factory-overhead&sub=pest-control', tabKey: 'sub=pest-control' },
-            { title: 'Facilitation', path: '/costing?tab=factory-overhead&sub=facilitation', tabKey: 'sub=facilitation' },
-            { title: 'Depreciation', path: '/costing?tab=factory-overhead&sub=depreciation', tabKey: 'sub=depreciation' },
+            { title: 'Repair & maintenance', path: '/costing?tab=factory-overhead&sub=repair-maintenance', tabKey: 'sub=repair-maintenance', child_module: 'Repair & maintenance' },
+            { title: 'Stationary & printing', path: '/costing?tab=factory-overhead&sub=stationary-printing', tabKey: 'sub=stationary-printing', child_module: 'Stationary & printing' },
+            { title: 'Generator/Diesel', path: '/costing?tab=factory-overhead&sub=generator-diesel', tabKey: 'sub=generator-diesel', child_module: 'Generator/Diesel' },
+            { title: 'DRAP', path: '/costing?tab=factory-overhead&sub=drap', tabKey: 'sub=drap', child_module: 'DRAP' },
+            { title: 'Utilities', path: '/costing?tab=factory-overhead&sub=utilities', tabKey: 'sub=utilities', child_module: 'Utilities' },
+            { title: 'Pest Control', path: '/costing?tab=factory-overhead&sub=pest-control', tabKey: 'sub=pest-control', child_module: 'Pest Control' },
+            { title: 'Facilitation', path: '/costing?tab=factory-overhead&sub=facilitation', tabKey: 'sub=facilitation', child_module: 'Facilitation' },
+            { title: 'Depreciation', path: '/costing?tab=factory-overhead&sub=depreciation', tabKey: 'sub=depreciation', child_module: 'Depreciation' },
           ]
         },
       ]
@@ -209,7 +216,10 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         allowedModules.has(item.main_module) ||
         (item.subItems || []).some((sub) => allowedModules.has(sub.main_module) || allowedModules.has(sub.title));
 
-      if (!item.subItems) return mainAllowed ? [item] : [];
+      if (!item.subItems) {
+        if (item.sub_module) return allowed(allowedSubModules, item.sub_module, item.title) ? [item] : [];
+        return mainAllowed ? [item] : [];
+      }
       if (mainAllowed && !hasGranularAccess) return [item];
 
       const subItems = filterSubItems(item.subItems);
