@@ -53,6 +53,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders', sub_module: 'Production Orders' },
         { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning', sub_module: 'Production Plans' },
         { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Orders' },
+        { title: 'Tickets', path: '/production/tickets' },
 
         {
           title: 'Reports',
@@ -87,6 +88,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complain Management' },
         { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
         { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
+        { title: 'Tickets', path: '/qc/tickets' },
       ]
     },
     {
@@ -98,6 +100,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Dashboard', path: '/engineering-dashboard?tab=dashboard', tabKey: 'dashboard', sub_module: 'Dashboard' },
         { title: 'Line wise Equipments & PM', path: '/engineering-dashboard?tab=equipment-pm', tabKey: 'equipment-pm', sub_module: 'Line wise Equipments & PM' },
         { title: 'Machine', path: '/machine', tabKey: 'machine', sub_module: 'Machine' },
+        { title: 'Tickets', path: '/engineering-dashboard/tickets' },
       ]
     },
     {
@@ -266,7 +269,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
                   <NavLink
                     to={hasSubItems ? "#" : item.path}
                     className={({ isActive }) =>
-                      `sidebar-nav-item ${(!hasSubItems && isActive && !coveredByGroup) || (hasSubItems && isGroupActive) ? "active" : ""}`
+                      `sidebar-nav-item ${(!hasSubItems && (isActive || location.pathname.startsWith(`${item.path}/`)) && !coveredByGroup) || (hasSubItems && isGroupActive) ? "active" : ""}`
                     }
                     onClick={(e) => {
                       if (hasSubItems) {

@@ -129,6 +129,22 @@
   gap: 12px;
 }
 
+.overview-trend-filter {
+  width: 260px;
+  max-width: 46%;
+  height: 32px;
+  margin-left: auto;
+  padding: 0 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 2px;
+  background: #fff;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+  cursor: pointer;
+}
+
 .overview-table-search {
   width: 220px;
   margin-left: auto;
@@ -296,15 +312,52 @@
     "left right"
     "cost cost";
   gap: 15px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .overview-layout > .overview-column:first-child {
   grid-area: left;
+  height: 560px;
+  max-height: 560px;
+  overflow: hidden;
 }
 
 .overview-layout > .overview-column:last-child {
   grid-area: right;
+  height: 560px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.overview-layout > .overview-column:first-child .summary-table-card {
+  height: 100%;
+  min-height: 0;
+}
+
+.summary-table-card .dome-table-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.summary-table-card .dome-table-wrapper {
+  height: 100%;
+  overflow: auto;
+}
+
+.summary-table-card .dome-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f8fafc;
+}
+
+.summary-table-card .dome-table tbody tr.dome-row-pinned td {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: #f8fafc;
+  font-weight: 700;
+  box-shadow: 0 -1px 0 #e2e8f0;
 }
 
 .overview-cost-full {
@@ -573,7 +626,25 @@
 .cost-table-wrap {
   width: 100%;
   min-width: 0;
-  flex: 1;
+  height: 180px;
+  max-height: 180px;
+  overflow: hidden;
+}
+
+.cost-table-wrap .dome-table-container,
+.cost-table-wrap .dome-table-wrapper {
+  height: 100%;
+}
+
+.cost-table-wrap .dome-table-wrapper {
+  overflow: auto;
+}
+
+.cost-table-wrap .dome-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
 }
 
 .cost-table {
@@ -631,6 +702,34 @@
 
 .summary-stat-note {
   font-size: 10px;
+}
+
+.overview-due-status {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.overview-due-status.overdue {
+  color: #be123c;
+  background: #ffe4e6;
+}
+
+.overview-due-status.due-today {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.overview-due-status.due-within-7-days {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.overview-due-status.on-schedule {
+  color: #166534;
+  background: #dcfce7;
 }
 
 .production-overview .dome-table-wrapper {

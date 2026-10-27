@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { axiosInstance } from "../../apis/axiosinstance";
+import { workspaceApi } from "../../apis/workspace/workspace";
 import Table from "../../global-components/Table/Table";
 import {
   BarChart,
@@ -107,11 +108,11 @@ const ProductionAnalytics = ({ analytics, error, product, onProductChange }) => 
 
   return (
     <div className="overview-analytics">
-      <h3 className="overview-analytics-title">Production analytics</h3>
+     
       <div className="card summary-table-card">
         <div className="card-header overview-table-header">
           <span>Monthly Production Performance Trend</span>
-          <select value={product} onChange={(event) => onProductChange(event.target.value)}>
+          <select className="overview-trend-filter" value={product} onChange={(event) => onProductChange(event.target.value)}>
             <option value="">All item groups</option>
             {products.map((item) => (
               <option key={item.itemName} value={item.itemName}>{item.itemName}</option>
@@ -129,7 +130,9 @@ const ProductionAnalytics = ({ analytics, error, product, onProductChange }) => 
                 content={<TrendHoverBridge onActive={applyHover} />}
               />
               <Legend wrapperStyle={{ fontSize: 11, lineHeight: "16px", paddingTop: 8 }} />
-              {lines.map((item, index) => (
+              {lines.map((item, index) => {
+                const plotted = points.filter((point) => Number(point[item.itemName])).length;
+                return (
                 <Line
                   key={item.itemName}
                   type="monotone"
@@ -137,10 +140,12 @@ const ProductionAnalytics = ({ analytics, error, product, onProductChange }) => 
                   name={item.itemName}
                   stroke={TREND_COLORS[index % TREND_COLORS.length]}
                   strokeWidth={2}
-                  dot={false}
+                  dot={plotted <= 1 ? { r: 5, strokeWidth: 2 } : false}
+                  activeDot={{ r: 6 }}
                   connectNulls
                 />
-              ))}
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
           {active && hover && (
@@ -200,28 +205,21 @@ const ProductionOverview = () => {
     achievement: 0,
     orders: [],
   });
-  const [sampleRows, setSampleRows] = useState([]);
+  const [openOrders, setOpenOrders] = useState({
+    total: 0,
+    planned: 0,
+    released: 0,
+    nextDueDate: "",
+    nextDueStatus: "",
+    orders: [],
+  });
   const [orderPage, setOrderPage] = useState(1);
   const [orderPageSize, setOrderPageSize] = useState(10);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderTotal, setOrderTotal] = useState(0);
-  const [samplePage, setSamplePage] = useState(1);
-  const [samplePageSize, setSamplePageSize] = useState(10);
-  const [sampleSearch, setSampleSearch] = useState("");
-  const [sampleTotal, setSampleTotal] = useState(0);
   const [analytics, setAnalytics] = useState(null);
   const [analyticsError, setAnalyticsError] = useState("");
   const [trendProduct, setTrendProduct] = useState("");
-  const [sampleStatus, setSampleStatus] = useState([
-    { code: "S", label: "Sampled", count: 0 },
-    { code: "UI", label: "Under Inspection", count: 0 },
-    { code: "A", label: "Accepted", count: 0 },
-    { code: "R", label: "Rejected", count: 0 },
-    { code: "P", label: "Pending", count: 0 },
-    { code: "CA", label: "Conditionally Accepted", count: 0 },
-    { code: "CR", label: "Conditionally Rejected", count: 0 },
-    { code: "C", label: "Cancel", count: 0 },
-  ]);
   const [statusSummary, setStatusSummary] = useState({
     total: 0,
     Planned: 0,
@@ -243,7 +241,7 @@ const ProductionOverview = () => {
       try {
         try {
           const analyticsResponse = await axiosInstance.get("/dashboard/monthly-production-analytics", {
-            params: { startDate, endDate, item: trendProduct },
+            params: { startDate, endDate },
           });
           if (analyticsResponse.data?.success) {
             setAnalytics(analyticsResponse.data.data);
@@ -306,59 +304,46 @@ const ProductionOverview = () => {
       }
     };
     fetchData();
-  }, [startDate, endDate, trendProduct]);
+  }, [startDate, endDate]);
 
   useEffect(() => {
     setOrderPage(1);
-    setSamplePage(1);
-  }, [startDate, endDate, orderSearch, sampleSearch]);
+  }, [orderSearch]);
 
   useEffect(() => {
-    const loadOrders = async () => {
+    const loadAchievement = async () => {
       try {
         const achievementResponse = await axiosInstance.get("/dashboard/monthly-production-achievement", {
-          params: {
-            startDate,
-            endDate,
-            page: orderPage,
-            limit: orderPageSize,
-            search: orderSearch,
-          },
+          params: { startDate, endDate, page: 1, limit: 1 },
         });
         if (achievementResponse.data?.success) {
-          setMonthAchievement(achievementResponse.data.data);
-          setOrderTotal(achievementResponse.data.pagination?.total || 0);
+          setMonthAchievement((current) => ({ ...current, ...achievementResponse.data.data, orders: current.orders }));
         }
       } catch (error) {
-        console.error("Error fetching due production orders:", error);
+        console.error("Error fetching production achievement:", error);
       }
     };
-    loadOrders();
-  }, [startDate, endDate, orderPage, orderPageSize, orderSearch]);
+    loadAchievement();
+  }, [startDate, endDate]);
 
   useEffect(() => {
-    const loadSamples = async () => {
+    const loadOpenOrders = async () => {
       try {
-        const sampleResponse = await axiosInstance.get("/dashboard/monthly-sample-status", {
-          params: {
-            startDate,
-            endDate,
-            page: samplePage,
-            limit: samplePageSize,
-            search: sampleSearch,
-          },
+        const response = await workspaceApi.getOpenProductionOrders({
+          page: orderPage,
+          limit: orderPageSize,
+          search: orderSearch,
         });
-        if (sampleResponse.data?.success) {
-          setSampleStatus(sampleResponse.data.data?.cards || []);
-          setSampleRows(sampleResponse.data.data?.samples || []);
-          setSampleTotal(sampleResponse.data.pagination?.total || 0);
+        if (response?.success) {
+          setOpenOrders(response.data);
+          setOrderTotal(response.pagination?.total || 0);
         }
       } catch (error) {
-        console.error("Error fetching monthly samples:", error);
+        console.error("Error fetching open production orders:", error);
       }
     };
-    loadSamples();
-  }, [startDate, endDate, samplePage, samplePageSize, sampleSearch]);
+    loadOpenOrders();
+  }, [orderPage, orderPageSize, orderSearch]);
 
   const top5Data = React.useMemo(() => {
     return [...productionSummaryData]
@@ -467,11 +452,7 @@ const ProductionOverview = () => {
       render: (row) => (
         <span>
           {row.completed ? row.completed.toLocaleString() : row.isTotal ? "0" : "-"}
-          {row.overProduced > 0 && (
-            <div className="overview-overproduced">
-              (+{row.overProduced.toLocaleString()} Over Produced)
-            </div>
-          )}
+         
         </span>
       ),
     },
@@ -502,16 +483,6 @@ const ProductionOverview = () => {
   ];
 
   const achievementPct = Math.max(0, Math.min(100, Number(monthAchievement.achievement || 0)));
-  const sampleTones = {
-    S: "tone-amber",
-    UI: "tone-violet",
-    A: "tone-green",
-    R: "tone-rose",
-    P: "tone-blue",
-    CA: "tone-green",
-    CR: "tone-rose",
-    C: "tone-slate",
-  };
 
   return (
     <div className="layout-page-padding production-overview">
@@ -614,13 +585,21 @@ const ProductionOverview = () => {
           <div className="overview-status-grid overview-month-grid">
             <div className="overview-status-card tone-blue">
               <span className="overview-kpi-icon">{kpiIcon("doc")}</span>
-              <span className="overview-status-label">Due in month</span>
-              <span className="overview-status-value">{Number(monthAchievement.dueInMonth || 0).toLocaleString()}</span>
-              <span className="overview-status-note">Production orders due this month</span>
+              <span className="overview-status-label">Open Orders</span>
+              <span className="overview-status-value">{Number(openOrders.total || 0).toLocaleString()}</span>
+              <span className="overview-status-note">
+                {Number(openOrders.planned || 0).toLocaleString()} planned · {Number(openOrders.released || 0).toLocaleString()} released
+              </span>
+              {openOrders.nextDueDate && (
+                <span className="overview-status-note">
+                  Next due {formatDisplayDate(openOrders.nextDueDate)}
+                  {openOrders.nextDueStatus ? ` · ${openOrders.nextDueStatus}` : ""}
+                </span>
+              )}
             </div>
             <div className="overview-status-card tone-rose">
               <span className="overview-kpi-icon">{kpiIcon("box")}</span>
-              <span className="overview-status-label">Closed in month</span>
+              <span className="overview-status-label">Closed </span>
               <span className="overview-status-value">{Number(monthAchievement.closedInMonth || 0).toLocaleString()}</span>
               <span className="overview-status-note">Production orders closed this month</span>
             </div>
@@ -644,15 +623,6 @@ const ProductionOverview = () => {
               </svg>
             </div>
           </div>
-          <div className="overview-status-grid overview-sample-grid">
-            {sampleStatus.map((card) => (
-              <div className={`overview-status-card ${sampleTones[card.code] || "tone-slate"}`} key={card.code}>
-                <span className="overview-kpi-icon">{kpiIcon(card.code === "UI" ? "search" : card.code === "A" || card.code === "CA" ? "check" : card.code === "R" || card.code === "CR" || card.code === "C" ? "x" : "flask")}</span>
-                <span className="overview-status-label">{card.label}</span>
-                <span className="overview-status-value">{Number(card.count || 0).toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -666,7 +636,7 @@ const ProductionOverview = () => {
       <div className="overview-layout">
         <div className="overview-column">
         <div className="card summary-table-card">
-          <div className="card-header">1. PRODUCTION SUMMARY (ALL ITEMS)</div>
+          <div className="card-header">1. PRODUCTION SUMMARY </div>
           <Table
             data={summaryRows}
             columns={summaryColumns}
@@ -679,7 +649,7 @@ const ProductionOverview = () => {
 
         <div className="card cost-comp-card overview-cost-full">
           <div className="card-header">
-            5. COST COMPARISON TREND (TOP PRODUCED ITEMS)
+            5. COST COMPARISON TREND 
           </div>
           <div className="cost-comp-toolbar">
             <button
@@ -748,7 +718,7 @@ const ProductionOverview = () => {
                           </option>
                         ))}
                       </select>
-                      {index >= 2 && (
+                      {costSlots.length > 2 && (
                         <button
                           type="button"
                           className="cost-comp-remove"
@@ -941,9 +911,7 @@ const ProductionOverview = () => {
 
       <div className="card summary-table-card overview-due-orders">
         <div className="card-header overview-table-header">
-          <span>
-            Production orders due {rangeLabel}
-          </span>
+          <span>Open production orders</span>
           <input
             className="overview-table-search"
             type="search"
@@ -953,29 +921,35 @@ const ProductionOverview = () => {
           />
         </div>
         <Table
-          data={monthAchievement.orders || []}
+          data={openOrders.orders || []}
           columns={[
             { header: "PO No", key: "ProductionOrderNo" },
             { header: "Item", key: "ItemCode" },
-            { header: "Product", key: "ProductName" },
-            { header: "Status", key: "StatusName" },
+            { header: "Product", key: "ItemName" },
+            { header: "Status", key: "ProductionStatus" },
+            { header: "Work Status", key: "WorkStatus" },
             {
               header: "Due Date",
               key: "DueDate",
               render: (row) => formatDisplayDate(row.DueDate),
             },
             {
-              header: "Close Date",
-              key: "CloseDate",
-              render: (row) => formatDisplayDate(row.CloseDate),
+              header: "Due Status",
+              key: "DueStatus",
+              render: (row) => (
+                <span className={`overview-due-status ${String(row.DueStatus || "").toLowerCase().replace(/\s+/g, "-")}`}>
+                  {row.DueStatus}
+                </span>
+              ),
+            },
+            {
+              header: "Days Remaining",
+              key: "DaysRemaining",
+              align: "right",
             },
             { header: "Planned Qty", key: "PlannedQty", align: "right" },
             { header: "Completed Qty", key: "CompletedQty", align: "right" },
-            {
-              header: "Closed in month",
-              key: "ClosedInMonth",
-              render: (row) => (Number(row.ClosedInMonth) === 1 ? "Yes" : "No"),
-            },
+            { header: "Remaining Qty", key: "RemainingQty", align: "right" },
           ]}
           totalEntries={orderTotal}
           showActions={false}
@@ -986,50 +960,6 @@ const ProductionOverview = () => {
           onItemsPerPageChange={(size) => {
             setOrderPageSize(size);
             setOrderPage(1);
-          }}
-        />
-      </div>
-
-      <div className="card summary-table-card overview-due-orders">
-        <div className="card-header overview-table-header">
-          <span>
-            Samples {rangeLabel}
-          </span>
-          <input
-            className="overview-table-search"
-            type="search"
-            placeholder="Search"
-            value={sampleSearch}
-            onChange={(e) => setSampleSearch(e.target.value)}
-          />
-        </div>
-        <Table
-          data={sampleRows}
-          columns={[
-            { header: "Sampling No", key: "SamplingNo" },
-            {
-              header: "Sampling Date",
-              key: "SamplingDate",
-              render: (row) => formatDisplayDate(row.SamplingDate),
-            },
-            { header: "Item", key: "ItemCode" },
-            { header: "Item Name", key: "ItemName" },
-            { header: "Batch", key: "Batch" },
-            { header: "Sample Qty", key: "SampleQty", align: "right" },
-            { header: "Status", key: "StatusName" },
-            { header: "Document Type", key: "DocumentType" },
-            { header: "Document No", key: "DocumentNo" },
-            { header: "Supplier", key: "SupplierName" },
-          ]}
-          totalEntries={sampleTotal}
-          showActions={false}
-          showPagination={true}
-          currentPage={samplePage}
-          pageSize={samplePageSize}
-          onPageChange={setSamplePage}
-          onItemsPerPageChange={(size) => {
-            setSamplePageSize(size);
-            setSamplePage(1);
           }}
         />
       </div>

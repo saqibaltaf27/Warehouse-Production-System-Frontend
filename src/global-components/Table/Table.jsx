@@ -42,6 +42,8 @@ const Table = ({
     let sortableItems = [...data];
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
+        if (a.isTotal) return 1;
+        if (b.isTotal) return -1;
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
 
@@ -162,7 +164,7 @@ const Table = ({
               sortedData.map((rowItem, rowIndex) => (
                 <React.Fragment key={rowIndex}>
                   <tr
-                    className={onRowClick ? 'dome-table-row--clickable' : ''}
+                    className={`${onRowClick ? 'dome-table-row--clickable' : ''} ${rowItem.isTotal ? 'dome-row-pinned' : ''}`.trim()}
                     onClick={(e) => {
                       if (e.target.closest('.dome-table-actions') || e.target.closest('.dome-table-expand-toggle') || e.target.closest('button')) return;
                       if (onRowClick) onRowClick(rowItem, rowIndex);

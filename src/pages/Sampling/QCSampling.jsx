@@ -7,7 +7,7 @@ import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromLis
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Select from 'react-select';
-import { IconRefresh, IconSearch } from '@tabler/icons-react';
+import { IconRefresh, IconSearch, IconArrowLeft } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
 import { formatDisplayDate } from '../../util/text/datetimeformat';
 import '../ProductionOrders/ProductionOrders.css';
@@ -674,9 +674,14 @@ const QCSampling = () => {
       {showAddSample && (
         <div className="add-sample-wrapper">
           <div className="add-sample-header section-header-flex">
-            <h4 className="add-sample-title">
-              {formMode === 'create' ? '' : formMode === 'view' ? '' : ''}
-            </h4>
+            <div className="sample-header-left">
+              {formMode !== 'create' && (
+                <Button variant="outline" icon={<IconArrowLeft size={16} />} onClick={() => setShowAddSample(false)}>Back</Button>
+              )}
+              <h4 className="add-sample-title">
+                {formMode === 'create' ? '' : formMode === 'view' ? '' : ''}
+              </h4>
+            </div>
             {formMode !== 'create' && (
               <div className="sample-mode-actions">
                 <Button variant={formMode === 'view' ? 'primary' : 'outline'} onClick={() => setFormMode('view')}>View</Button>
@@ -962,3 +967,4 @@ const QCSampling = () => {
 };
 
 export default QCSampling;
+

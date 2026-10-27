@@ -1,0 +1,165 @@
+.pq-overview-page {
+  padding: 16px;
+}
+
+.pq-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pq-overview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pq-overview-head h2,
+.pq-section h3,
+.pq-chart-card h4 {
+  margin: 0;
+  color: var(--dashboard-text, #1e293b);
+}
+
+.pq-overview-head h2 {
+  font-size: 18px;
+}
+
+.pq-overview-head p,
+.pq-refreshed,
+.pq-kpi-note,
+.pq-empty,
+.pq-notes {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.pq-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--dashboard-border, #e5e7eb);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pq-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pq-filters input {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #1e293b;
+}
+
+.pq-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.pq-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pq-kpi-grid,
+.pq-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pq-kpi,
+.pq-alert,
+.pq-chart-card {
+  padding: 12px;
+  border: 1px solid #e6ebf2;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.pq-kpi-label,
+.pq-alert span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.pq-kpi-value,
+.pq-alert strong {
+  display: block;
+  margin-top: 6px;
+  color: #1e293b;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.pq-kpi-blue .pq-kpi-value { color: #1d4ed8; }
+.pq-kpi-green .pq-kpi-value { color: #14804a; }
+.pq-kpi-amber .pq-kpi-value { color: #d97706; }
+.pq-kpi-rose .pq-kpi-value { color: #e11d48; }
+.pq-kpi-mint .pq-kpi-value { color: #0f9f6e; }
+.pq-kpi-peach .pq-kpi-value { color: #c2410c; }
+
+.pq-chart-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 12px;
+}
+
+.pq-alert-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.pq-alert-warn {
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.pq-alert-danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.pq-notes {
+  padding-left: 16px;
+}
+
+@media (max-width: 1100px) {
+  .pq-kpi-grid,
+  .pq-alert-grid,
+  .pq-chart-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .pq-overview-head,
+  .pq-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pq-kpi-grid,
+  .pq-alert-grid,
+  .pq-chart-row {
+    grid-template-columns: 1fr;
+  }
+}

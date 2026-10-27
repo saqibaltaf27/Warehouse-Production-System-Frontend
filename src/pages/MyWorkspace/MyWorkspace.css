@@ -5,6 +5,43 @@
   padding: 16px;
 }
 
+.workspace-quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--dashboard-border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.workspace-quick-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dashboard-text);
+}
+
+.workspace-quick-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 2px;
+  background: var(--primary-blue, #1d4ed8);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.workspace-quick-btn:hover {
+  filter: brightness(0.95);
+}
+
 .workspace-top {
   display: grid;
   grid-template-columns: 1fr 330px;
@@ -397,6 +434,34 @@ a.workspace-notice-row:hover {
 .workspace-pending h3 {
   margin: 0 0 8px;
   font-size: 14px;
+}
+
+.overview-due-status {
+  display: inline-flex;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.overview-due-status.overdue {
+  color: #be123c;
+  background: #ffe4e6;
+}
+
+.overview-due-status.due-today {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.overview-due-status.due-within-7-days {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.overview-due-status.on-schedule {
+  color: #166534;
+  background: #dcfce7;
 }
 
 .workspace-pending ul {

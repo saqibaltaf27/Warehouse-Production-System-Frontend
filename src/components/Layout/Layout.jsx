@@ -41,6 +41,10 @@ const Layout = () => {
 
   const moduleTitles = {
     "/workspace": "My Workspace",
+    "/workspace/ticket": "Tickets",
+    "/production/tickets": "Production Tickets",
+    "/qc/tickets": "Quality Tickets",
+    "/engineering-dashboard/tickets": "Engineering Tickets",
     "/production": "Production",
     "/production-plan/add": "Create Production Plan",
     "/production-plan/edit": "Edit Production Plan",

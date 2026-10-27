@@ -98,9 +98,13 @@
 }
 
 .add-sample-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   border-bottom: none;
   padding-bottom: 0;
-  margin-bottom: 0;
+  margin-bottom: 8px;
 }
 
 .add-sample-title {
@@ -454,9 +458,16 @@
   height: 60px;
 }
 
+.sample-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .sample-mode-actions {
   display: flex;
   gap: 8px;
+  margin-left: auto;
 }
 
 .sample-doc-field {

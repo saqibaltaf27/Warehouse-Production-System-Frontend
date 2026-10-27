@@ -22,6 +22,8 @@ import EngineeringDashboard from './pages/EngineeringDashboard/EngineeringDashbo
 import Machine from './pages/Machine/Machine';
 import Production from './pages/Production/Production.jsx';
 import MyWorkspace from './pages/MyWorkspace/MyWorkspace.jsx';
+import Tickets from './pages/Tickets/Tickets.jsx';
+import TicketBoard from './pages/Tickets/TicketBoard.jsx';
 import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import Staff from './pages/Staff/Staff.jsx';
 import Sampling from './pages/Sampling/Sampling.jsx';
@@ -57,6 +59,10 @@ function AppContent() {
             <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
             <Route path="workspace" element={<MyWorkspace />} />
+            <Route path="workspace/ticket" element={<Tickets />} />
+            <Route path="production/tickets" element={<ProtectedRoute requiredRoute="/production"><TicketBoard ticketType="Production" /></ProtectedRoute>} />
+            <Route path="qc/tickets" element={<ProtectedRoute requiredRoute="/qc"><TicketBoard ticketType="Quality" /></ProtectedRoute>} />
+            <Route path="engineering-dashboard/tickets" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><TicketBoard ticketType="Engineering" /></ProtectedRoute>} />
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
             <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />

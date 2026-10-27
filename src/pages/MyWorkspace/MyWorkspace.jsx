@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { IconBell, IconCake, IconWorld } from "@tabler/icons-react";
+import { useNavigate } from "react-router-dom";
+import { IconBell, IconCake, IconPlus, IconWorld } from "@tabler/icons-react";
 import {
   BarChart,
   Bar,
@@ -16,8 +17,8 @@ import {
 import Skeleton from "../../global-components/Skeleton/Skeleton";
 import Table from "../../global-components/Table/Table";
 import GlobalPopup from "../../global-components/GlobalPopup/GlobalPopup";
-import { axiosInstance } from "../../apis/axiosinstance";
-import { API_ENDPOINTS } from "../../apis/endpoints";
+import { workspaceApi } from "../../apis/workspace/workspace";
+import { formatDisplayDate } from "../../util/text/datetimeformat";
 import "./MyWorkspace.css";
 
 const DASHBOARD_URL = "https://dome-backend.gms-world.com/api/home/dashboard";
@@ -29,14 +30,29 @@ const WAREHOUSE_COLORS = ["#1B47DB", "#6997E4", "#10B981", "#F59E0B", "#B26552",
 const toNumber = (value) => Number(value) || 0;
 
 const MyWorkspace = () => {
+  const navigate = useNavigate();
   const [banners, setBanners] = useState([]);
   const [notices, setNotices] = useState([]);
   const [activeBanner, setActiveBanner] = useState(0);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState([]);
+  const [openSummary, setOpenSummary] = useState({
+    total: 0,
+    planned: 0,
+    released: 0,
+    overdue: 0,
+    plannedQty: 0,
+    completedQty: 0,
+    remainingQty: 0,
+    nextDueDate: "",
+    nextDueStatus: "",
+  });
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [orderSearch, setOrderSearch] = useState("");
   const [debouncedOrderSearch, setDebouncedOrderSearch] = useState("");
+  const [orderPage, setOrderPage] = useState(1);
+  const [orderPageSize, setOrderPageSize] = useState(10);
+  const [orderTotal, setOrderTotal] = useState(0);
   const [workingDate, setWorkingDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [workingPlans, setWorkingPlans] = useState([]);
   const [workingLoading, setWorkingLoading] = useState(true);
@@ -105,16 +121,36 @@ const MyWorkspace = () => {
   }, [orderSearch]);
 
   useEffect(() => {
+    setOrderPage(1);
+  }, [debouncedOrderSearch]);
+
+  useEffect(() => {
     let cancelled = false;
     const loadOrders = async () => {
       setOrdersLoading(true);
       try {
-        const response = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.PLANNED_RELEASED_ORDERS, {
-          params: { search: debouncedOrderSearch },
+        const response = await workspaceApi.getOpenProductionOrders({
+          search: debouncedOrderSearch,
+          page: orderPage,
+          limit: orderPageSize,
         });
-        if (!cancelled) setOrders(response.data?.data || []);
+        if (!cancelled) {
+          setOrders(response?.data?.orders || []);
+          setOpenSummary({
+            total: response?.data?.total || 0,
+            planned: response?.data?.planned || 0,
+            released: response?.data?.released || 0,
+            overdue: response?.data?.overdue || 0,
+            plannedQty: response?.data?.plannedQty || 0,
+            completedQty: response?.data?.completedQty || 0,
+            remainingQty: response?.data?.remainingQty || 0,
+            nextDueDate: response?.data?.nextDueDate || "",
+            nextDueStatus: response?.data?.nextDueStatus || "",
+          });
+          setOrderTotal(response?.pagination?.total || 0);
+        }
       } catch (error) {
-        console.error("Planned and released orders error:", error);
+        console.error("Open production orders error:", error);
       } finally {
         if (!cancelled) setOrdersLoading(false);
       }
@@ -123,17 +159,15 @@ const MyWorkspace = () => {
     return () => {
       cancelled = true;
     };
-  }, [debouncedOrderSearch]);
+  }, [debouncedOrderSearch, orderPage, orderPageSize]);
 
   useEffect(() => {
     let cancelled = false;
     const loadWorkingPlans = async () => {
       setWorkingLoading(true);
       try {
-        const response = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.TODAY_WORKING_PLANS, {
-          params: { date: workingDate },
-        });
-        if (!cancelled) setWorkingPlans(response.data?.data || []);
+        const response = await workspaceApi.getTodayWorkingPlans({ date: workingDate });
+        if (!cancelled) setWorkingPlans(response?.data || []);
       } catch (error) {
         console.error("Today working plans error:", error);
       } finally {
@@ -163,11 +197,12 @@ const MyWorkspace = () => {
     const dueBuckets = { Overdue: 0, "Due in 7 days": 0, "Due in 30 days": 0, Later: 0 };
 
     orders.forEach((order) => {
-      if (order.ProductionOrderStatus === "Planned") summary.planned += 1;
-      if (order.ProductionOrderStatus === "Released") summary.released += 1;
-      summary.plannedQty += toNumber(order.PlannedQuantity);
-      summary.completedQty += toNumber(order.CompletedQuantity);
-      summary.pendingQty += toNumber(order.PendingQuantity);
+      if (order.ProductionStatus === "Planned" || order.ProductionOrderStatus === "Planned") summary.planned += 1;
+      if (order.ProductionStatus === "Released" || order.ProductionOrderStatus === "Released") summary.released += 1;
+      if (order.DueStatus === "Overdue") summary.overdue += 1;
+      summary.plannedQty += toNumber(order.PlannedQty ?? order.PlannedQuantity);
+      summary.completedQty += toNumber(order.CompletedQty ?? order.CompletedQuantity);
+      summary.pendingQty += toNumber(order.RemainingQty ?? order.PendingQuantity);
 
       const warehouseLabel = order.WarehouseName || order.Warehouse || "Unknown";
       warehouses[warehouseLabel] = (warehouses[warehouseLabel] || 0) + 1;
@@ -177,7 +212,6 @@ const MyWorkspace = () => {
         due.setHours(0, 0, 0, 0);
         const days = Math.round((due - today) / 86400000);
         if (days < 0) {
-          summary.overdue += 1;
           dueBuckets.Overdue += 1;
         } else if (days <= 7) {
           dueBuckets["Due in 7 days"] += 1;
@@ -202,12 +236,12 @@ const MyWorkspace = () => {
     const dueData = Object.entries(dueBuckets).map(([name, value]) => ({ name, value }));
 
     const topPending = [...orders]
-      .sort((a, b) => toNumber(b.PendingQuantity) - toNumber(a.PendingQuantity))
+      .sort((a, b) => toNumber(b.RemainingQty ?? b.PendingQuantity) - toNumber(a.RemainingQty ?? a.PendingQuantity))
       .slice(0, 5)
       .map((order) => ({
         name: `PO ${order.ProductionOrderNo}`,
-        product: order.ProductName,
-        value: toNumber(order.PendingQuantity),
+        product: order.ItemName || order.ProductName,
+        value: toNumber(order.RemainingQty ?? order.PendingQuantity),
       }));
 
     return { summary, statusData, warehouseData, dueData, topPending };
@@ -359,6 +393,18 @@ const MyWorkspace = () => {
         </aside>
       </div>
 
+      <section className="workspace-quick-actions">
+        <h3 className="workspace-quick-title">Quick Actions</h3>
+        <button
+          type="button"
+          className="workspace-quick-btn"
+          onClick={() => navigate("/workspace/ticket")}
+        >
+          <IconPlus size={16} />
+          Create Ticket
+        </button>
+      </section>
+
       <section className="workspace-overview">
         <div className="workspace-orders-header">
           <h3 className="workspace-orders-title">Production Orders Overview</h3>
@@ -378,71 +424,74 @@ const MyWorkspace = () => {
             <div className="workspace-kpi-grid">
               <div className="workspace-kpi-card">
                 <span className="workspace-kpi-label">Open Orders</span>
-                <span className="workspace-kpi-value">{fmtQty(overview.summary.total)}</span>
-                <span className="workspace-kpi-note">{fmtQty(overview.summary.planned)} planned · {fmtQty(overview.summary.released)} released</span>
+                <span className="workspace-kpi-value">{fmtQty(openSummary.total)}</span>
+                <span className="workspace-kpi-note">{fmtQty(openSummary.planned)} planned · {fmtQty(openSummary.released)} released</span>
+                {openSummary.nextDueDate && (
+                  <span className="workspace-kpi-note">
+                    Next due {formatDisplayDate(openSummary.nextDueDate)}
+                    {openSummary.nextDueStatus ? ` · ${openSummary.nextDueStatus}` : ""}
+                  </span>
+                )}
               </div>
               <div className="workspace-kpi-card">
                 <span className="workspace-kpi-label">Overdue</span>
-                <span className="workspace-kpi-value workspace-kpi-value-danger">{fmtQty(overview.summary.overdue)}</span>
+                <span className="workspace-kpi-value workspace-kpi-value-danger">{fmtQty(openSummary.overdue)}</span>
                 <span className="workspace-kpi-note">Past due date</span>
               </div>
               <div className="workspace-kpi-card">
                 <span className="workspace-kpi-label">Planned Qty</span>
-                <span className="workspace-kpi-value">{fmtQty(overview.summary.plannedQty)}</span>
-                <span className="workspace-kpi-note">{fmtQty(overview.summary.completedQty)} completed</span>
+                <span className="workspace-kpi-value">{fmtQty(openSummary.plannedQty)}</span>
+                <span className="workspace-kpi-note">{fmtQty(openSummary.completedQty)} completed</span>
               </div>
               <div className="workspace-kpi-card">
                 <span className="workspace-kpi-label">Pending Qty</span>
-                <span className="workspace-kpi-value">{fmtQty(overview.summary.pendingQty)}</span>
+                <span className="workspace-kpi-value">{fmtQty(openSummary.remainingQty)}</span>
                 <span className="workspace-kpi-note">
-                  {overview.summary.plannedQty > 0
-                    ? `${((overview.summary.completedQty / overview.summary.plannedQty) * 100).toFixed(1)}% complete`
+                  {openSummary.plannedQty > 0
+                    ? `${((openSummary.completedQty / openSummary.plannedQty) * 100).toFixed(1)}% complete`
                     : "No planned quantity"}
                 </span>
               </div>
             </div>
 
-            <div className="workspace-chart-grid">
-              <div className="workspace-chart-card">
-                <h4 className="workspace-chart-title">Orders by Status</h4>
-                <div className="workspace-chart-donut">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie data={overview.statusData} innerRadius={55} outerRadius={80} paddingAngle={2} dataKey="value">
-                        {overview.statusData.map((entry) => (
-                          <Cell key={entry.name} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <ul className="workspace-chart-legend">
-                    {overview.statusData.map((entry) => (
-                      <li key={entry.name}>
-                        <svg className="legend-color" viewBox="0 0 12 12" aria-hidden="true">
-                          <circle cx="6" cy="6" r="6" fill={entry.color} />
-                        </svg>
-                        <span>{entry.name}</span>
-                        <strong>{fmtQty(entry.value)}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="workspace-chart-card">
-                <h4 className="workspace-chart-title">Top Pending Quantity</h4>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={overview.topPending} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} />
-                    <Tooltip formatter={(value, name, item) => [fmtQty(value), item?.payload?.product || "Pending"]} />
-                    <Bar dataKey="value" name="Pending" fill="#F59E0B" barSize={16} radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            <Table
+              data={orders}
+              columns={[
+                { header: "PO No", key: "ProductionOrderNo" },
+                { header: "Item", key: "ItemCode" },
+                { header: "Product", key: "ItemName" },
+                { header: "Status", key: "ProductionStatus" },
+                { header: "Work Status", key: "WorkStatus" },
+                {
+                  header: "Due Date",
+                  key: "DueDate",
+                  render: (row) => formatDisplayDate(row.DueDate),
+                },
+                {
+                  header: "Due Status",
+                  key: "DueStatus",
+                  render: (row) => (
+                    <span className={`overview-due-status ${String(row.DueStatus || "").toLowerCase().replace(/\s+/g, "-")}`}>
+                      {row.DueStatus}
+                    </span>
+                  ),
+                },
+                { header: "Days Remaining", key: "DaysRemaining", align: "right" },
+                { header: "Planned Qty", key: "PlannedQty", align: "right" },
+                { header: "Completed Qty", key: "CompletedQty", align: "right" },
+                { header: "Remaining Qty", key: "RemainingQty", align: "right" },
+              ]}
+              totalEntries={orderTotal}
+              showActions={false}
+              showPagination={true}
+              currentPage={orderPage}
+              pageSize={orderPageSize}
+              onPageChange={setOrderPage}
+              onItemsPerPageChange={(size) => {
+                setOrderPageSize(size);
+                setOrderPage(1);
+              }}
+            />
           </>
         )}
       </section>

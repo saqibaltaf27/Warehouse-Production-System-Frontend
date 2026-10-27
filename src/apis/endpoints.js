@@ -65,7 +65,8 @@ export const API_ENDPOINTS = {
     OEE: '/dashboard/oee',
     QUALITY: '/dashboard/quality',
     ORDER_SUMMARY: '/dashboard/order-summary',
-    WAREHOUSES: '/dashboard/warehouses'
+    WAREHOUSES: '/dashboard/warehouses',
+    OPEN_PRODUCTION_ORDERS: '/dashboard/open-production-orders',
   },
 
   PRODUCTION_TEMPLATE: {
@@ -147,5 +148,14 @@ export const API_ENDPOINTS = {
     CREATE_TEMPLATE: '/coa-template',
     GET_ALL_TEMPLATES: '/coa-template',
     GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`
+  },
+
+  TICKETS: {
+    LIST: '/tickets',
+    CREATE: '/tickets',
+    DETAIL: (id) => `/tickets/${id}`,
+    UPDATE: (id) => `/tickets/${id}`,
+    REMARKS: (id) => `/tickets/${id}/remarks`,
+    EMPLOYEES: '/tickets/employees',
   }
 };
