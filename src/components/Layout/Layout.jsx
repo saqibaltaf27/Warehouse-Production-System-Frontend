@@ -73,7 +73,7 @@ const Layout = () => {
     'material-shortages': 'Critical Material',
     'batch-expiry': 'Batch Expiry',
     'material-capacity': 'Material-based Production Capacity',
-    'cost-analysis': 'Cost Analysis',
+    // 'cost-analysis': 'Cost Analysis',
     'quality-control': 'Production Dashboard',
     'complaints': 'Complain Management',
     'coa': 'Certificate of Analysis',

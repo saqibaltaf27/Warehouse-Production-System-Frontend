@@ -45,6 +45,7 @@ export const API_ENDPOINTS = {
     OPEN_ORDERS: '/production-planning/open-orders',
     PLANNED_RELEASED_ORDERS: '/production-planning/planned-released-orders',
     TODAY_WORKING_PLANS: '/production-planning/today-working-plans',
+    MONTH_WORKING_POS: '/production-planning/month-working-pos',
     GET_MACHINES: '/production-planning/machines',
     GET_PLANS: '/production-planning/plans',
     CREATE_PLAN: '/production-planning/plan',
@@ -148,6 +149,10 @@ export const API_ENDPOINTS = {
     CREATE_TEMPLATE: '/coa-template',
     GET_ALL_TEMPLATES: '/coa-template',
     GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`
+  },
+
+  SAMPLING: {
+    POSTED_GRNS: '/sampling/posted-grns',
   },
 
   TICKETS: {

@@ -16,4 +16,18 @@ export const workspaceApi = {
     });
     return response.data;
   },
+  getMonthWorkingPos: async (params) => {
+    const response = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.MONTH_WORKING_POS, {
+      params,
+      skipGlobalLoading: true,
+    });
+    return response.data;
+  },
+  getPostedGrns: async (params) => {
+    const response = await axiosInstance.get(API_ENDPOINTS.SAMPLING.POSTED_GRNS, {
+      params,
+      skipGlobalLoading: true,
+    });
+    return response.data;
+  },
 };
