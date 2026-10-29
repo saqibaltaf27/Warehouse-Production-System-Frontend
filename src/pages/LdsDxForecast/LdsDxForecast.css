@@ -1,0 +1,97 @@
+.lds-dx-page {
+  padding: 20px 24px 32px;
+}
+
+.lds-dx-page .po-filter-toolbar-card {
+  margin-bottom: 16px;
+}
+
+.lds-dx-page .po-filter-toolbar-grid {
+  justify-content: space-between;
+}
+
+.lds-dx-filter-left,
+.lds-dx-filter-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.lds-dx-filter-left {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+
+.lds-dx-filter-right {
+  margin-left: auto;
+}
+
+.lds-dx-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.lds-dx-card h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.lds-dx-chart {
+  height: 420px;
+  position: relative;
+}
+
+.lds-dx-loading {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lds-dx-spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1b47db;
+  border-radius: 50%;
+  animation: lds-dx-spin 0.8s linear infinite;
+}
+
+@keyframes lds-dx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lds-dx-note {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+
+.lds-dx-tooltip {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #0f172a;
+  font-size: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.lds-dx-tooltip-label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.lds-dx-tooltip-row {
+  color: #334155;
+}

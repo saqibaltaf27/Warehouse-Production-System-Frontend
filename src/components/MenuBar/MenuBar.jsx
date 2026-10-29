@@ -53,6 +53,8 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Production Orders', path: '/production?tab=production-orders', tabKey: 'production-orders', sub_module: 'Production Orders' },
         { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning', sub_module: 'Production Plans' },
         { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Orders' },
+     //   { title: 'Production Tracking ', path: '/production?tab=production-tracking', tabKey: 'production-tracking', sub_module: 'Production Tracking' },
+        { title: 'Production Forecast', path: '/production?tab=lds-dx-forecast', tabKey: 'lds-dx-forecast', sub_module: 'LDS Dx Production Forecast' },
         { title: 'Tickets', path: '/production/tickets' },
 
         {

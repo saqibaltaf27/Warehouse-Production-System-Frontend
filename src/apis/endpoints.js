@@ -155,6 +155,10 @@ export const API_ENDPOINTS = {
     POSTED_GRNS: '/sampling/posted-grns',
   },
 
+  LDS_DX: {
+    DASHBOARD: '/lds-dx/dashboard',
+  },
+
   TICKETS: {
     LIST: '/tickets',
     CREATE: '/tickets',

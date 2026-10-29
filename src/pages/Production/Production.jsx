@@ -12,6 +12,7 @@ import ProductionOverview from '../ProductionOverview/ProductionOverview';
 import MaterialShortages from '../ProductionPlanning/MaterialShortages';
 import BatchExpiry from '../ProductionPlanning/BatchExpiry';
 import MaterialCapacityReport from '../ProductionPlanning/MaterialCapacityReport';
+import LdsDxForecast from '../LdsDxForecast/LdsDxForecast';
 import './Production.css';
 
 const Production = () => {
@@ -81,6 +82,7 @@ const Production = () => {
         {activeTab === 'production-template' && <ProductionTemplate />}
         {activeTab === 'cost-analysis' && <CostAnalysis />}
         {activeTab === 'quality-control' && <ProductionOverview />}
+        {activeTab === 'lds-dx-forecast' && <LdsDxForecast />}
       </div>
     </div>
   );
