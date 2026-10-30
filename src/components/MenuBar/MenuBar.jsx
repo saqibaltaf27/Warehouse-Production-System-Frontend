@@ -182,7 +182,15 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       icon: <IconSettingsAutomation size={18} stroke={1.5} />,
     });
   } else if (!loadingPermissions) {
-    const allowed = (set, ...names) => names.some((name) => name && set.has(name));
+    const normalize = (value) => String(value || "").trim().toLowerCase();
+    const allowed = (set, ...names) => {
+      const targets = names.map(normalize).filter(Boolean);
+      if (!targets.length || !set?.size) return false;
+      for (const entry of set) {
+        if (targets.includes(normalize(entry))) return true;
+      }
+      return false;
+    };
 
     // Match ACL keys only — do not fall back to menu titles (avoids
     // collisions like Workspace "Quality" unlocking Costing HR Cost → Quality).
