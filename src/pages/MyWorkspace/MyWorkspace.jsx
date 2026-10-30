@@ -1260,7 +1260,6 @@ const MyWorkspace = () => {
       {canSeeProduction ? (
       <section className="workspace-orders">
         <div className="workspace-orders-header">
-          <h3 className="workspace-orders-title">SAP Working POs this month</h3>
         </div>
         <div className="workspace-chart-card workspace-chart-wide">
           <h4 className="workspace-chart-title">
