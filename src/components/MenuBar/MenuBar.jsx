@@ -199,8 +199,9 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
 
     const filterSubItems = (subItems) => subItems.flatMap((sub) => {
       if (sub.subItems) {
-        const groupAllowed = allowed(allowedSubModules, sub.sub_module);
-        if (groupAllowed) return [{ ...sub, subItems: sub.subItems }];
+        // Never unlock all children from sub_module alone — any leaf under
+        // "Quality Testing" also adds that sub_module, which used to expose
+        // Create Sample even when its child_module was unchecked.
         const children = sub.subItems.filter(childAllowed);
         return children.length > 0 ? [{ ...sub, subItems: children }] : [];
       }
