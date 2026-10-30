@@ -1,9 +1,21 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { aclApi } from '../apis/acl/acl';
 import { useAuth } from './AuthContext';
 
 const PermissionContext = createContext(null);
+
+const normalizeName = (value) => String(value || "").trim().toLowerCase();
+
+const setHasName = (set, name) => {
+  const target = normalizeName(name);
+  if (!target || !set) return false;
+  if (set.has(name)) return true;
+  for (const entry of set) {
+    if (normalizeName(entry) === target) return true;
+  }
+  return false;
+};
 
 export const PermissionProvider = ({ children }) => {
   const { user } = useAuth();
@@ -77,14 +89,33 @@ export const PermissionProvider = ({ children }) => {
     fetchPermissions();
   }, [user]);
 
+  /** Superadmin = all. Otherwise requires main module + optional submodule. */
+  const hasModulePermission = useCallback((mainModule, subModule) => {
+    if (user?.isSuperAdmin) return true;
+    if (!mainModule) return false;
+    if (!setHasName(allowedModules, mainModule)) return false;
+    if (!subModule) return true;
+    return setHasName(allowedSubModules, subModule);
+  }, [user, allowedModules, allowedSubModules]);
+
+  const value = useMemo(() => ({
+    allowedModules,
+    allowedSubModules,
+    allowedChildModules,
+    allowedRoutes,
+    loadingPermissions,
+    hasModulePermission,
+  }), [
+    allowedModules,
+    allowedSubModules,
+    allowedChildModules,
+    allowedRoutes,
+    loadingPermissions,
+    hasModulePermission,
+  ]);
+
   return (
-    <PermissionContext.Provider value={{ 
-      allowedModules, 
-      allowedSubModules, 
-      allowedChildModules, 
-      allowedRoutes, 
-      loadingPermissions 
-    }}>
+    <PermissionContext.Provider value={value}>
       {children}
     </PermissionContext.Provider>
   );

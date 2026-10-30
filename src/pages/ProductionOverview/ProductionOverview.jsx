@@ -909,60 +909,7 @@ const ProductionOverview = () => {
         </div>
       </div>
 
-      <div className="card summary-table-card overview-due-orders">
-        <div className="card-header overview-table-header">
-          <span>Open production orders</span>
-          <input
-            className="overview-table-search"
-            type="search"
-            placeholder="Search"
-            value={orderSearch}
-            onChange={(e) => setOrderSearch(e.target.value)}
-          />
-        </div>
-        <Table
-          data={openOrders.orders || []}
-          columns={[
-            { header: "PO No", key: "ProductionOrderNo" },
-            { header: "Item", key: "ItemCode" },
-            { header: "Product", key: "ItemName" },
-            { header: "Status", key: "ProductionStatus" },
-            { header: "Work Status", key: "WorkStatus" },
-            {
-              header: "Due Date",
-              key: "DueDate",
-              render: (row) => formatDisplayDate(row.DueDate),
-            },
-            {
-              header: "Due Status",
-              key: "DueStatus",
-              render: (row) => (
-                <span className={`overview-due-status ${String(row.DueStatus || "").toLowerCase().replace(/\s+/g, "-")}`}>
-                  {row.DueStatus}
-                </span>
-              ),
-            },
-            {
-              header: "Days Remaining",
-              key: "DaysRemaining",
-              align: "right",
-            },
-            { header: "Planned Qty", key: "PlannedQty", align: "right" },
-            { header: "Completed Qty", key: "CompletedQty", align: "right" },
-            { header: "Remaining Qty", key: "RemainingQty", align: "right" },
-          ]}
-          totalEntries={orderTotal}
-          showActions={false}
-          showPagination={true}
-          currentPage={orderPage}
-          pageSize={orderPageSize}
-          onPageChange={setOrderPage}
-          onItemsPerPageChange={(size) => {
-            setOrderPageSize(size);
-            setOrderPage(1);
-          }}
-        />
-      </div>
+ 
     </div>
   );
 };

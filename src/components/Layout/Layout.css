@@ -81,10 +81,27 @@
   padding: 16px 24px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   position: sticky;
   top: 0;
   z-index: 20;
   box-sizing: border-box;
+}
+
+.content-page-title-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 2px;
+  background: var(--primary);
+  color: var(--text-on-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .content-page-title-text {

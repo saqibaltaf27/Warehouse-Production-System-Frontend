@@ -177,13 +177,17 @@ const Table = ({
                         style={col.width ? { width: col.width } : undefined}
                       >
                         <div className={`dome-cell-content ${alignClass(col)}`.trim()}>
-                          {colIndex === 0 && rowHasSubComponent && rowHasSubComponent(rowItem) && (
-                            <span
-                              className="dome-table-expand-toggle"
-                              onClick={(e) => { e.stopPropagation(); toggleRow(rowIndex); }}
-                            >
-                              {expandedRows[rowIndex] ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
-                            </span>
+                          {colIndex === 0 && rowHasSubComponent && (
+                            rowHasSubComponent(rowItem) ? (
+                              <span
+                                className="dome-table-expand-toggle"
+                                onClick={(e) => { e.stopPropagation(); toggleRow(rowIndex); }}
+                              >
+                                {expandedRows[rowIndex] ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                              </span>
+                            ) : (
+                              <span className="dome-table-expand-spacer" aria-hidden="true" />
+                            )
                           )}
                           {col.render ? col.render(rowItem, rowIndex) : rowItem[col.key]}
                         </div>

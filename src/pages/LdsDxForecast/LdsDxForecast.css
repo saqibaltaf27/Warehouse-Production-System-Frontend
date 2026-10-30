@@ -77,6 +77,22 @@
   margin: 0 0 10px;
 }
 
+.lds-dx-item-code {
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.lds-dx-sub-row td {
+  background: #f8fafc;
+  font-size: 12px;
+  color: #334155;
+}
+
+.lds-dx-sub-row td:first-child .dome-cell-content {
+  padding-left: 28px;
+  font-weight: 600;
+}
+
 .lds-dx-tooltip {
   background: #fff;
   border: 1px solid #e2e8f0;

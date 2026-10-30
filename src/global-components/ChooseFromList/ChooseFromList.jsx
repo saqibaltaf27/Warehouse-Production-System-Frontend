@@ -35,16 +35,20 @@ export default function ChooseFromList({
 
   const fetchData = useCallback(async () => {
     if (!apiEndpoint) return;
-    setLoading(true);
+    const isFirstLoad = data.length === 0;
+    if (isFirstLoad) setLoading(true);
     try {
-      const params = new URLSearchParams({
+      const params = {
         ...queryParams,
         page,
         limit: pageSize,
-        ...(search ? { search } : {})
-      });
+        ...(search ? { search } : {}),
+      };
 
-      const response = await axiosInstance.get(`${apiEndpoint}?${params}`);
+      const response = await axiosInstance.get(apiEndpoint, {
+        params,
+        skipGlobalLoading: true,
+      });
       const json = response.data;
 
       if (json.success) {
@@ -110,7 +114,8 @@ export default function ChooseFromList({
     setDrillLoading(true);
     try {
       const response = await axiosInstance.get(drillDown.endpoint, {
-        params: { ...(drillDown.extraParams || {}), docEntry: key },
+        params: { ...(drillDown.extraParams || {}), docEntry: key, preview: 1 },
+        skipGlobalLoading: true,
       });
       const lines = response.data?.data?.lines || [];
       const byLine = new Map();

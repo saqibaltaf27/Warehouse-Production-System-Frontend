@@ -54,8 +54,8 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Production Plans', path: '/production?tab=production-planning', tabKey: 'production-planning', sub_module: 'Production Plans' },
         { title: 'Purchase Orders', path: '/production?tab=purchase-order', tabKey: 'purchase-order', sub_module: 'Purchase Orders' },
      //   { title: 'Production Tracking ', path: '/production?tab=production-tracking', tabKey: 'production-tracking', sub_module: 'Production Tracking' },
-        { title: 'Production Forecast', path: '/production?tab=lds-dx-forecast', tabKey: 'lds-dx-forecast', sub_module: 'LDS Dx Production Forecast' },
-        { title: 'Tickets', path: '/production/tickets' },
+        { title: 'Production Forecast', path: '/production?tab=lds-dx-forecast', tabKey: 'lds-dx-forecast', sub_module: 'Production Forecast' },
+        { title: 'Tickets', path: '/production/tickets' ,sub_module: 'ProductionTickets' },
 
         {
           title: 'Reports',
@@ -90,7 +90,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complain Management' },
         { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
         { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
-        { title: 'Tickets', path: '/qc/tickets' },
+        { title: 'Tickets', path: '/qc/tickets' ,sub_module: 'QC Tickets' },
       ]
     },
     {
@@ -102,7 +102,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Dashboard', path: '/engineering-dashboard?tab=dashboard', tabKey: 'dashboard', sub_module: 'Dashboard' },
         { title: 'Line wise Equipments & PM', path: '/engineering-dashboard?tab=equipment-pm', tabKey: 'equipment-pm', sub_module: 'Line wise Equipments & PM' },
         { title: 'Machine', path: '/machine', tabKey: 'machine', sub_module: 'Machine' },
-        { title: 'Tickets', path: '/engineering-dashboard/tickets' },
+        { title: 'Tickets', path: '/engineering-dashboard/tickets' ,sub_module: 'Engineering Tickets' },
       ]
     },
     {
@@ -119,14 +119,14 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
     {
       title: "Cost Overview",
       path: "/costing",
-      main_module: "Costing",
+      main_module: "Costing Overview",
       icon: <IconReportMoney size={18} stroke={1.5} />,
       subItems: [
         {
           title: 'Dashboard',
           path: '/costing?tab=dashboard',
           tabKey: 'tab=dashboard',
-          sub_module: 'Costing Dashboard'
+          sub_module: 'Costing Overview Dashboard'
         },
         {
           title: 'HR Cost',
@@ -184,49 +184,38 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
   } else if (!loadingPermissions) {
     const allowed = (set, ...names) => names.some((name) => name && set.has(name));
 
+    // Match ACL keys only — do not fall back to menu titles (avoids
+    // collisions like Workspace "Quality" unlocking Costing HR Cost → Quality).
     const childAllowed = (child) =>
-      allowed(allowedChildModules, child.child_module, child.title);
+      allowed(allowedChildModules, child.child_module);
 
     const filterSubItems = (subItems) => subItems.flatMap((sub) => {
       if (sub.subItems) {
+        const groupAllowed = allowed(allowedSubModules, sub.sub_module);
+        if (groupAllowed) return [{ ...sub, subItems: sub.subItems }];
         const children = sub.subItems.filter(childAllowed);
-        const groupAllowed = allowed(allowedSubModules, sub.sub_module, sub.title);
-        if (!groupAllowed && children.length === 0) return [];
-        return [{ ...sub, subItems: children }];
+        return children.length > 0 ? [{ ...sub, subItems: children }] : [];
       }
 
       if (!sub.sub_module && !sub.child_module) return [sub];
 
       const subAllowed =
-        allowed(allowedSubModules, sub.sub_module, sub.title) ||
-        allowed(allowedChildModules, sub.child_module, sub.title) ||
-        allowed(allowedModules, sub.main_module);
+        allowed(allowedSubModules, sub.sub_module) ||
+        allowed(allowedChildModules, sub.child_module);
       return subAllowed ? [sub] : [];
     });
 
     visibleMenuItems = menuItems.flatMap((item) => {
       if (item.public) return [item];
 
-      const declaredNames = [];
-      (item.subItems || []).forEach((sub) => {
-        [sub.sub_module, sub.child_module, sub.title].forEach((name) => sub.sub_module && name && declaredNames.push(name));
-        (sub.subItems || []).forEach((child) => {
-          [child.sub_module, child.child_module, child.title].forEach((name) => name && declaredNames.push(name));
-        });
-      });
-      const hasGranularAccess = declaredNames.some(
-        (name) => allowedSubModules.has(name) || allowedChildModules.has(name)
-      );
-      const mainAllowed =
-        allowedModules.has(item.main_module) ||
-        (item.subItems || []).some((sub) => allowedModules.has(sub.main_module) || allowedModules.has(sub.title));
+      const mainAllowed = allowed(allowedModules, item.main_module);
 
       if (!item.subItems) {
-        if (item.sub_module) return allowed(allowedSubModules, item.sub_module, item.title) ? [item] : [];
+        if (item.sub_module) return allowed(allowedSubModules, item.sub_module) ? [item] : [];
         return mainAllowed ? [item] : [];
       }
-      if (mainAllowed && !hasGranularAccess) return [item];
 
+      // Always filter children — main module alone must not unlock the full tree.
       const subItems = filterSubItems(item.subItems);
       return subItems.length > 0 ? [{ ...item, subItems }] : [];
     });

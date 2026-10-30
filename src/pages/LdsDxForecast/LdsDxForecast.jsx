@@ -153,7 +153,6 @@ const LdsDxForecast = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState(null);
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
 
   useEffect(() => {
@@ -176,26 +175,14 @@ const LdsDxForecast = () => {
     };
   }, [fromDate, toDate]);
 
-  const customerOptions = (dashboard?.customers || []).map((item) => ({
-    value: item.cardCode,
-    label: `${item.cardCode} — ${item.cardName}`,
-  }));
   const itemOptions = (dashboard?.items || []).map((item) => ({
     value: item.itemCode,
     label: `${item.itemCode} — ${item.itemName}`,
   }));
 
-  const customerCodes = selectedCustomers.map((item) => item.value);
   const itemCodes = selectedItems.map((item) => item.value);
 
   const chartLines = useMemo(() => {
-    if (customerCodes.length) {
-      return customerCodes.map((code, index) => ({
-        dataKey: `c:${code}`,
-        name: selectedCustomers[index]?.label || code,
-        color: LINE_COLORS[index % LINE_COLORS.length],
-      }));
-    }
     if (itemCodes.length) {
       return itemCodes.map((code, index) => ({
         dataKey: `i:${code}`,
@@ -204,7 +191,7 @@ const LdsDxForecast = () => {
       }));
     }
     return [{ dataKey: "totalQty", name: "All", color: "#1B47DB" }];
-  }, [customerCodes, itemCodes, selectedCustomers, selectedItems]);
+  }, [itemCodes, selectedItems]);
 
   const chartData = useMemo(() => {
     const slots = dashboard?.monthlyTrend || [];
@@ -212,7 +199,6 @@ const LdsDxForecast = () => {
     return slots.map((slot) => {
       const matched = points.filter((point) => {
         if (point.periodKey !== slot.periodKey) return false;
-        if (customerCodes.length && !customerCodes.includes(point.cardCode)) return false;
         if (itemCodes.length && !itemCodes.includes(point.itemCode)) return false;
         return true;
       });
@@ -221,11 +207,6 @@ const LdsDxForecast = () => {
         monthName: slot.monthName,
         totalQty: matched.reduce((sum, point) => sum + Number(point.qty || 0), 0),
       };
-      customerCodes.forEach((code) => {
-        row[`c:${code}`] = matched
-          .filter((point) => point.cardCode === code)
-          .reduce((sum, point) => sum + Number(point.qty || 0), 0);
-      });
       itemCodes.forEach((code) => {
         row[`i:${code}`] = matched
           .filter((point) => point.itemCode === code)
@@ -233,48 +214,62 @@ const LdsDxForecast = () => {
       });
       return row;
     });
-  }, [dashboard, customerCodes, itemCodes]);
+  }, [dashboard, itemCodes]);
 
   const hasActiveFilters =
     fromDate !== defaultFrom ||
     toDate !== defaultTo ||
-    selectedCustomers.length > 0 ||
     selectedItems.length > 0;
 
   function handleResetFilters() {
     setFromDate(defaultFrom);
     setToDate(defaultTo);
-    setSelectedCustomers([]);
     setSelectedItems([]);
   }
 
-  const orders = (dashboard?.orders || [])
-    .filter((row) => {
-      if (customerCodes.length && !customerCodes.includes(row.CardCode)) return false;
-      if (itemCodes.length && !itemCodes.includes(row.ItemCode)) return false;
-      return true;
-    })
-    .sort((a, b) => String(a.DeliveryDate || "").localeCompare(String(b.DeliveryDate || "")));
+  const orders = useMemo(
+    () =>
+      (dashboard?.orders || [])
+        .filter((row) => {
+          if (itemCodes.length && !itemCodes.includes(row.ItemCode)) return false;
+          return true;
+        })
+        .sort((a, b) => String(a.DeliveryDate || "").localeCompare(String(b.DeliveryDate || ""))),
+    [dashboard, itemCodes]
+  );
+
+  const groupedOrders = useMemo(() => {
+    const byItem = new Map();
+    orders.forEach((row) => {
+      const key = row.ItemCode || "-";
+      if (!byItem.has(key)) {
+        byItem.set(key, {
+          ItemCode: row.ItemCode,
+          ItemName: row.ItemName,
+          OrderedQty: 0,
+          OnHandQty: Number(row.OnHandQty) || 0,
+          DeliveryDate: row.DeliveryDate || "",
+          orders: [],
+        });
+      }
+      const group = byItem.get(key);
+      group.OrderedQty += Number(row.OrderedQty) || 0;
+      group.OnHandQty = Number(row.OnHandQty) || group.OnHandQty;
+      if (row.DeliveryDate && (!group.DeliveryDate || row.DeliveryDate < group.DeliveryDate)) {
+        group.DeliveryDate = row.DeliveryDate;
+      }
+      group.orders.push(row);
+    });
+    return [...byItem.values()].sort((a, b) =>
+      String(a.DeliveryDate || "").localeCompare(String(b.DeliveryDate || ""))
+    );
+  }, [orders]);
 
   return (
     <div className="lds-dx-page">
       <div className="po-filter-toolbar-card">
         <div className="po-filter-toolbar-grid">
           <div className="lds-dx-filter-left">
-            <div className="po-filter-item po-filter-search-box">
-              <label className="po-filter-label">Customer</label>
-              <Select
-                isMulti
-                isClearable
-                isSearchable
-                placeholder="All customers"
-                options={customerOptions}
-                value={selectedCustomers}
-                onChange={(value) => setSelectedCustomers(value || [])}
-                menuPortalTarget={document.body}
-                styles={filterSelectStyles}
-              />
-            </div>
             <div className="po-filter-item po-filter-search-box">
               <label className="po-filter-label">Item</label>
               <Select
@@ -330,10 +325,7 @@ const LdsDxForecast = () => {
 
       <div className="lds-dx-card">
         <h3>Monthly sales quantity</h3>
-        <p className="lds-dx-note">
-          LDS Dx invoices and credit notes. Default is one total line. Select customers or items for individual lines.
-          {dashboard?.range ? ` ${formatDisplayDate(dashboard.range.fromDate)} to ${formatDisplayDate(dashboard.range.toDate)}.` : ""}
-        </p>
+      
         {loading ? (
           <DataLoader />
         ) : (
@@ -368,19 +360,46 @@ const LdsDxForecast = () => {
           <DataLoader />
         ) : (
           <Table
-            data={orders}
-            totalEntries={orders.length}
+            data={groupedOrders}
+            totalEntries={groupedOrders.length}
             showActions={false}
-            showPagination={orders.length > 20}
+            showPagination={groupedOrders.length > 20}
+            rowHasSubComponent={(row) => (row.orders || []).length > 1}
+            expandedRowRender={(row) =>
+              (row.orders || []).map((so) => (
+                <tr key={`${so.SalesOrderNumber}-${so.ItemCode}-${so.DeliveryDate}`} className="lds-dx-sub-row">
+                  <td>
+                    <div className="dome-cell-content">SO {so.SalesOrderNumber}</div>
+                  </td>
+                  <td>
+                    <div className="dome-cell-content">{so.ItemName || "-"}</div>
+                  </td>
+                  <td>
+                    <div className="dome-cell-content">{qty(so.OrderedQty)}</div>
+                  </td>
+                  <td>
+                    <div className="dome-cell-content">{qty(so.OnHandQty)}</div>
+                  </td>
+                  <td>
+                    <div className="dome-cell-content">{formatDisplayDate(so.DeliveryDate)}</div>
+                  </td>
+                </tr>
+              ))
+            }
             columns={[
-              { header: "SO", key: "SalesOrderNumber" },
-              { header: "Customer", key: "CustomerName" },
-              { header: "CardCode", key: "CardCode" },
-              { header: "Item", key: "ItemCode" },
+              {
+                header: "Item",
+                key: "ItemCode",
+                render: (row) => <span className="lds-dx-item-code">{row.ItemCode || "-"}</span>,
+              },
               { header: "Name", key: "ItemName" },
               { header: "Ordered", key: "OrderedQty", render: (row) => qty(row.OrderedQty) },
               { header: "On Hand", key: "OnHandQty", render: (row) => qty(row.OnHandQty) },
-              { header: "Delivery", key: "DeliveryDate", render: (row) => formatDisplayDate(row.DeliveryDate) },
+              {
+                header: "Delivery",
+                key: "DeliveryDate",
+                render: (row) => formatDisplayDate(row.DeliveryDate) || "-",
+              },
             ]}
           />
         )}

@@ -62,10 +62,18 @@
   opacity: 0.3;
 }
 
-.dome-table-expand-toggle {
-  display: flex;
+.dome-table-expand-toggle,
+.dome-table-expand-spacer {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
   margin-right: 8px;
+}
+
+.dome-table-expand-toggle {
   cursor: pointer;
 }
 

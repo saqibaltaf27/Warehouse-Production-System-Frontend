@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Outlet, useLocation, useSearchParams, NavLink } from "react-router-dom";
+import { Outlet, useLocation, useSearchParams, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { IconMenu2, IconLock, IconChevronDown, IconUser } from "@tabler/icons-react";
+import { IconMenu2, IconLock, IconChevronDown, IconUser, IconPlus } from "@tabler/icons-react";
 import MenuBar from "../MenuBar/MenuBar";
 import Breadcrumb from "../../global-components/Breadcrumb/Breadcrumb";
 import { usePermission } from "../../context/permissioncheck";
@@ -10,6 +10,7 @@ import "./Layout.css";
 const Layout = () => {
   const { user, logout, fetchUser } = useAuth();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -220,6 +221,16 @@ const Layout = () => {
         <main className="dribbble-content">
           <div className="content-page-title-bar">
             <h1 className="content-page-title-text">{pageTitle}</h1>
+            {(pathname === "/workspace" || pathname === "/") && (
+              <button
+                type="button"
+                className="content-page-title-action"
+                onClick={() => navigate("/workspace/ticket")}
+              >
+                <IconPlus size={16} />
+                Create Ticket
+              </button>
+            )}
           </div>
           <div className="content-page-inner">
             <Outlet />

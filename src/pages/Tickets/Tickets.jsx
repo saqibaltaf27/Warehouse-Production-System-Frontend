@@ -138,7 +138,7 @@ const Tickets = () => {
                 <input value={employeeName} disabled />
               </label>
               <label className="tickets-field">
-                <span>Ticket Type <em>*</em></span>
+                <span>Department <em>*</em></span>
                 <select
                   value={form.department}
                   onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))}
