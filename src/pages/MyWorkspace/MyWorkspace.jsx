@@ -1259,8 +1259,7 @@ const MyWorkspace = () => {
 
       {canSeeProduction ? (
       <section className="workspace-orders">
-        <div className="workspace-orders-header">
-        </div>
+
         <div className="workspace-chart-card workspace-chart-wide">
           <h4 className="workspace-chart-title">
             Planned vs produced this month
