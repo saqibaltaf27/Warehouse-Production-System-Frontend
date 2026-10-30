@@ -787,7 +787,6 @@ const MyWorkspace = () => {
     setDetailPopup({
       title: "Production blockers",
       chips: [`${workingKpis.blockedOrders} orders`],
-      note: "All Planned and Released POs. Shortage uses outstanding WOR1 quantity above warehouse OnHand.",
       columns: [
         { header: "PO", key: "po" },
         {
