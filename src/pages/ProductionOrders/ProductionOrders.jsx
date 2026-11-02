@@ -4,7 +4,8 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
 import Button from "../../global-components/Button/Button";
-import { IconSearch, IconRefresh, IconPlus } from "@tabler/icons-react";
+import { IconSearch, IconRefresh, IconPlus, IconFileSpreadsheet } from "@tabler/icons-react";
+import * as XLSX from "xlsx";
 import ProductionOrderHeader from "./ProductionOrderHeader";
 import ProductionOrderComponents from "./ProductionOrderComponents";
 import Table from "../../global-components/Table/Table";
@@ -122,6 +123,7 @@ const ProductionOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [exporting, setExporting] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedDocNum, setSelectedDocNum] = useState(null);
   const [tableLoading, setTableLoading] = useState(false);
@@ -525,6 +527,51 @@ const ProductionOrders = () => {
     return `${day}-${month}-${year}`;
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const response = await axiosInstance.get(
+        API_ENDPOINTS.PRODUCTION_ORDERS.PAGINATED_ORDERS(
+          1,
+          Math.max(totalOrders || 0, 1000),
+          searchQuery,
+          filters,
+          sortConfig,
+        ),
+      );
+      if (!response.data?.success) {
+        toast.error(response.data?.message || "Failed to export production orders");
+        return;
+      }
+      const rows = (response.data.data || []).map((row) => ({
+        "PO No.": row.DocNum ?? "",
+        "Item No.": row.ProductNo ?? "",
+        "Item Name": row.ProductDescription ?? "",
+        "Planned Qty": row.PlannedQty ?? "",
+        "Due Date": formatDate(row.DueDate) || "",
+        Project: row.Project ?? "",
+        Status: row.Status ?? "",
+      }));
+      if (!rows.length) {
+        toast.error("No records to export");
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Production Orders");
+      XLSX.writeFile(
+        workbook,
+        `Production_Orders_${filters.fromDate || "all"}_to_${filters.toDate || "all"}.xlsx`,
+      );
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error("Export Excel failed:", err);
+      toast.error(err?.response?.data?.message || err.message || "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const tableColumns = [
     { key: "DocNum", header: "PO No.", width: "10%" },
     { key: "ProductNo", header: "Item No.", width: "15%" },
@@ -723,19 +770,32 @@ const ProductionOrders = () => {
                 />
               </div>
 
-              {/* Reset Filters */}
+              {/* Reset / Export */}
               <div className="po-filter-item">
                 <label className="po-filter-label">&nbsp;</label>
-                <button
-                  type="button"
-                  className="po-filter-reset-btn"
-                  onClick={handleResetFilters}
-                  disabled={!hasActiveFilters}
-                  title={hasActiveFilters ? "Reset all filters" : "No filters applied"}
-                >
-                  <IconRefresh size={16} />
-                  Reset
-                </button>
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  <Button
+                    type="button"
+                    variant="success"
+                    size="sm"
+                    onClick={handleExportExcel}
+                    disabled={exporting || tableLoading}
+                    title="Export Excel"
+                    icon={<IconFileSpreadsheet size={16} />}
+                  >
+                    {exporting ? "Exporting..." : "Export Excel"}
+                  </Button>
+                  <button
+                    type="button"
+                    className="po-filter-reset-btn"
+                    onClick={handleResetFilters}
+                    disabled={!hasActiveFilters}
+                    title={hasActiveFilters ? "Reset all filters" : "No filters applied"}
+                  >
+                    <IconRefresh size={16} />
+                    Reset
+                  </button>
+                </div>
               </div>
             </div>
           </div>

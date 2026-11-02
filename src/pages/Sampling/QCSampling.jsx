@@ -7,8 +7,9 @@ import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromLis
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Select from 'react-select';
-import { IconRefresh, IconSearch, IconArrowLeft } from '@tabler/icons-react';
+import { IconRefresh, IconSearch, IconArrowLeft, IconFileSpreadsheet } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import { formatDisplayDate } from '../../util/text/datetimeformat';
 import '../ProductionOrders/ProductionOrders.css';
 import './Sampling.css';
@@ -85,17 +86,27 @@ const currentMonthRange = () => {
   };
 };
 
-const statusOptions = [
-  { value: 'S,UI', label: 'Sampled / Under Inspection' },
-  { value: 'A', label: 'Accepted' },
-  { value: 'UI', label: 'Under Inspection' },
-  { value: 'P', label: 'Pending' },
+const statusStageOptions = [
   { value: 'S', label: 'Sampled' },
-  { value: 'R', label: 'Rejected' },
+  { value: 'UI', label: 'Under Inspection' },
+  { value: 'QC', label: 'QC Complete' },
+];
+
+const qcCompleteOptions = [
+  { value: 'A', label: 'Accepted' },
   { value: 'CA', label: 'Conditionally Accepted' },
   { value: 'CR', label: 'Conditionally Rejected' },
+  { value: 'R', label: 'Rejected' },
   { value: 'C', label: 'Cancel' },
 ];
+
+const QC_COMPLETE_STATUSES = 'A,CA,CR,R,C';
+
+function resolveApiStatus(statusFilter, qcCompleteFilter) {
+  if (!statusFilter) return '';
+  if (statusFilter === 'QC') return qcCompleteFilter || QC_COMPLETE_STATUSES;
+  return statusFilter;
+}
 
 const docTypeOptions = [
   { value: '20', label: 'Goods Receipt PO' },
@@ -119,6 +130,7 @@ const QCSampling = () => {
   const savedFilters = readSavedSamplingFilters();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -127,7 +139,16 @@ const QCSampling = () => {
   const initialDates = currentMonthRange();
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState(savedFilters?.statusFilter || '');
+  const initialStatus = ['S', 'UI', 'QC'].includes(savedFilters?.statusFilter)
+    ? savedFilters.statusFilter
+    : ['A', 'CA', 'CR', 'R', 'C'].includes(savedFilters?.statusFilter)
+      ? 'QC'
+      : '';
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [qcCompleteFilter, setQcCompleteFilter] = useState(
+    savedFilters?.qcCompleteFilter ||
+      (['A', 'CA', 'CR', 'R', 'C'].includes(savedFilters?.statusFilter) ? savedFilters.statusFilter : '')
+  );
   const [docTypeFilter, setDocTypeFilter] = useState(savedFilters?.docTypeFilter || '');
   const [fromDate, setFromDate] = useState(savedFilters?.fromDate || initialDates.fromDate);
   const [toDate, setToDate] = useState(savedFilters?.toDate || initialDates.toDate);
@@ -217,16 +238,27 @@ const QCSampling = () => {
     }
   };
 
+  const buildSampleParams = (overrides = {}) => {
+    const params = {
+      page,
+      limit,
+      fromDate,
+      toDate,
+      ...overrides,
+    };
+    if (debouncedSearch) params.search = debouncedSearch;
+    const status =
+      listMode === 'inspection' ? 'S,UI' : resolveApiStatus(statusFilter, qcCompleteFilter);
+    if (status) params.status = status;
+    if (docTypeFilter) params.docType = docTypeFilter;
+    return params;
+  };
+
   const fetchSavedSamples = async () => {
     setLoading(true);
     try {
-      const params = { page, limit, fromDate, toDate };
-      if (debouncedSearch) params.search = debouncedSearch;
-      const status = listMode === 'inspection' ? 'S,UI' : statusFilter;
-      if (status) params.status = status;
-      if (docTypeFilter) params.docType = docTypeFilter;
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
-        params
+        params: buildSampleParams(),
       });
       if (res.data?.success) {
         setData(res.data.data);
@@ -238,6 +270,48 @@ const QCSampling = () => {
     setLoading(false);
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
+        params: buildSampleParams({ page: 1, limit: Math.max(totalRecords, 1000) }),
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export samples');
+        return;
+      }
+
+      const rows = (res.data.data || []).map((row) => ({
+        'Sampling No': row['Sampling No'] ?? '',
+        'Sampling Date': formatDisplayDate(row['Sampling Date']) || '',
+        'Document Type': row['Docnument Type'] ?? row['Document Type'] ?? '',
+        'Document Entry': row['Document Entry'] ?? '',
+        'Document No': row['Document No'] ?? '',
+        'Supplier Code': row['Supplier Code'] ?? '',
+        'Supplier Name': row['Supplier Name'] ?? '',
+        'Item Name': row['Item Name'] ?? '',
+        Batch: row.Batch ?? '',
+        Status: row.Status ?? '',
+      }));
+
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'QC Sampling');
+      XLSX.writeFile(workbook, `QC_Sampling_${fromDate || 'all'}_to_${toDate || 'all'}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400);
     return () => clearTimeout(timer);
@@ -246,11 +320,12 @@ const QCSampling = () => {
   useEffect(() => {
     sessionStorage.setItem(QC_SAMPLING_FILTERS_KEY, JSON.stringify({
       statusFilter,
+      qcCompleteFilter,
       docTypeFilter,
       fromDate,
       toDate,
     }));
-  }, [statusFilter, docTypeFilter, fromDate, toDate]);
+  }, [statusFilter, qcCompleteFilter, docTypeFilter, fromDate, toDate]);
 
   useEffect(() => {
     setPage(1);
@@ -258,7 +333,7 @@ const QCSampling = () => {
 
   useEffect(() => {
     fetchSavedSamples();
-  }, [page, limit, listMode, statusFilter, docTypeFilter, fromDate, toDate, debouncedSearch]);
+  }, [page, limit, listMode, statusFilter, qcCompleteFilter, docTypeFilter, fromDate, toDate, debouncedSearch]);
 
   useEffect(() => {
     if (searchParams.get('create') !== '1') return;
@@ -405,7 +480,8 @@ const QCSampling = () => {
             QCRequestNumber: item.U_RequestNo || '',
             ManualQCNo: item.U_ManualQCNo || '',
             SampleQty: item.U_SmpQty || '',
-            Status: mappedStatus
+            Status: mappedStatus,
+            SampleId: item.SampleId || item.U_SampleId || null,
           };
         });
         setSampleItems(mappedLines);
@@ -426,6 +502,23 @@ const QCSampling = () => {
     next.delete('openSample');
     setSearchParams(next, { replace: true });
   }, [searchParams]);
+
+  const isDecidedStatus = (status) => ['A', 'CA', 'CR', 'R'].includes(status);
+  const isRowLocked = (row) => formMode === 'view' || isDecidedStatus(row.Status);
+
+  const qcDecisionSummary = (() => {
+    const active = (sampleItems || []).filter((row) => row.Status && row.Status !== 'C');
+    if (!active.length) return 'Pending';
+
+    const statuses = active.map((row) => row.Status);
+    if (statuses.every((s) => s === 'A')) return 'Accepted';
+    if (statuses.every((s) => s === 'R')) return 'Rejected';
+    if (statuses.every((s) => s === 'CA')) return 'Conditionally Accepted';
+    if (statuses.every((s) => s === 'CR')) return 'Conditionally Rejected';
+    if (statuses.every((s) => s === 'A' || s === 'CA')) return 'Accepted';
+    if (statuses.every((s) => s === 'R' || s === 'CR')) return 'Rejected';
+    return 'Pending';
+  })();
 
   const savedSampleColumns = [
     { key: 'Sampling No', header: 'Sampling No' },
@@ -448,7 +541,7 @@ const QCSampling = () => {
         <input 
           type="checkbox" 
           checked={row.CollectSample || false}
-          disabled={formMode === 'view'}
+          disabled={isRowLocked(row)}
           onChange={(e) => {
             const idx = sampleItems.findIndex(r => r.Index === row.Index);
             if (idx === -1) return;
@@ -516,7 +609,7 @@ const QCSampling = () => {
             type="number" 
             className="add-sample-input qc-qty-input"
             value={row.SampleQty || ''}
-            disabled={formMode === 'view'}
+            disabled={isRowLocked(row)}
             onChange={(e) => {
               const idx = sampleItems.findIndex(r => r.Index === row.Index);
               if (idx === -1) return;
@@ -545,7 +638,7 @@ const QCSampling = () => {
         <select 
           className="add-sample-input qc-status-select"
           value={row.Status || 'A'}
-          disabled={formMode === 'view'}
+          disabled={isRowLocked(row)}
           onChange={(e) => {
             const idx = sampleItems.findIndex(r => r.Index === row.Index);
             if (idx === -1) return;
@@ -568,28 +661,57 @@ const QCSampling = () => {
     {
       key: 'TestingResult',
       header: 'Testing Result',
-      render: (row) => (
-        row.Status === 'UI' || row.Status === 'S' ? (
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              const params = new URLSearchParams({
-                tab: 'qc-test-report',
-                samplingNo: String(qcCounter || ''),
-                itemCode: row.ItemCode || '',
-                itemName: row.ItemName || '',
-                batch: row.BatchSerial || '',
-                sampleQty: row.SampleQty != null ? String(row.SampleQty) : '',
-              });
-              navigate(`/sampling?${params.toString()}`);
-            }}
-          >
-            Add Testing Result
-          </Button>
-        ) : null
-      )
+      render: (row) => {
+        const decidedStatuses = ['A', 'CA', 'CR', 'R'];
+        const canAddResult = row.Status === 'UI' || row.Status === 'S';
+        const canShowResult = decidedStatuses.includes(row.Status) && row.SampleId;
+
+        if (canShowResult) {
+          return (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                const params = new URLSearchParams({
+                  tab: 'qc-test-report',
+                  docEntry: String(row.SampleId),
+                  mode: 'view',
+                  fromSample: String(qcCounter || ''),
+                });
+                navigate(`/sampling?${params.toString()}`);
+              }}
+            >
+              Show Result
+            </Button>
+          );
+        }
+
+        if (canAddResult) {
+          return (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                const params = new URLSearchParams({
+                  tab: 'qc-test-report',
+                  samplingNo: String(qcCounter || ''),
+                  itemCode: row.ItemCode || '',
+                  itemName: row.ItemName || '',
+                  batch: row.BatchSerial || '',
+                  sampleQty: row.SampleQty != null ? String(row.SampleQty) : '',
+                });
+                navigate(`/sampling?${params.toString()}`);
+              }}
+            >
+              Add Testing Result
+            </Button>
+          );
+        }
+
+        return null;
+      }
     },
   ];
 
@@ -678,9 +800,15 @@ const QCSampling = () => {
               {formMode !== 'create' && (
                 <Button variant="outline" icon={<IconArrowLeft size={16} />} onClick={() => setShowAddSample(false)}>Back</Button>
               )}
-              <h4 className="add-sample-title">
-                {formMode === 'create' ? '' : formMode === 'view' ? '' : ''}
-              </h4>
+              {formMode !== 'create' && (
+                <div
+                  className={`qc-decision-summary qc-decision-${qcDecisionSummary.toLowerCase().replace(/\s+/g, '-')}`}
+                  title={`Overall QC Decision: ${qcDecisionSummary}`}
+                >
+                  <span className="qc-decision-label">QC Decision</span>
+                  <span className="qc-decision-value">{qcDecisionSummary}</span>
+                </div>
+              )}
             </div>
             {formMode !== 'create' && (
               <div className="sample-mode-actions">
@@ -869,13 +997,15 @@ const QCSampling = () => {
             <div className="po-filter-item" style={{ minWidth: '220px' }}>
               <label className="po-filter-label">Status</label>
               <Select
-                value={statusOptions.find((opt) => opt.value === (listMode === 'inspection' ? 'S,UI' : statusFilter)) || null}
+                value={statusStageOptions.find((opt) => opt.value === (listMode === 'inspection' ? 'UI' : statusFilter)) || null}
                 onChange={(opt) => {
                   setListMode('all');
-                  setStatusFilter(opt ? opt.value : '');
+                  const next = opt ? opt.value : '';
+                  setStatusFilter(next);
+                  if (next !== 'QC') setQcCompleteFilter('');
                   setPage(1);
                 }}
-                options={statusOptions}
+                options={statusStageOptions}
                 placeholder="All Statuses"
                 isClearable
                 isSearchable
@@ -883,6 +1013,24 @@ const QCSampling = () => {
                 styles={filterSelectStyles}
               />
             </div>
+            {statusFilter === 'QC' ? (
+              <div className="po-filter-item" style={{ minWidth: '220px' }}>
+                <label className="po-filter-label">QC Result</label>
+                <Select
+                  value={qcCompleteOptions.find((opt) => opt.value === qcCompleteFilter) || null}
+                  onChange={(opt) => {
+                    setQcCompleteFilter(opt ? opt.value : '');
+                    setPage(1);
+                  }}
+                  options={qcCompleteOptions}
+                  placeholder="All QC Results"
+                  isClearable
+                  isSearchable
+                  menuPortalTarget={document.body}
+                  styles={filterSelectStyles}
+                />
+              </div>
+            ) : null}
             <div className="po-filter-item" style={{ minWidth: '220px' }}>
               <label className="po-filter-label">Document Type</label>
               <Select
@@ -925,26 +1073,48 @@ const QCSampling = () => {
             </div>
             <div className="po-filter-item">
               <label className="po-filter-label">&nbsp;</label>
-              <button
-                type="button"
-                className="po-filter-reset-btn"
-                onClick={() => {
-                  const dates = currentMonthRange();
-                  setListMode('all');
-                  setSearchInput('');
-                  setDebouncedSearch('');
-                  setStatusFilter('');
-                  setDocTypeFilter('');
-                  setFromDate(dates.fromDate);
-                  setToDate(dates.toDate);
-                  setPage(1);
-                }}
-                disabled={!searchInput && !statusFilter && listMode !== 'inspection' && !docTypeFilter && fromDate === initialDates.fromDate && toDate === initialDates.toDate}
-                title="Reset filters"
-              >
-                <IconRefresh size={16} />
-                Reset
-              </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <Button
+                  type="button"
+                  variant="success"
+                  size="sm"
+                  onClick={handleExportExcel}
+                  disabled={exporting || loading}
+                  title="Export Excel"
+                  icon={<IconFileSpreadsheet size={16} />}
+                >
+                  {exporting ? 'Exporting...' : 'Export Excel'}
+                </Button>
+                <button
+                  type="button"
+                  className="po-filter-reset-btn"
+                  onClick={() => {
+                    const dates = currentMonthRange();
+                    setListMode('all');
+                    setSearchInput('');
+                    setDebouncedSearch('');
+                    setStatusFilter('');
+                    setQcCompleteFilter('');
+                    setDocTypeFilter('');
+                    setFromDate(dates.fromDate);
+                    setToDate(dates.toDate);
+                    setPage(1);
+                  }}
+                  disabled={
+                    !searchInput &&
+                    !statusFilter &&
+                    !qcCompleteFilter &&
+                    listMode !== 'inspection' &&
+                    !docTypeFilter &&
+                    fromDate === initialDates.fromDate &&
+                    toDate === initialDates.toDate
+                  }
+                  title="Reset filters"
+                >
+                  <IconRefresh size={16} />
+                  Reset
+                </button>
+              </div>
             </div>
           </div>
         </div>

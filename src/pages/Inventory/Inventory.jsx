@@ -14,10 +14,14 @@ import {
   IconClock,
   IconTruckDelivery,
   IconSearch,
-  IconDownload,
   IconRefresh,
+  IconFileSpreadsheet,
 } from '@tabler/icons-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import Button from '../../global-components/Button/Button';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import '../ProductionOrders/ProductionOrders.css';
 import './Inventory.css';
 
 const fmt = (n) => {
@@ -73,6 +77,7 @@ const Inventory = () => {
 
   const [isDashboardLoading, setIsDashboardLoading] = useState(false);
   const [isMasterLoading, setIsMasterLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Overview Tab Data
   const [dashboardCards, setDashboardCards] = useState(null);
@@ -169,6 +174,104 @@ const Inventory = () => {
 
   // Reset page when filters change
   useEffect(() => { setDashboardPage(1); setMasterPage(1); }, [company, warehouse, itemGroup, category, debouncedSearch, agingBucket]);
+
+  const hasActiveFilters = Boolean(warehouse || itemGroup || category || search.trim() || (activeTab === 'overview' && agingBucket !== 'ALL'));
+
+  const handleResetFilters = () => {
+    setWarehouse('');
+    setItemGroup('');
+    setCategory('');
+    setSearch('');
+    setDebouncedSearch('');
+    setAgingBucket('ALL');
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      if (activeTab === 'master') {
+        const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.ITEMS, {
+          params: {
+            company,
+            warehouse,
+            group: itemGroup,
+            category,
+            search: debouncedSearch,
+            page: 1,
+            limit: Math.max(masterTotal || 0, 1000),
+          },
+          skipGlobalLoading: true,
+        });
+        if (!res.data?.success) {
+          toast.error(res.data?.message || 'Failed to export item master');
+          return;
+        }
+        const rows = (res.data.data?.items || []).map((row) => ({
+          'Item Code': row.ItemCode ?? '',
+          'Item Name': row.ItemName ?? '',
+          'Cat No': row.FrgnName ?? '',
+          Company: row.Company ?? '',
+          Category: row.Category ?? '',
+          Quantity: row.Stock ?? '',
+        }));
+        if (!rows.length) {
+          toast.error('No records to export');
+          return;
+        }
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Item Master');
+        XLSX.writeFile(workbook, `Item_Master_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        toast.success(`Exported ${rows.length} record(s)`);
+        return;
+      }
+
+      const res = await axiosInstance.get(API_ENDPOINTS.INVENTORY.DASHBOARD_ITEMS, {
+        params: {
+          company,
+          warehouse,
+          group: itemGroup,
+          category,
+          search: debouncedSearch,
+          agingBucket,
+          page: 1,
+          limit: Math.max(dashboardTotal || 0, 1000),
+        },
+        skipGlobalLoading: true,
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export inventory');
+        return;
+      }
+      const rows = (res.data.data?.shortExpiryItemsTable || []).map((row) => ({
+        Company: row.Company ?? '',
+        'Item Code': row.ItemCode ?? '',
+        'Item Name': row.ItemName ?? '',
+        Category: row.Category ?? '',
+        'Lot / Serial No': row.BatchNumber ?? '',
+        'Expiry Date': row.ExpiryDate
+          ? new Date(row.ExpiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+          : '',
+        'Days To Expiry': row.DaysToExpiry ?? '',
+        'Expiry Aging': row.AgingBucket ?? '',
+        'Stock Units': row.StockQty ?? '',
+      }));
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory Overview');
+      XLSX.writeFile(workbook, `Inventory_Overview_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // ── Overview Cards items ───────────────────────────
   const overviewCards = dashboardCards
@@ -276,35 +379,91 @@ const Inventory = () => {
 
   return (
     <div className="inventory-page fade-in-up layout-page-padding">
-      {/* Filters */}
-      <div className="inventory-filters">
-        {activeTab !== 'overview' && (
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search items..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        )}
-        <select value={warehouse} onChange={(e) => setWarehouse(e.target.value)}>
-          <option value="">All Warehouses</option>
-          {filterOptions?.warehouses?.map((w) => (
-            <option key={w.value} value={w.value}>{w.label}</option>
-          ))}
-        </select>
-        <select value={itemGroup} onChange={(e) => setItemGroup(e.target.value)}>
-          <option value="">All Item Groups</option>
-          {filterOptions?.itemGroups?.map((g) => (
-            <option key={g.value} value={g.value}>{g.label}</option>
-          ))}
-        </select>
-        <select value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="">All Categories</option>
-          {filterOptions?.categories?.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
-          ))}
-        </select>
+      <div className="po-filter-toolbar-card">
+        <div className="po-filter-toolbar-grid">
+          <div className="po-filter-item po-filter-search-box">
+            <label className="po-filter-label">Search</label>
+            <div style={{ position: 'relative' }}>
+              <IconSearch size={18} className="po-filter-search-icon" />
+              <input
+                type="text"
+                placeholder={activeTab === 'overview' ? 'Search SKU, Item Name, Batch No...' : 'Search items...'}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="po-filter-search-input"
+              />
+            </div>
+          </div>
+
+          <div className="po-filter-item" style={{ minWidth: '180px' }}>
+            <label className="po-filter-label">Warehouse</label>
+            <select
+              className="po-filter-date-input"
+              value={warehouse}
+              onChange={(e) => setWarehouse(e.target.value)}
+            >
+              <option value="">All Warehouses</option>
+              {filterOptions?.warehouses?.map((w) => (
+                <option key={w.value} value={w.value}>{w.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="po-filter-item" style={{ minWidth: '180px' }}>
+            <label className="po-filter-label">Item Group</label>
+            <select
+              className="po-filter-date-input"
+              value={itemGroup}
+              onChange={(e) => setItemGroup(e.target.value)}
+            >
+              <option value="">All Item Groups</option>
+              {filterOptions?.itemGroups?.map((g) => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="po-filter-item" style={{ minWidth: '180px' }}>
+            <label className="po-filter-label">Category</label>
+            <select
+              className="po-filter-date-input"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              {filterOptions?.categories?.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <Button
+                type="button"
+                variant="success"
+                className="po-export-btn"
+                onClick={handleExportExcel}
+                disabled={exporting || isDashboardLoading || isMasterLoading}
+                title="Export Excel"
+                icon={<IconFileSpreadsheet size={16} />}
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </Button>
+              <button
+                type="button"
+                className="po-filter-reset-btn"
+                onClick={handleResetFilters}
+                disabled={!hasActiveFilters}
+                title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
+              >
+                <IconRefresh size={16} />
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -450,16 +609,6 @@ const Inventory = () => {
 
           <div className="inventory-section mt-6">
             <div className="table-toolbar">
-              <div className="search-bar-wrapper">
-                <IconSearch size={16} className="search-bar-icon" />
-                <input 
-                  type="text" 
-                  className="search-bar-input"
-                  placeholder="Search SKU, Item Name, Batch No..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
               <Tabs
                 tabs={AGING_TABS}
                 activeTab={agingBucket}
@@ -467,24 +616,9 @@ const Inventory = () => {
                 className="aging-filters-tabs"
               />
               <div className="toolbar-actions">
-                <button className="toolbar-btn export-btn">
-                  <IconDownload size={16} /> Export CSV
-                </button>
-                <button onClick={fetchDashboardItems} className="toolbar-btn refresh-btn">
+                <button onClick={fetchDashboardItems} className="toolbar-btn refresh-btn" title="Refresh">
                   <IconRefresh size={16} />
                 </button>
-                <div className="page-size-selector">
-                  <span className="page-size-label">Show:</span>
-                  <select 
-                    value={dashboardPageSize} 
-                    onChange={(e) => { setDashboardPageSize(Number(e.target.value)); setDashboardPage(1); }}
-                    className="page-size-select"
-                  >
-                    <option value={10}>10 per page</option>
-                    <option value={25}>25 per page</option>
-                    <option value={50}>50 per page</option>
-                  </select>
-                </div>
               </div>
             </div>
             <Table
@@ -507,7 +641,6 @@ const Inventory = () => {
       {/* Item Master Tab Content */}
       {activeTab === 'master' && (
         <div className="inventory-section mt-6 fade-in-up">
-          <h3>Item Master</h3>
           <Table
             data={itemMasterData}
             columns={masterColumns}

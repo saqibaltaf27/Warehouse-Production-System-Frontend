@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Table from '../../global-components/Table/Table';
+import Button from '../../global-components/Button/Button';
 import {
   IconSearch,
   IconRefresh,
@@ -13,6 +14,8 @@ import {
   IconFileSpreadsheet,
   IconCalculator
 } from '@tabler/icons-react';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import '../ProductionOrders/ProductionOrders.css';
 import './ProductionPlanning.css';
 import './MaterialCapacityReport.css';
@@ -370,48 +373,32 @@ const MaterialCapacityReport = () => {
     filters.capacityStatus !== 'all'
   );
 
-  // Export to CSV
-  const handleExportCSV = () => {
-    if (!filteredData.length) return;
-    const headers = [
-      'Product Code',
-      'Product Name',
-      'Category',
-      'Product Type',
-      'Producible Capacity Units',
-      'Total BOM Items',
-      'Bottleneck Component Code',
-      'Bottleneck Component Name',
-      'Required Base Qty',
-      'Total Available Stock',
-      'UoM',
-    ];
-
-    const rows = filteredData.map((r) => [
-      `"${r.ProductCode}"`,
-      `"${(r.ProductName || '').replace(/"/g, '""')}"`,
-      `"${(r.Category || '').replace(/"/g, '""')}"`,
-      `"${r.ProductType}"`,
-      r.CapacityUnits,
-      r.TotalComponents,
-      `"${r.LimitingComponentCode || ''}"`,
-      `"${(r.LimitingComponentName || '').replace(/"/g, '""')}"`,
-      r.LimitingBaseQty || 0,
-      r.LimitingAvailableStock || 0,
-      `"${r.LimitingUoM || ''}"`,
-    ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `material_production_capacity_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportExcel = () => {
+    if (!filteredData.length) {
+      toast.error('No records to export');
+      return;
+    }
+    const rows = filteredData.map((r) => ({
+      'Product Code': r.ProductCode ?? '',
+      'Product Name': r.ProductName ?? '',
+      Category: r.Category ?? '',
+      'Product Type': r.ProductType ?? '',
+      'Producible Capacity Units': r.CapacityUnits ?? '',
+      'Total BOM Items': r.TotalComponents ?? '',
+      'Bottleneck Component Code': r.LimitingComponentCode ?? '',
+      'Bottleneck Component Name': r.LimitingComponentName ?? '',
+      'Required Base Qty': r.LimitingBaseQty || 0,
+      'Total Available Stock': r.LimitingAvailableStock || 0,
+      UoM: r.LimitingUoM ?? '',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Material Capacity');
+    XLSX.writeFile(
+      workbook,
+      `Material_Capacity_${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+    toast.success(`Exported ${rows.length} record(s)`);
   };
 
   // Table Columns
@@ -607,17 +594,17 @@ const MaterialCapacityReport = () => {
                 Refresh
               </button>
 
-              <button
+              <Button
                 type="button"
-                className="po-filter-reset-btn"
-                onClick={handleExportCSV}
+                variant="success"
+                size="sm"
+                onClick={handleExportExcel}
                 disabled={!filteredData.length}
-                title="Export report to CSV"
-                style={{ background: '#ecfdf5', color: '#047857', borderColor: '#a7f3d0' }}
+                title="Export Excel"
+                icon={<IconFileSpreadsheet size={16} />}
               >
-                <IconFileSpreadsheet size={16} />
-                Export
-              </button>
+                Export Excel
+              </Button>
             </div>
           </div>
         </div>

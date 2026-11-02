@@ -6,6 +6,8 @@ import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromLis
 import toast from 'react-hot-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { IconFileSpreadsheet } from '@tabler/icons-react';
+import * as XLSX from 'xlsx';
 import './Sampling.css';
 import '../ProductionOrders/ProductionOrders.css';
 
@@ -58,6 +60,8 @@ const QualityAssurance = () => {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [decisionOptions, setDecisionOptions] = useState([]);
+  const [fromSample, setFromSample] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const fetchQualityRecords = async (pageNum = 1, currentStatusFilter = statusFilter, search = debouncedSearch) => {
     setLoading(true);
@@ -216,9 +220,47 @@ const QualityAssurance = () => {
   };
 
   useEffect(() => {
+    const docEntry = searchParams.get('docEntry');
+    const mode = searchParams.get('mode');
+    const returnSample = searchParams.get('fromSample') || '';
     const no = searchParams.get('samplingNo');
     const code = searchParams.get('itemCode');
-    if (!no && !code) return;
+
+    if (!docEntry && !no && !code) return;
+
+    if (returnSample) setFromSample(returnSample);
+
+    const clearParams = () => {
+      const next = new URLSearchParams(searchParams);
+      ['docEntry', 'mode', 'fromSample', 'samplingNo', 'itemCode', 'itemName', 'batch', 'sampleQty'].forEach((key) => next.delete(key));
+      setSearchParams(next, { replace: true });
+    };
+
+    if (docEntry && mode === 'view') {
+      (async () => {
+        setLoadingDetails(true);
+        setShowForm(true);
+        try {
+          const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-record/${docEntry}`);
+          if (res.data?.success && res.data.data?.length) {
+            const header = res.data.data[0];
+            setSelectedRecord(header);
+            setRecordDetails(res.data.data.filter((r) => r['Parameter Code'] || r['Parameter Name']));
+            setSamplingNo(header['Sample Number'] ? String(header['Sample Number']) : returnSample || '');
+          } else {
+            toast.error('Quality result not found');
+          }
+        } catch (err) {
+          console.error('Failed to open quality result:', err);
+          toast.error('Failed to load quality result');
+        } finally {
+          setLoadingDetails(false);
+          clearParams();
+        }
+      })();
+      return;
+    }
+
     setSelectedRecord(null);
     if (no) setSamplingNo(no);
     setShowForm(true);
@@ -231,9 +273,7 @@ const QualityAssurance = () => {
         no || ''
       );
     }
-    const next = new URLSearchParams(searchParams);
-    ['samplingNo', 'itemCode', 'itemName', 'batch', 'sampleQty'].forEach((key) => next.delete(key));
-    setSearchParams(next, { replace: true });
+    clearParams();
   }, [searchParams]);
 
   useEffect(() => {
@@ -339,8 +379,10 @@ const QualityAssurance = () => {
   };
 
   const leaveQualityForm = () => {
-    if (samplingNo && !selectedRecord) {
-      navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(samplingNo)}`);
+    const returnTo = fromSample || (samplingNo && !selectedRecord ? samplingNo : '');
+    if (returnTo) {
+      setFromSample('');
+      navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(returnTo)}`);
       return;
     }
     setShowForm(false);
@@ -398,6 +440,52 @@ const QualityAssurance = () => {
     } catch (err) {
       console.error("Failed to save quality record:", err);
       toast.error(err.response?.data?.message || "Failed to save quality record");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-records`, {
+        params: {
+          page: 1,
+          limit: Math.max(totalRecords || 0, 1000),
+          ...(statusFilter ? { status: statusFilter } : {}),
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        },
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export QC test reports');
+        return;
+      }
+      const rows = (res.data.data || []).map((row) => ({
+        'Doc Num': row['Document Number'] ?? '',
+        'Sample Number': row['Sample Number'] ?? '',
+        'QC Type': row['QC Type'] ?? '',
+        Type: row.Type ?? '',
+        'Base Type': row.BaseType ?? '',
+        'Item Code': row['Item Code'] ?? '',
+        'Item Name': row['Item Name'] ?? '',
+        'Sample Qty': row['Sample Qty'] ?? '',
+        'QC Decision': row['QC Decision'] ?? '',
+        Batch: row['Batch/Serial'] ?? '',
+        'Accepted Qty': row['Accepted Qty'] ?? '',
+        'Rejected Qty': row['Rejected Qty'] ?? '',
+      }));
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'QC Test Report');
+      XLSX.writeFile(workbook, `QC_Test_Report_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -1023,6 +1111,20 @@ const QualityAssurance = () => {
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">&nbsp;</label>
+              <Button
+                type="button"
+                variant="success"
+                className="po-export-btn"
+                onClick={handleExportExcel}
+                disabled={exporting || loading}
+                title="Export Excel"
+                icon={<IconFileSpreadsheet size={16} />}
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </Button>
             </div>
           </div>
         </div>

@@ -3,7 +3,10 @@ import Select from 'react-select';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Table from '../../global-components/Table/Table';
-import { IconSearch, IconRefresh } from '@tabler/icons-react';
+import Button from '../../global-components/Button/Button';
+import { IconSearch, IconRefresh, IconFileSpreadsheet } from '@tabler/icons-react';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import '../ProductionOrders/ProductionOrders.css';
 import './ProductionPlanning.css';
 
@@ -112,6 +115,7 @@ const MaterialShortages = () => {
   const [shortagesPageSize, setShortagesPageSize] = useState(20);
   const [shortagesTotal, setShortagesTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
 
   const [filters, setFilters] = useState({
@@ -201,6 +205,47 @@ const MaterialShortages = () => {
   useEffect(() => {
     fetchShortages();
   }, [fetchShortages]);
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.SHORTAGES, {
+        params: {
+          page: 1,
+          pageSize: Math.max(shortagesTotal || 0, 1000),
+          search: debouncedSearch,
+          warehouse: filters.warehouse,
+          status: filters.status,
+          minShortage: filters.minShortage,
+        },
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export shortages');
+        return;
+      }
+      const rows = (res.data.data || []).map((row) => ({
+        Component: row.ComponentCode ?? '',
+        'Component Name': row.ComponentName ?? '',
+        'Required Qty': row.RemainingRequired ?? '',
+        'Available Stock': row.TotalAvailable ?? '',
+        Shortage: row.ShortageQty ?? '',
+      }));
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Critical Material');
+      XLSX.writeFile(workbook, `Critical_Material_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const shortagesColumns = [
     { header: 'Component', key: 'ComponentCode' },
@@ -293,19 +338,32 @@ const MaterialShortages = () => {
                 />
               </div>
 
-              {/* Reset Button */}
+              {/* Reset / Export */}
               <div className="po-filter-item">
                 <label className="po-filter-label">&nbsp;</label>
-                <button
-                  type="button"
-                  className="po-filter-reset-btn"
-                  onClick={handleResetFilters}
-                  disabled={!hasActiveFilters}
-                  title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
-                >
-                  <IconRefresh size={16} />
-                  Reset
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <Button
+                    type="button"
+                    variant="success"
+                    size="sm"
+                    onClick={handleExportExcel}
+                    disabled={exporting || loading}
+                    title="Export Excel"
+                    icon={<IconFileSpreadsheet size={16} />}
+                  >
+                    {exporting ? 'Exporting...' : 'Export Excel'}
+                  </Button>
+                  <button
+                    type="button"
+                    className="po-filter-reset-btn"
+                    onClick={handleResetFilters}
+                    disabled={!hasActiveFilters}
+                    title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
+                  >
+                    <IconRefresh size={16} />
+                    Reset
+                  </button>
+                </div>
               </div>
             </div>
           </div>

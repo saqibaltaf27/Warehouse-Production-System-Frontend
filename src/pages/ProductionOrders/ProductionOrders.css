@@ -538,6 +538,16 @@
   border-color: var(--primary-blue);
 }
 
+.po-export-btn.btn,
+.po-export-btn {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 13px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
 .po-filter-reset-btn {
   display: inline-flex;
   align-items: center;

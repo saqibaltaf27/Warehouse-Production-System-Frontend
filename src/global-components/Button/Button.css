@@ -71,9 +71,15 @@
 }
 
 .btn-success {
-  color: #087b4f;
-  background: var(--color-success-light);
-  border-color: transparent;
+  color: #ffffff;
+  background: #14804a;
+  border-color: #14804a;
+}
+
+.btn-success:hover:not(:disabled) {
+  color: #ffffff;
+  background: #0f6a3c;
+  border-color: #0f6a3c;
 }
 
 .btn-sm {

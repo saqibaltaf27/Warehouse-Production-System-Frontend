@@ -3,7 +3,10 @@ import Select from 'react-select';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Table from '../../global-components/Table/Table';
-import { IconSearch, IconRefresh } from '@tabler/icons-react';
+import Button from '../../global-components/Button/Button';
+import { IconSearch, IconRefresh, IconFileSpreadsheet } from '@tabler/icons-react';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 import '../ProductionOrders/ProductionOrders.css';
 import './ProductionPlanning.css';
 
@@ -120,6 +123,7 @@ const BatchExpiry = () => {
   const [batchPageSize, setBatchPageSize] = useState(20);
   const [batchTotal, setBatchTotal] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [warehouses, setWarehouses] = useState([]);
 
   const [filters, setFilters] = useState({
@@ -213,6 +217,53 @@ const BatchExpiry = () => {
   useEffect(() => {
     fetchBatchExpiry();
   }, [fetchBatchExpiry]);
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.BATCH_EXPIRY, {
+        params: {
+          page: 1,
+          pageSize: Math.max(batchTotal || 0, 1000),
+          search: debouncedSearch,
+          warehouse: filters.warehouse,
+          bucket: filters.bucket,
+          fromDate: filters.fromDate,
+          toDate: filters.toDate,
+        },
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export batch expiry');
+        return;
+      }
+      const rows = (res.data.data || []).map((row) => ({
+        'Item Code': row.ItemCode ?? '',
+        'Item Name': row.ItemName ?? '',
+        'Batch Number': row.BatchNumber ?? '',
+        Warehouse: row.WhsCode ?? '',
+        Quantity: row.Quantity ?? '',
+        'Expiry Date': fmtDate(row.ExpiryDate),
+        'Aging Bucket': row.ExpiryBucket ?? '',
+      }));
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Batch Expiry');
+      XLSX.writeFile(
+        workbook,
+        `Batch_Expiry_${filters.fromDate || 'all'}_to_${filters.toDate || 'all'}.xlsx`,
+      );
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const expiryColumns = [
     { header: 'Item Code', key: 'ItemCode' },
@@ -318,19 +369,32 @@ const BatchExpiry = () => {
                 />
               </div>
 
-              {/* Reset Button */}
+              {/* Reset / Export */}
               <div className="po-filter-item">
                 <label className="po-filter-label">&nbsp;</label>
-                <button
-                  type="button"
-                  className="po-filter-reset-btn"
-                  onClick={handleResetFilters}
-                  disabled={!hasActiveFilters}
-                  title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
-                >
-                  <IconRefresh size={16} />
-                  Reset
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <Button
+                    type="button"
+                    variant="success"
+                    size="sm"
+                    onClick={handleExportExcel}
+                    disabled={exporting || loading}
+                    title="Export Excel"
+                    icon={<IconFileSpreadsheet size={16} />}
+                  >
+                    {exporting ? 'Exporting...' : 'Export Excel'}
+                  </Button>
+                  <button
+                    type="button"
+                    className="po-filter-reset-btn"
+                    onClick={handleResetFilters}
+                    disabled={!hasActiveFilters}
+                    title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
+                  >
+                    <IconRefresh size={16} />
+                    Reset
+                  </button>
+                </div>
               </div>
             </div>
           </div>

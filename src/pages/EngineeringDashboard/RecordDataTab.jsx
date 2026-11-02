@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { IconPlus, IconSearch, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconPlus, IconSearch, IconEdit, IconTrash, IconFileSpreadsheet } from '@tabler/icons-react';
 import CreatableSelect from 'react-select/creatable';
 import Table from '../../global-components/Table/Table';
+import Button from '../../global-components/Button/Button';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import '../ProductionOrders/ProductionOrders.css';
 
 const formatDisplayDate = (dateString) => {
   if (!dateString) return '-';
@@ -29,6 +32,7 @@ const RecordDataTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Filters state for modal
   const [filterOptions, setFilterOptions] = useState({ types: [], families: [] });
@@ -185,6 +189,53 @@ const RecordDataTab = () => {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axiosInstance.get(API_ENDPOINTS.PREVENTIVE_MAINTENANCE.YEARLY_SCHEDULE, {
+        params: {
+          year: yearFilter,
+          page: 1,
+          limit: Math.max(totalEntries || 0, 1000),
+          search: debouncedSearch,
+        },
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export schedule');
+        return;
+      }
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const rows = (res.data.data || []).map((row) => {
+        const mapped = {
+          'Instrument Name': row.instrument_name ?? '',
+          'Instrument S/N': row.instrument_sn ?? '',
+          Type: row.type ?? '',
+          Family: row.family ?? '',
+          'Date of Installation': formatDisplayDate(row.date_of_installation),
+        };
+        months.forEach((month) => {
+          const entries = row.schedule?.[month] || [];
+          mapped[month] = entries.map((m) => formatDisplayDate(m.date)).join(', ');
+        });
+        return mapped;
+      });
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `PM ${yearFilter}`);
+      XLSX.writeFile(workbook, `Equipment_PM_${yearFilter}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const matrixColumns = [
     { header: 'Instrument Name', key: 'instrument_name', className: 'sticky-col font-medium' },
     { header: 'Instrument S/N', key: 'instrument_sn' },
@@ -242,34 +293,54 @@ const RecordDataTab = () => {
     <div className="tab-content-container">
       <div className="pm-tab-header">
         <h2 className="pm-tab-title">Annual Preventive Maintenance Schedule ({yearFilter})</h2>
-        
-        <div className="pm-tab-actions">
-          <div className="pm-search-bar">
-            <IconSearch size={16} color="#64748b" />
-            <input 
-              type="text" 
-              placeholder="Search Instrument or S/N..." 
-              value={tableSearch}
-              onChange={(e) => setTableSearch(e.target.value)}
-              className="pm-search-input"
-            />
+        <button onClick={handleOpenAdd} className="pm-add-btn">
+          <IconPlus size={16} />
+          Add
+        </button>
+      </div>
+
+      <div className="po-filter-toolbar-card" style={{ marginBottom: 16 }}>
+        <div className="po-filter-toolbar-grid">
+          <div className="po-filter-item po-filter-search-box">
+            <label className="po-filter-label">Search</label>
+            <div style={{ position: 'relative' }}>
+              <IconSearch size={18} className="po-filter-search-icon" />
+              <input
+                type="text"
+                placeholder="Search Instrument or S/N..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="po-filter-search-input"
+              />
+            </div>
           </div>
-
-          <select 
-            value={yearFilter} 
-            onChange={(e) => setYearFilter(parseInt(e.target.value))}
-            className="pm-year-select"
-          >
-            <option value="2024">2024</option>
-            <option value="2025">2025</option>
-            <option value="2026">2026</option>
-            <option value="2027">2027</option>
-          </select>
-
-          <button onClick={handleOpenAdd} className="pm-add-btn">
-            <IconPlus size={16} />
-            Add
-          </button>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Year</label>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(parseInt(e.target.value, 10))}
+              className="po-filter-date-input"
+            >
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+            </select>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <Button
+              type="button"
+              variant="success"
+              className="po-export-btn"
+              onClick={handleExportExcel}
+              disabled={exporting || loading}
+              title="Export Excel"
+              icon={<IconFileSpreadsheet size={16} />}
+            >
+              {exporting ? 'Exporting...' : 'Export Excel'}
+            </Button>
+          </div>
         </div>
       </div>
 
