@@ -112,7 +112,9 @@ const QualityAssurance = () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/quality-decisions`);
       if (res.data?.success) {
-        setDecisionOptions(res.data.data);
+        const allowed = new Set(['A', 'R', 'CA', 'CR']);
+        setDecisionOptions((res.data.data || []).filter((opt) => allowed.has(opt.value)));
+        setStatusFilter((prev) => (allowed.has(prev) ? prev : ''));
       }
     } catch (err) {
       console.error("Error fetching quality decisions:", err);
@@ -228,7 +230,7 @@ const QualityAssurance = () => {
 
     if (!docEntry && !no && !code) return;
 
-    if (returnSample) setFromSample(returnSample);
+    if (returnSample || no) setFromSample(returnSample || no);
 
     const clearParams = () => {
       const next = new URLSearchParams(searchParams);
@@ -264,6 +266,7 @@ const QualityAssurance = () => {
     setSelectedRecord(null);
     if (no) setSamplingNo(no);
     setShowForm(true);
+    setInspectedBy((prev) => prev || getCurrentEmpId());
     if (code) {
       loadItem(
         code,
@@ -287,6 +290,12 @@ const QualityAssurance = () => {
     fetchDecisionOptions();
     fetchWarehouses();
   }, []);
+
+  useEffect(() => {
+    if (!showForm || selectedRecord || inspectedBy || !employeeOptions.length) return;
+    const currentEmpId = getCurrentEmpId();
+    if (currentEmpId) setInspectedBy(currentEmpId);
+  }, [showForm, selectedRecord, inspectedBy, employeeOptions, user]);
 
   useEffect(() => {
     fetchQualityRecords(page, statusFilter, debouncedSearch);
@@ -346,6 +355,13 @@ const QualityAssurance = () => {
     }
   };
 
+  const getCurrentEmpId = () => {
+    const raw = user?.empId || user?.EmpID || user?.id || user?.emp_id || '';
+    if (!raw) return '';
+    const match = employeeOptions.find((e) => String(e.EmpID) === String(raw));
+    return match ? String(match.EmpID) : String(raw);
+  };
+
   const handleAddQuality = () => {
     setSelectedRecord(null);
     setRecordDetails([]);
@@ -363,7 +379,7 @@ const QualityAssurance = () => {
     setDocDate(new Date().toISOString().split('T')[0]);
     setQcType('B');
     setSampleBy('');
-    setInspectedBy('');
+    setInspectedBy(getCurrentEmpId());
     setAnalyzedBy('');
     setReviewedBy('');
     setReportBy('');
@@ -386,6 +402,34 @@ const QualityAssurance = () => {
       return;
     }
     setShowForm(false);
+  };
+
+  const getDecisionLabel = (code) => {
+    const labels = {
+      A: 'Accepted',
+      R: 'Rejected',
+      CA: 'Conditionally Accepted',
+      CR: 'Conditionally Rejected',
+    };
+    return labels[code] || code || 'Updated';
+  };
+
+  const hasPendingTestingResults = (lines = [], justSavedItemCode = '', justSavedBatch = '') => {
+    const decided = new Set(['A', 'CA', 'CR', 'R', 'C']);
+    return (lines || []).some((line) => {
+      const status = String(line.U_status || line.U_Status || '').trim();
+      if (!status || decided.has(status)) return false;
+      if (!(status === 'UI' || status === 'S')) return false;
+      const hasQcRequest = Boolean(String(line.U_RequestNo || '').trim());
+      if (!hasQcRequest) return false;
+      // Exclude the line we just decided (in case DB read is slightly stale)
+      const sameItem =
+        String(line.U_ItemCode || '').trim() === String(justSavedItemCode || '').trim();
+      const sameBatch =
+        String(line.U_Batch || '').trim() === String(justSavedBatch || '').trim();
+      if (sameItem && (!justSavedBatch || sameBatch)) return false;
+      return true;
+    });
   };
 
   const handleSaveQuality = async () => {
@@ -431,9 +475,46 @@ const QualityAssurance = () => {
 
       const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/quality/record`, payload);
       if (res.data?.success) {
-        toast.success("Quality record created successfully!");
-        setShowForm(false);
-        fetchQualityRecords(1);
+        const decisionLabel = getDecisionLabel(qcDecision);
+        const itemLabel = itemName || itemCode || 'Item';
+        const returnTo = fromSample || samplingNo || '';
+
+        if (!returnTo) {
+          toast.success(`${itemLabel} has been ${decisionLabel}`);
+          setShowForm(false);
+          fetchQualityRecords(1);
+          return;
+        }
+
+        let stillPending = false;
+        try {
+          const sampleRes = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/sampling/saved-sample/${returnTo}`
+          );
+          if (sampleRes.data?.success) {
+            stillPending = hasPendingTestingResults(
+              sampleRes.data.data?.lines || [],
+              itemCode,
+              selectedBatch
+            );
+          }
+        } catch (checkErr) {
+          console.error('Failed to check remaining sample lines:', checkErr);
+          stillPending = true; // safer: return to sample so user can continue
+        }
+
+        setFromSample('');
+        const toastMessage = stillPending
+          ? `${itemLabel} has been ${decisionLabel}. Add the next testing result.`
+          : `${itemLabel} has been ${decisionLabel}. All testing results are complete.`;
+        // App Toaster + handoff for tab switch (qc-test-report unmounts this page)
+        toast.success(toastMessage, { duration: 4500, id: 'sampling-qc-decision' });
+        sessionStorage.setItem('wps_sampling_toast', toastMessage);
+        if (stillPending) {
+          navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(returnTo)}`);
+        } else {
+          navigate('/sampling?tab=qc');
+        }
       } else {
         toast.error(res.data?.message || "Failed to save quality record");
       }
@@ -489,6 +570,16 @@ const QualityAssurance = () => {
     }
   };
 
+  const formatEmployeeDisplay = (id, name) => {
+    if (!id && !name) return '';
+    const resolvedName =
+      name ||
+      employeeOptions.find((e) => String(e.EmpID) === String(id))?.FirstName ||
+      '';
+    if (id && resolvedName) return `${id} - ${resolvedName}`;
+    return resolvedName || String(id || '');
+  };
+
   const mainColumns = [
     { key: 'Document Number', header: 'Doc Num' },
     { key: 'Sample Number', header: 'Sample Number' },
@@ -509,24 +600,18 @@ const QualityAssurance = () => {
       key: 'Action', 
       header: 'Action',
       render: (row) => (
-        <textarea 
-          rows={2}
-          value={row['Action'] || ''}
-          readOnly
-          className="qc-param-textarea qa-readonly"
-        />
+        <div className="qc-param-text" title={row['Action'] || ''}>
+          {row['Action'] || '\u00A0'}
+        </div>
       )
     },
     { 
       key: 'Criteria', 
       header: 'Criteria',
       render: (row) => (
-        <textarea 
-          rows={2}
-          value={row['Criteria'] || ''}
-          readOnly
-          className="qc-param-textarea qa-readonly"
-        />
+        <div className="qc-param-text" title={row['Criteria'] || ''}>
+          {row['Criteria'] || '\u00A0'}
+        </div>
       )
     },
     { 
@@ -629,6 +714,40 @@ const QualityAssurance = () => {
     }
   ];
 
+  const viewDetailColumns = [
+    { key: 'Parameter Line', header: '#' },
+    { key: 'Parameter Code', header: 'Parameter Code' },
+    { key: 'Parameter Name', header: 'Parameter Name' },
+    {
+      key: 'Action',
+      header: 'Action',
+      render: (row) => (
+        <div className="qc-param-text" title={row['Action'] || ''}>{row['Action'] || '\u00A0'}</div>
+      ),
+    },
+    {
+      key: 'Criteria',
+      header: 'Criteria',
+      render: (row) => (
+        <div className="qc-param-text" title={row['Criteria'] || ''}>{row['Criteria'] || '\u00A0'}</div>
+      ),
+    },
+    { key: 'Equipment Code', header: 'Equipment Code' },
+    { key: 'Equipment Name', header: 'Equipment Name' },
+    { key: 'UOM', header: 'UOM' },
+    { key: 'Std Value', header: 'Std Value' },
+    { key: 'Min Value', header: 'Min Value' },
+    { key: 'Max Value', header: 'Max Value' },
+    {
+      key: 'Type',
+      header: 'Type',
+      render: (row) => (row.Type === 'P' || row['Parameter Type'] === 'P' ? 'P - Process' : 'M - Material'),
+    },
+    { key: 'Observed Value 1', header: 'Observed Value 1' },
+    { key: 'Observed Value 2', header: 'Observed Value 2' },
+    { key: 'Observed Value 3', header: 'Observed Value 3' },
+  ];
+
   return (
     <div className="qc-sampling-container fade-in-up">
       
@@ -638,7 +757,9 @@ const QualityAssurance = () => {
             <div className="qc-sampling-actions">
               <Button variant="outline" onClick={leaveQualityForm}>Back</Button>
               <h4 className="add-sample-title">
-                {selectedRecord ? `Quality Details: ${selectedRecord['Document Number']}` : `Add Quality Test${samplingNo ? ` — ${samplingNo}` : ''}`}
+                {selectedRecord
+                  ? `View Quality Details: ${selectedRecord['Document Number']}`
+                  : `Add Quality Test${samplingNo ? ` — ${samplingNo}` : ''}`}
               </h4>
             </div>
             </div>
@@ -881,10 +1002,6 @@ const QualityAssurance = () => {
                       </select>
                     </div>
                     
-                    <div className="qa-actions">
-                      <Button variant="primary">OK</Button>
-                      <Button variant="secondary" onClick={leaveQualityForm}>Cancel</Button>
-                    </div>
                   </div>
 
                   <div className="add-sample-col">
@@ -948,16 +1065,12 @@ const QualityAssurance = () => {
                     </div>
 
                     <div className="qa-actions qa-actions-end">
-                      {!selectedRecord ? (
-                        <Button variant="primary" onClick={handleSaveQuality}>Create Quality Test</Button>
-                      ) : (
-                        <>
-                          <Button variant="secondary">Release Sticker</Button>
-                          <Button variant="secondary">Rejected Sticker</Button>
-                          <Button variant="secondary">COA</Button>
-                          <Button variant="secondary">QC Report</Button>
-                        </>
-                      )}
+                      <Button variant="primary" onClick={handleSaveQuality}>
+                        Create Quality Test
+                      </Button>
+                      <Button variant="secondary" onClick={leaveQualityForm}>
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -992,7 +1105,7 @@ const QualityAssurance = () => {
                 <div className="add-sample-table-wrapper qa-plain-table">
                   <Table 
                     data={recordDetails}
-                    columns={detailColumns}
+                    columns={viewDetailColumns}
                     isLoading={loadingDetails}
                     showActions={false}
                   />
@@ -1002,23 +1115,23 @@ const QualityAssurance = () => {
                   <div className="add-sample-col">
                     <div className="add-sample-field">
                       <label className="add-sample-label">Sample By</label>
-                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Sample By Name'] ? `${selectedRecord['Sample By']} - ${selectedRecord['Sample By Name']}` : (selectedRecord['Sample By'] || '')} />
+                      <input type="text" className="add-sample-input" disabled value={formatEmployeeDisplay(selectedRecord['Sample By'], selectedRecord['Sample By Name'])} />
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Inspected By</label>
-                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Inspected By Name'] ? `${selectedRecord['Inspected By']} - ${selectedRecord['Inspected By Name']}` : (selectedRecord['Inspected By'] || '')} />
+                      <input type="text" className="add-sample-input" disabled value={formatEmployeeDisplay(selectedRecord['Inspected By'], selectedRecord['Inspected By Name'])} />
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Analyzed By</label>
-                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Analyzed By Name'] ? `${selectedRecord['Analyzed By']} - ${selectedRecord['Analyzed By Name']}` : (selectedRecord['Analyzed By'] || '')} />
+                      <input type="text" className="add-sample-input" disabled value={formatEmployeeDisplay(selectedRecord['Analyzed By'], selectedRecord['Analyzed By Name'])} />
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Reviewed By</label>
-                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Reviewed By Name'] ? `${selectedRecord['Reviewed By']} - ${selectedRecord['Reviewed By Name']}` : (selectedRecord['Reviewed By'] || '')} />
+                      <input type="text" className="add-sample-input" disabled value={formatEmployeeDisplay(selectedRecord['Reviewed By'], selectedRecord['Reviewed By Name'])} />
                     </div>
                     <div className="add-sample-field">
                       <label className="add-sample-label">Report By</label>
-                      <input type="text" className="add-sample-input" disabled value={selectedRecord['Report By Name'] ? `${selectedRecord['Report By']} - ${selectedRecord['Report By Name']}` : (selectedRecord['Report By'] || '')} />
+                      <input type="text" className="add-sample-input" disabled value={formatEmployeeDisplay(selectedRecord['Report By'], selectedRecord['Report By Name'])} />
                     </div>
                   </div>
 
@@ -1056,12 +1169,7 @@ const QualityAssurance = () => {
                       </div>
                     </div>
                     
-                    <div className="qa-actions qa-actions-end">
-                      <Button variant="secondary">Release Sticker</Button>
-                      <Button variant="secondary">Rejected Sticker</Button>
-                      <Button variant="secondary">COA</Button>
-                      <Button variant="secondary">QC Report</Button>
-                    </div>
+               
                   </div>
                 </div>
               </div>
@@ -1072,13 +1180,10 @@ const QualityAssurance = () => {
 
       {!showForm && (
       <div className="dome-card-wrapper qa-card">
-        <div className="qa-toolbar">
-          <h3 className="section-title"></h3>
-          <div className="qa-toolbar-actions">
-            <Button variant="primary" onClick={handleAddQuality}>
-              Add Test Report
-            </Button>
-          </div>
+        <div className="po-table-header">
+          <Button variant="primary" onClick={handleAddQuality}>
+            Add Test Report
+          </Button>
         </div>
 
         <div className="po-filter-toolbar-card">

@@ -221,7 +221,7 @@ const QCSampling = () => {
             CollectSample: false,
             QCRequestNumber: '',
             ManualQCNo: '',
-            Status: 'A'
+            Status: 'S'
           };
         });
         setSampleItems(lines);
@@ -388,6 +388,7 @@ const QCSampling = () => {
       
       return {
         ...item,
+        Status: item.Status || (formMode === 'create' ? 'S' : item.Status),
         ManagedBy: uManage,
         CollectSample: item.CollectSample ? 'Y' : 'N'
       };
@@ -450,7 +451,7 @@ const QCSampling = () => {
         });
         setQcCounter(header.DocNum || header.Docnum || docnum);
 
-        const mappedLines = lines.map((item, index) => {
+        let mappedLines = lines.map((item) => {
           const rawStatus = item.U_status || item.U_Status || item.u_status || 'A';
           let mappedStatus = String(rawStatus).trim();
           if (mappedStatus === 'Accepted') mappedStatus = 'A';
@@ -463,7 +464,6 @@ const QCSampling = () => {
           if (mappedStatus === 'Cancel') mappedStatus = 'C';
 
           return {
-            Index: index + 1,
             BaseLine: item.U_BaseLine || 0,
             ItemCode: item.U_ItemCode,
             ItemName: item.U_ItemName,
@@ -484,6 +484,25 @@ const QCSampling = () => {
             SampleId: item.SampleId || item.U_SampleId || null,
           };
         });
+
+        // From Under Inspection / Sampled / specific QC filter: only show matching lines
+        if (statusFilter === 'UI') {
+          mappedLines = mappedLines.filter((line) => line.Status === 'UI');
+        } else if (statusFilter === 'S') {
+          mappedLines = mappedLines.filter((line) => line.Status === 'S');
+        } else if (statusFilter === 'QC' && qcCompleteFilter) {
+          mappedLines = mappedLines.filter((line) => line.Status === qcCompleteFilter);
+        }
+
+        // No matching lines left under current filter (e.g. last UI result just saved)
+        if (!mappedLines.length && (statusFilter === 'UI' || statusFilter === 'S' || statusFilter === 'QC')) {
+          setShowAddSample(false);
+          setSampleItems([]);
+          setFormMode('create');
+          return;
+        }
+
+        mappedLines = mappedLines.map((line, index) => ({ ...line, Index: index + 1 }));
         setSampleItems(mappedLines);
         setFormMode('view');
         setShowAddSample(true);
@@ -504,13 +523,24 @@ const QCSampling = () => {
   }, [searchParams]);
 
   const isDecidedStatus = (status) => ['A', 'CA', 'CR', 'R'].includes(status);
-  const isRowLocked = (row) => formMode === 'view' || isDecidedStatus(row.Status);
+  // View: all locked. Edit: only decided QC lines locked. Create: fully editable (status defaults to Sampled).
+  const isRowLocked = (row) => formMode === 'view' || (formMode === 'edit' && isDecidedStatus(row.Status));
+  const isStatusLocked = (row) => isRowLocked(row);
+
+  const activeSampleLines = (sampleItems || []).filter((row) => row.Status && row.Status !== 'C');
+  const allLinesDecided =
+    activeSampleLines.length > 0 && activeSampleLines.every((row) => isDecidedStatus(row.Status));
+
+  useEffect(() => {
+    if (allLinesDecided && formMode === 'edit') {
+      setFormMode('view');
+    }
+  }, [allLinesDecided, formMode]);
 
   const qcDecisionSummary = (() => {
-    const active = (sampleItems || []).filter((row) => row.Status && row.Status !== 'C');
-    if (!active.length) return 'Pending';
+    if (!activeSampleLines.length) return 'Pending';
 
-    const statuses = active.map((row) => row.Status);
+    const statuses = activeSampleLines.map((row) => row.Status);
     if (statuses.every((s) => s === 'A')) return 'Accepted';
     if (statuses.every((s) => s === 'R')) return 'Rejected';
     if (statuses.every((s) => s === 'CA')) return 'Conditionally Accepted';
@@ -528,7 +558,25 @@ const QCSampling = () => {
     { key: 'Document No', header: 'Document No' },
     { key: 'Supplier Code', header: 'Supplier Code' },
     { key: 'Supplier Name', header: 'Supplier Name' },
-    { key: 'Status', header: 'Status' }
+    {
+      key: 'Status',
+      header: 'Status',
+      render: (row) => {
+        if (statusFilter === 'UI') return 'Under Inspection';
+        if (statusFilter === 'S') return 'Sampled';
+        if (statusFilter === 'QC' && qcCompleteFilter) {
+          const labels = {
+            A: 'Accepted',
+            R: 'Rejected',
+            CA: 'Conditionally Accepted',
+            CR: 'Conditionally Rejected',
+            C: 'Cancel',
+          };
+          return labels[qcCompleteFilter] || row.Status;
+        }
+        return row.Status;
+      },
+    },
   ];
   const addSampleColumns = [
     { key: 'Index', header: '#' },
@@ -637,8 +685,8 @@ const QCSampling = () => {
       render: (row) => (
         <select 
           className="add-sample-input qc-status-select"
-          value={row.Status || 'A'}
-          disabled={isRowLocked(row)}
+          value={row.Status || 'S'}
+          disabled={isStatusLocked(row)}
           onChange={(e) => {
             const idx = sampleItems.findIndex(r => r.Index === row.Index);
             if (idx === -1) return;
@@ -647,10 +695,10 @@ const QCSampling = () => {
             setSampleItems(newItems);
           }}
         >
-          <option value="A">Accepted</option>
+          <option value="S">Sampled</option>
           <option value="UI">Under Inspection</option>
           <option value="P">Pending</option>
-          <option value="S">Sampled</option>
+          <option value="A">Accepted</option>
           <option value="R">Rejected</option>
           <option value="CA">Conditionally Accepted</option>
           <option value="CR">Conditionally Rejected</option>
@@ -663,7 +711,8 @@ const QCSampling = () => {
       header: 'Testing Result',
       render: (row) => {
         const decidedStatuses = ['A', 'CA', 'CR', 'R'];
-        const canAddResult = row.Status === 'UI' || row.Status === 'S';
+        const hasQcRequest = Boolean(String(row.QCRequestNumber || '').trim());
+        const canAddResult = hasQcRequest && (row.Status === 'UI' || row.Status === 'S');
         const canShowResult = decidedStatuses.includes(row.Status) && row.SampleId;
 
         if (canShowResult) {
@@ -697,6 +746,7 @@ const QCSampling = () => {
                 const params = new URLSearchParams({
                   tab: 'qc-test-report',
                   samplingNo: String(qcCounter || ''),
+                  fromSample: String(qcCounter || ''),
                   itemCode: row.ItemCode || '',
                   itemName: row.ItemName || '',
                   batch: row.BatchSerial || '',
@@ -714,6 +764,11 @@ const QCSampling = () => {
       }
     },
   ];
+
+  const visibleSampleColumns =
+    formMode === 'create'
+      ? addSampleColumns.filter((col) => col.key !== 'TestingResult')
+      : addSampleColumns;
 
   return (
     <div className="qc-sampling-container fade-in-up">
@@ -810,7 +865,7 @@ const QCSampling = () => {
                 </div>
               )}
             </div>
-            {formMode !== 'create' && (
+            {formMode !== 'create' && !allLinesDecided && (
               <div className="sample-mode-actions">
                 <Button variant={formMode === 'view' ? 'primary' : 'outline'} onClick={() => setFormMode('view')}>View</Button>
                 <Button variant={formMode === 'edit' ? 'primary' : 'outline'} onClick={() => setFormMode('edit')}>Edit</Button>
@@ -924,7 +979,7 @@ const QCSampling = () => {
               <Table 
                 data={sampleItems}
                 isLoading={linesLoading}
-                columns={addSampleColumns}
+                columns={visibleSampleColumns}
                 showActions={false}
                 showPagination={false}
               />

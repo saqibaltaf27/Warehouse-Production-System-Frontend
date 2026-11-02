@@ -110,16 +110,18 @@
 .sample-header-left {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
 }
 
 .qc-decision-summary {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
   min-height: 34px;
-  padding: 6px 12px 6px 10px;
+  padding: 6px 14px;
   border: 1px solid transparent;
   border-radius: 4px;
   font-size: 12px;
@@ -127,15 +129,17 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
   position: relative;
   overflow: hidden;
+  text-align: center;
 }
 
 .qc-decision-summary::before {
   content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 4px;
-  align-self: stretch;
-  border-radius: 2px;
   background: currentColor;
-  flex-shrink: 0;
 }
 
 .qc-decision-label {
@@ -325,13 +329,46 @@
 }
 
 .qc-param-textarea {
+  display: block;
   width: 100%;
-  min-width: 150px;
-  padding: 4px;
+  min-width: 180px;
+  max-width: 280px;
+  min-height: 48px;
+  height: auto;
+  padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 2px;
   outline: none;
-  resize: vertical;
+  resize: none;
+  overflow: visible;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  box-sizing: border-box;
+  field-sizing: content;
+}
+
+.qc-param-text {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 180px;
+  max-width: 280px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  background: #f5f5f5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  box-sizing: border-box;
+  color: #1e293b;
+  font-size: 13px;
+}
+
+.qc-param-text:empty::before {
+  content: '\00a0';
 }
 
 .qc-param-select {

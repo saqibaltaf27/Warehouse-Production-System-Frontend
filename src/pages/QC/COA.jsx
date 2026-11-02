@@ -405,9 +405,9 @@ const COA = () => {
         <div className="coa-footer-status">
           <div className="coa-approved-text">APPROVED</div>
         </div>
-        <div className="coa-footer-disclaimer">
+        {/* <div className="coa-footer-disclaimer">
           This is SAP generated Document and does not require signature
-        </div>
+        </div> */}
       </div>
     </div>
     </div>

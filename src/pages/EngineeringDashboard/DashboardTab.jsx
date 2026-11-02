@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
   IconRefresh,
-  IconTool,
-  IconCalendarEvent,
-  IconCalendarStats,
-  IconCalendarTime,
-  IconAlertCircle,
-  IconChecklist
+  IconSearch,
+  IconFileSpreadsheet,
 } from '@tabler/icons-react';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import BarChart from '../../global-components/Charts/BarChart';
 import PieChart from '../../global-components/Charts/PieChart';
 import Table from '../../global-components/Table/Table';
+import Button from '../../global-components/Button/Button';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import '../ProductionOrders/ProductionOrders.css';
 import './DashboardTab.css';
 
 const formatDisplayDate = (dateString) => {
@@ -34,9 +34,9 @@ const getStatusColor = (status) => {
 const DashboardTab = () => {
   const [filters, setFilters] = useState({
     year: new Date().getFullYear(),
-    type: null,
-    family: null,
-    instrumentId: null
+    type: '',
+    family: '',
+    instrumentId: ''
   });
 
   const [filterOptions, setFilterOptions] = useState({
@@ -53,6 +53,7 @@ const DashboardTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [tableSearch, setTableSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -90,9 +91,9 @@ const DashboardTab = () => {
       try {
         const queryParams = {
           year: filters.year,
-          type: filters.type?.value || '',
-          family: filters.family?.value || '',
-          instrumentId: filters.instrumentId?.value || ''
+          type: filters.type || '',
+          family: filters.family || '',
+          instrumentId: filters.instrumentId || ''
         };
 
         const tableParams = {
@@ -123,9 +124,79 @@ const DashboardTab = () => {
     fetchDashboardData();
   }, [filters, currentPage, pageSize, debouncedSearch]);
 
-  const handleFilterChange = (key, selectedOption) => {
-    setFilters(prev => ({ ...prev, [key]: selectedOption }));
-    setCurrentPage(1); // Reset page on filter change
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    tableSearch.trim() ||
+    filters.type ||
+    filters.family ||
+    filters.instrumentId ||
+    filters.year !== new Date().getFullYear()
+  );
+
+  const handleResetFilters = () => {
+    setFilters({
+      year: new Date().getFullYear(),
+      type: '',
+      family: '',
+      instrumentId: '',
+    });
+    setTableSearch('');
+    setDebouncedSearch('');
+    setCurrentPage(1);
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const res = await axiosInstance.get(API_ENDPOINTS.PREVENTIVE_MAINTENANCE.YEARLY_SCHEDULE, {
+        params: {
+          year: filters.year,
+          type: filters.type || '',
+          family: filters.family || '',
+          instrumentId: filters.instrumentId || '',
+          page: 1,
+          limit: Math.max(totalEntries || 0, 1000),
+          search: debouncedSearch,
+        },
+      });
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to export schedule');
+        return;
+      }
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const rows = (res.data.data || []).map((row) => {
+        const mapped = {
+          'Instrument Name': row.instrument_name ?? '',
+          'Instrument S/N': row.instrument_sn ?? '',
+          Type: row.type ?? '',
+          Family: row.family ?? '',
+          'Date of Installation': formatDisplayDate(row.date_of_installation),
+        };
+        months.forEach((month) => {
+          const entries = row.schedule?.[month] || [];
+          mapped[month] = entries.map((m) => formatDisplayDate(m.date)).join(', ');
+        });
+        return mapped;
+      });
+      if (!rows.length) {
+        toast.error('No records to export');
+        return;
+      }
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `PM ${filters.year}`);
+      XLSX.writeFile(workbook, `Engineering_Dashboard_PM_${filters.year}.xlsx`);
+      toast.success(`Exported ${rows.length} record(s)`);
+    } catch (err) {
+      console.error('Export Excel failed:', err);
+      toast.error(err?.response?.data?.message || err.message || 'Export failed');
+    } finally {
+      setExporting(false);
+    }
   };
 
   const matrixColumns = [
@@ -157,45 +228,110 @@ const DashboardTab = () => {
 
   return (
     <div className="pm-dashboard">
-      {/* Filters Section */}
-      <div className="inventory-filters pm-filters dashboard-card">
-        <select value={filters.year} onChange={(e) => handleFilterChange('year', parseInt(e.target.value))}>
-          {filterOptions.years.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+      <div className="po-filter-toolbar-card">
+        <div className="po-filter-toolbar-grid">
+          <div className="po-filter-item po-filter-search-box">
+            <label className="po-filter-label">Search</label>
+            <div style={{ position: 'relative' }}>
+              <IconSearch size={18} className="po-filter-search-icon" />
+              <input
+                type="text"
+                placeholder="Search Instrument or S/N..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="po-filter-search-input"
+              />
+            </div>
+          </div>
 
-        <select value={filters.type || ''} onChange={(e) => handleFilterChange('type', e.target.value || null)}>
-          <option value="">All Types</option>
-          {filterOptions.types.map(t => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Year</label>
+            <select
+              className="po-filter-date-input"
+              value={filters.year}
+              onChange={(e) => handleFilterChange('year', parseInt(e.target.value, 10))}
+            >
+              {(filterOptions.years.length ? filterOptions.years : [filters.year]).map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
 
-        <select value={filters.family || ''} onChange={(e) => handleFilterChange('family', e.target.value || null)}>
-          <option value="">All Families</option>
-          {filterOptions.families.map(f => (
-            <option key={f} value={f}>{f}</option>
-          ))}
-        </select>
+          <div className="po-filter-item" style={{ minWidth: '160px' }}>
+            <label className="po-filter-label">Type</label>
+            <select
+              className="po-filter-date-input"
+              value={filters.type}
+              onChange={(e) => handleFilterChange('type', e.target.value)}
+            >
+              <option value="">All Types</option>
+              {filterOptions.types.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
 
-        <select value={filters.instrumentId || ''} onChange={(e) => handleFilterChange('instrumentId', e.target.value ? parseInt(e.target.value) : null)}>
-          <option value="">All Instruments</option>
-          {filterOptions.instruments.map(i => (
-            <option key={i.id} value={i.id}>{`${i.instrument_name} (${i.instrument_sn})`}</option>
-          ))}
-        </select>
+          <div className="po-filter-item" style={{ minWidth: '160px' }}>
+            <label className="po-filter-label">Family</label>
+            <select
+              className="po-filter-date-input"
+              value={filters.family}
+              onChange={(e) => handleFilterChange('family', e.target.value)}
+            >
+              <option value="">All Families</option>
+              {filterOptions.families.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
 
-        <button className="reset-btn" onClick={() => setFilters({ year: new Date().getFullYear(), type: null, family: null, instrumentId: null })}>
-          Reset
-        </button>
+          <div className="po-filter-item" style={{ minWidth: '220px' }}>
+            <label className="po-filter-label">Instrument</label>
+            <select
+              className="po-filter-date-input"
+              value={filters.instrumentId}
+              onChange={(e) => handleFilterChange('instrumentId', e.target.value)}
+            >
+              <option value="">All Instruments</option>
+              {filterOptions.instruments.map((i) => (
+                <option key={i.id} value={i.id}>{`${i.instrument_name} (${i.instrument_sn})`}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <Button
+                type="button"
+                variant="success"
+                className="po-export-btn"
+                onClick={handleExportExcel}
+                disabled={exporting || loading}
+                title="Export Excel"
+                icon={<IconFileSpreadsheet size={16} />}
+              >
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </Button>
+              <button
+                type="button"
+                className="po-filter-reset-btn"
+                onClick={handleResetFilters}
+                disabled={!hasActiveFilters}
+                title={hasActiveFilters ? 'Reset all filters' : 'No filters applied'}
+              >
+                <IconRefresh size={16} />
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {loading && <div className="loading-state"><IconRefresh className="spin" size={32} /> Loading data...</div>}
 
       {!loading && (
         <>
-          {/* Charts Row 1 */}
           <div className="pm-charts-row">
             <div className="dashboard-card pm-chart-container">
               <h3>Monthly Preventive Maintenance ({filters.year})</h3>
@@ -220,7 +356,6 @@ const DashboardTab = () => {
             </div>
           </div>
 
-          {/* Charts Row 2 */}
           <div className="pm-charts-row">
             <div className="dashboard-card pm-chart-container">
               <h3>Maintenance by Type</h3>
@@ -240,17 +375,9 @@ const DashboardTab = () => {
             </div>
           </div>
 
-          {/* Annual PM Schedule Matrix */}
           <div className="dashboard-card">
             <div className="matrix-header">
               <h3>Annual Preventive Maintenance Schedule ({filters.year})</h3>
-              <input 
-                type="text" 
-                placeholder="Search Instrument or S/N..." 
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-                className="pm-search-input"
-              />
             </div>
             <div className="pm-matrix-wrapper">
               <Table 

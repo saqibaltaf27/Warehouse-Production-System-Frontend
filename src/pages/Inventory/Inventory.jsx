@@ -615,11 +615,7 @@ const Inventory = () => {
                 onTabChange={setAgingBucket}
                 className="aging-filters-tabs"
               />
-              <div className="toolbar-actions">
-                <button onClick={fetchDashboardItems} className="toolbar-btn refresh-btn" title="Refresh">
-                  <IconRefresh size={16} />
-                </button>
-              </div>
+              
             </div>
             <Table
               data={dashboardItems}

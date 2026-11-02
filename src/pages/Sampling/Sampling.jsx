@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Tabs from '../../global-components/Tabs/Tabs';
 import QCSampling from './QCSampling';
 import UnderInspection from './UnderInspection';
@@ -26,6 +27,21 @@ const Sampling = () => {
       sessionStorage.setItem('mainSamplingActiveTab', tabParam);
     }
   }, [tabParam]);
+
+  // Survives child tab remount (QC Test Report → Sampling); Strict Mode safe
+  useEffect(() => {
+    const onSamplingTab = (tabParam || activeTab) === 'qc';
+    if (!onSamplingTab) return;
+    const msg = sessionStorage.getItem('wps_sampling_toast');
+    if (!msg) return;
+    const timer = window.setTimeout(() => {
+      const pending = sessionStorage.getItem('wps_sampling_toast');
+      if (!pending) return;
+      sessionStorage.removeItem('wps_sampling_toast');
+      toast.success(pending, { duration: 4500, id: 'sampling-qc-decision' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [activeTab, tabParam, searchParams]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
