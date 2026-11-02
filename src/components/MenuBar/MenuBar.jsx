@@ -67,7 +67,6 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           ]
         },
         // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
-
       ]
     },
     {
