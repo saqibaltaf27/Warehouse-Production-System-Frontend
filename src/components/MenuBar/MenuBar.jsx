@@ -66,7 +66,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
             { title: 'Material-based Capacity', path: '/production?tab=material-capacity', tabKey: 'material-capacity', child_module: 'Material-based Capacity' },
           ]
         },
-        // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
+         // { title: 'Cost Analysis', path: '/production?tab=cost-analysis', tabKey: 'cost-analysis' },
       ]
     },
     {

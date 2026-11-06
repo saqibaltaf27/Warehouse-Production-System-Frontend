@@ -55,29 +55,42 @@ const Sampling = () => {
     };
   }, []);
 
-  const { allowedSubModules, loadingPermissions } = usePermission();
+  const { allowedChildModules, loadingPermissions } = usePermission();
   const { user } = useAuth();
 
+  // Match MenuBar child_module names — do NOT use sub_module "Quality"
+  // (collides with Workspace → Quality and forced everyone onto qc-test-report).
   const allTabs = [
-    { key: 'qc', label: 'Sampling', sub_module: 'QC Sampling' },
-    { key: 'Under Inspection', label: 'Under Inspection', sub_module: 'Under Inspection' },
-    { key: 'qc-test-report', label: 'QC Test Report', sub_module: 'Quality' },
-    { key: 'QC Parameters', label: 'QC Parameters', sub_module: 'QC Parameters' },
+    { key: 'qc', label: 'Sampling', childModules: ['Create Sample', 'Sample Management'] },
+    { key: 'Under Inspection', label: 'Under Inspection', childModules: ['Sample Management'] },
+    { key: 'qc-test-report', label: 'QC Test Report', childModules: ['QC Test Report'] },
+    { key: 'QC Parameters', label: 'QC Parameters', childModules: ['Testing Standard'] },
   ];
+
+  const normalize = (value) => String(value || '').trim().toLowerCase();
+  const hasChild = (names = []) => {
+    if (!allowedChildModules?.size) return false;
+    const targets = names.map(normalize);
+    for (const entry of allowedChildModules) {
+      if (targets.includes(normalize(entry))) return true;
+    }
+    return false;
+  };
 
   let tabs = allTabs;
   if (!user?.isSuperAdmin && !loadingPermissions) {
-    tabs = allTabs.filter(tab => allowedSubModules.has(tab.sub_module));
+    tabs = allTabs.filter((tab) => hasChild(tab.childModules));
   } else if (loadingPermissions) {
     tabs = [];
   }
 
-  // Effect to ensure activeTab is valid if the default one is hidden
+  // Only fall back when the requested tab is not allowed for this user
   useEffect(() => {
-    if (tabs.length > 0 && !tabs.find(t => t.key === activeTab)) {
+    if (loadingPermissions || tabs.length === 0) return;
+    if (!tabs.find((t) => t.key === activeTab)) {
       handleTabChange(tabs[0].key);
     }
-  }, [tabs, activeTab]);
+  }, [tabs, activeTab, loadingPermissions]);
 
   return (
     <div className="sampling-page-container layout-page-padding">
