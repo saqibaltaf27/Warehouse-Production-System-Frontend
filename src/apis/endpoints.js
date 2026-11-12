@@ -148,7 +148,11 @@ export const API_ENDPOINTS = {
   QC: {
     CREATE_TEMPLATE: '/coa-template',
     GET_ALL_TEMPLATES: '/coa-template',
-    GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`
+    GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`,
+    LIST_COA_REPORTS: '/coa-report',
+    USED_COA_BATCHES: '/coa-report/used-batches',
+    GET_COA_REPORT: (coaNo) => `/coa-report/${coaNo}`,
+    SAVE_COA_REPORT: '/coa-report'
   },
 
   SAMPLING: {

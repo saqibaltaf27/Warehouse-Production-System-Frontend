@@ -112,13 +112,7 @@
   color: #1e293b;
 }
 
-.tickets-form-head h3::before {
-  content: "";
-  width: 4px;
-  height: 22px;
-  border-radius: 2px;
-  background: #166534;
-}
+
 
 .tickets-form-close {
   width: 32px;

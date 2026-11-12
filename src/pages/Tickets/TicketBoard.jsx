@@ -49,6 +49,7 @@ const TicketBoard = ({ ticketType }) => {
   const [remark, setRemark] = useState("");
   const [savingRemark, setSavingRemark] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [formTicketType, setFormTicketType] = useState(ticketType);
   const [description, setDescription] = useState("");
   const [savingTicket, setSavingTicket] = useState(false);
   const [dragging, setDragging] = useState(null);
@@ -93,6 +94,7 @@ const TicketBoard = ({ ticketType }) => {
   useEffect(() => {
     loadTickets();
     ticketsApi.getEmployees().then((response) => setEmployees(response?.data || [])).catch(() => {});
+    setFormTicketType(ticketType);
   }, [ticketType]);
 
   const updateFilter = (key, value) => {
@@ -145,14 +147,25 @@ const TicketBoard = ({ ticketType }) => {
     }
   };
 
+  const openCreateForm = () => {
+    setFormTicketType(ticketType);
+    setDescription("");
+    setShowForm(true);
+  };
+
+  const closeCreateForm = () => {
+    setShowForm(false);
+    setDescription("");
+    setFormTicketType(ticketType);
+  };
+
   const createTicket = async (event) => {
     event.preventDefault();
     if (!description.trim()) return;
     setSavingTicket(true);
     try {
-      await ticketsApi.createTicket({ ticketType, description: description.trim() });
-      setShowForm(false);
-      setDescription("");
+      await ticketsApi.createTicket({ ticketType: formTicketType, description: description.trim() });
+      closeCreateForm();
       toast.success("Ticket created");
       loadTickets();
     } catch (err) {
@@ -205,7 +218,6 @@ const TicketBoard = ({ ticketType }) => {
 
   return (
     <div className="ticket-board">
-      <h2 className="ticket-board-title">{ticketType} Tickets</h2>
       <div className="po-filter-toolbar-card">
         <div className="po-filter-toolbar-grid">
           <div className="po-filter-item po-filter-search-box">
@@ -240,7 +252,7 @@ const TicketBoard = ({ ticketType }) => {
           <div className="ticket-board-filter-actions">
             <Button type="button" variant="danger" onClick={exportPdf}>PDF</Button>
             <Button type="button" variant="success" onClick={exportExcel}>Excel</Button>
-            <Button type="button" variant="primary" onClick={() => setShowForm(true)}>Create Ticket</Button>
+            <Button type="button" variant="primary" onClick={openCreateForm}>Create Ticket</Button>
           </div>
         </div>
       </div>
@@ -435,11 +447,11 @@ const TicketBoard = ({ ticketType }) => {
         </GlobalPopup>
       )}
       {showForm && (
-        <GlobalPopup className="tickets-popup" title="Create IT Support Request" onClose={() => setShowForm(false)} showClose={false}>
+        <GlobalPopup className="tickets-popup" title="Create Ticket" onClose={closeCreateForm} showClose={false}>
           <form className="tickets-form" onSubmit={createTicket}>
             <div className="tickets-form-head">
-              <h3>Create IT Support Request</h3>
-              <button type="button" className="tickets-form-close" onClick={() => setShowForm(false)} aria-label="Close">×</button>
+              <h3>Create Ticket</h3>
+              <button type="button" className="tickets-form-close" onClick={closeCreateForm} aria-label="Close">×</button>
             </div>
             <div className="tickets-form-body">
               <label className="tickets-field">
@@ -447,8 +459,17 @@ const TicketBoard = ({ ticketType }) => {
                 <input value={employeeName} disabled />
               </label>
               <label className="tickets-field">
-                <span>Ticket Type</span>
-                <input value={ticketType} disabled />
+                <span>Ticket Type <em>*</em></span>
+                <select
+                  value={formTicketType}
+                  onChange={(event) => setFormTicketType(event.target.value)}
+                  required
+                >
+                  <option value="Quality">Quality</option>
+                  <option value="Production">Production</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Administration">Administration</option>
+                </select>
               </label>
               <label className="tickets-field">
                 <span>Description <em>*</em></span>
@@ -462,7 +483,7 @@ const TicketBoard = ({ ticketType }) => {
               </label>
             </div>
             <div className="tickets-form-actions">
-              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={closeCreateForm}>Cancel</Button>
               <Button type="submit" variant="primary" isLoading={savingTicket}>
                 <IconSend size={15} />
                 Submit Ticket

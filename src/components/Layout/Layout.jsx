@@ -46,6 +46,8 @@ const Layout = () => {
     "/production/tickets": "Production Tickets",
     "/qc/tickets": "Quality Tickets",
     "/engineering-dashboard/tickets": "Engineering Tickets",
+    "/administration/tickets": "Administration Tickets",
+    "/administration": "Administration",
     "/production": "Production",
     "/production-plan/add": "Create Production Plan",
     "/production-plan/edit": "Edit Production Plan",

@@ -24,11 +24,12 @@ const COATemplates = () => {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const [formData, setFormData] = useState({
-    product: null,
+    products: [],
     tests: [
       { id: 1, test: '', specification: '', result: '' }
     ]
   });
+  const [isEditing, setIsEditing] = useState(false);
 
   const fetchSavedTemplates = async () => {
     try {
@@ -107,26 +108,45 @@ const COATemplates = () => {
       border: state.isFocused ? '1px solid #1b47db' : '1px solid #ccc',
       borderRadius: '2px',
       boxShadow: 'none',
-      minHeight: '26px',
-      height: '26px',
+      minHeight: '32px',
       fontSize: '12px',
     }),
     valueContainer: (base) => ({
       ...base,
-      height: '24px',
-      padding: '0 8px',
+      padding: '2px 8px',
+      gap: '4px',
+    }),
+    multiValue: (base) => ({
+      ...base,
+      background: '#e8eefc',
+      borderRadius: '2px',
+    }),
+    multiValueLabel: (base) => ({
+      ...base,
+      fontSize: '12px',
+      color: '#1e293b',
     }),
     indicatorsContainer: (base) => ({
       ...base,
-      height: '24px',
+      alignSelf: 'stretch',
     }),
     menuPortal: base => ({ ...base, zIndex: 9999 })
   };
 
+  const resetForm = () => {
+    setFormData({
+      products: [],
+      tests: [{ id: 1, test: '', specification: '', result: '' }]
+    });
+    setIsEditing(false);
+    setShowError(false);
+  };
+
   const handleSave = async () => {
-    if (!formData.product) {
+    const selectedProducts = Array.isArray(formData.products) ? formData.products : [];
+    if (!selectedProducts.length) {
       setShowError(true);
-      toast.error('Please select a product first.');
+      toast.error('Please select at least one product.');
       return;
     }
     setShowError(false);
@@ -139,7 +159,7 @@ const COATemplates = () => {
     try {
       setIsSaving(true);
       const payload = {
-        itemCode: formData.product.value,
+        itemCodes: selectedProducts.map((p) => p.value),
         description: JSON.stringify(validTests),
         createdBy: user?.EmpID || user?.emp_id || user?.id || 0
       };
@@ -148,10 +168,7 @@ const COATemplates = () => {
       
       if (res.data.success) {
         toast.success(res.data.message || 'COA Template saved successfully!');
-        setFormData({
-          product: null,
-          tests: [{ id: 1, test: '', specification: '', result: '' }]
-        });
+        resetForm();
         setShowCreateForm(false);
         fetchSavedTemplates();
       } else {
@@ -178,21 +195,22 @@ const COATemplates = () => {
   const handleEdit = async (e, row) => {
     e.stopPropagation(); // Prevent row click from opening modal
     try {
-      // Try to fetch the full label
-      let fullLabel = row.ItemCode;
-      try {
-        const items = await fetchProducts(row.ItemCode);
-        const matched = items.find(i => i.value === row.ItemCode);
-        if (matched) {
-          fullLabel = matched.label;
+      let fullLabel = row.ItemName
+        ? `${row.ItemCode} - ${row.ItemName}`
+        : row.ItemCode;
+      if (!row.ItemName) {
+        try {
+          const items = await fetchProducts(row.ItemCode);
+          const matched = items.find(i => i.value === row.ItemCode);
+          if (matched) fullLabel = matched.label;
+        } catch (err) {
+          console.error("Failed to fetch full item label", err);
         }
-      } catch (err) {
-        console.error("Failed to fetch full item label", err);
       }
 
       const testsArray = JSON.parse(row.Description);
       setFormData({
-        product: { value: row.ItemCode, label: fullLabel },
+        products: [{ value: row.ItemCode, label: fullLabel }],
         tests: testsArray.map((t, index) => ({
           id: index + 1,
           test: t.test || t.tests,
@@ -200,6 +218,7 @@ const COATemplates = () => {
           result: t.result
         }))
       });
+      setIsEditing(true);
       setShowCreateForm(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
@@ -215,19 +234,26 @@ const COATemplates = () => {
   };
 
   const tableColumns = [
-    { key: 'ItemCode', header: 'Item Code', width: '30%' },
-    { 
-      key: 'CreatedDate', 
-      header: 'Created Date', 
-      width: '30%',
-      render: (row) => new Date(row.CreatedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) 
+    { key: 'ItemCode', header: 'Item Code', width: '18%' },
+    {
+      key: 'ItemName',
+      header: 'Item Name',
+      width: '28%',
+      render: (row) => row.ItemName || '—'
     },
     { 
       key: 'CreatedBy', 
       header: 'Created By', 
-      width: '20%',
-      render: (row) => row.CreatedBy || 'N/A'
+      width: '18%',
+      render: (row) => row.CreatedByName || row.CreatedBy || 'N/A'
     },
+    { 
+      key: 'CreatedDate', 
+      header: 'Created Date', 
+      width: '18%',
+      render: (row) => new Date(row.CreatedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) 
+    },
+
     {
       key: 'actions',
       header: 'Actions',
@@ -260,10 +286,7 @@ const COATemplates = () => {
         <h2 className="coa-template-title"></h2>
         {!showCreateForm && (
           <Button variant="primary" onClick={() => {
-            setFormData({
-              product: null,
-              tests: [{ id: 1, test: '', specification: '', result: '' }]
-            });
+            resetForm();
             setShowCreateForm(true);
           }} icon={<IconPlus size={18} />}>
             Create Template
@@ -273,31 +296,29 @@ const COATemplates = () => {
 
       {showCreateForm && (
         <div className="add-sample-wrapper">
-          <h2 className="add-sample-title">
-            {formData.product && savedTemplates.some(t => t.ItemCode === formData.product.value) ? 'Update COA Template' : 'Create COA Template'}
-          </h2>
-
           <div className="add-sample-grid">
             <div className="add-sample-col" style={{ maxWidth: '100%' }}>
               <div className="add-sample-field">
-                <label className="add-sample-label">Product</label>
+                <label className="add-sample-label">Product(s)</label>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <AsyncSelect
                     cacheOptions
                     defaultOptions
+                    isMulti
+                    closeMenuOnSelect={false}
                     loadOptions={fetchProducts}
                     onChange={(selected) => {
-                      setFormData(prev => ({ ...prev, product: selected }));
-                      if (selected) setShowError(false);
+                      setFormData(prev => ({ ...prev, products: selected || [] }));
+                      if (selected?.length) setShowError(false);
                     }}
-                    value={formData.product}
+                    value={formData.products}
                     styles={customSelectStyles}
-                    placeholder="Search and select a product..."
+                    placeholder="Search and select one or more products..."
                     isClearable
                     menuPortalTarget={document.body}
                     menuPosition="fixed"
                   />
-                  {showError && <span className="coa-template-error">Product is required</span>}
+                  {showError && <span className="coa-template-error">Select at least one product</span>}
                 </div>
               </div>
             </div>
@@ -363,9 +384,9 @@ const COATemplates = () => {
         </div>
 
         <div className="add-sample-footer">
-          <Button variant="outline" onClick={() => setShowCreateForm(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => { resetForm(); setShowCreateForm(false); }}>Cancel</Button>
           <Button variant="primary" onClick={handleSave} isLoading={isSaving}>
-            {formData.product && savedTemplates.some(t => t.ItemCode === formData.product.value) ? 'Save Changes' : 'Save Template'}
+            {isEditing ? 'Save Changes' : 'Save Template'}
           </Button>
         </div>
 
@@ -386,7 +407,7 @@ const COATemplates = () => {
       {/* Template Details Modal */}
       {selectedTemplate && (
         <GlobalPopup 
-          title={`Template Details - ${selectedTemplate.ItemCode}`} 
+          title={`Template Details - ${selectedTemplate.ItemCode}${selectedTemplate.ItemName ? ` — ${selectedTemplate.ItemName}` : ''}`} 
           onClose={() => setSelectedTemplate(null)}
           className="coa-template-modal"
         >
@@ -397,13 +418,14 @@ const COATemplates = () => {
               <div className="coa-template-modal-title-wrapper">
                 <h2 className="coa-template-modal-title">
                   Item Code : {selectedTemplate.ItemCode}
+                  {selectedTemplate.ItemName ? ` — ${selectedTemplate.ItemName}` : ''}
                 </h2>
              
               </div>
               <p className="coa-template-modal-subtitle">
                 Created on {new Date(selectedTemplate.CreatedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} 
                 &nbsp;&nbsp;•&nbsp;&nbsp; 
-                Created By: {selectedTemplate.CreatedBy || 'N/A'}
+                Created By: {selectedTemplate.CreatedByName || selectedTemplate.CreatedBy || 'N/A'}
               </p>
             </div>
 

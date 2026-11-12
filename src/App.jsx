@@ -63,6 +63,7 @@ function AppContent() {
             <Route path="production/tickets" element={<ProtectedRoute requiredRoute="/production"><TicketBoard ticketType="Production" /></ProtectedRoute>} />
             <Route path="qc/tickets" element={<ProtectedRoute requiredRoute="/qc"><TicketBoard ticketType="Quality" /></ProtectedRoute>} />
             <Route path="engineering-dashboard/tickets" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><TicketBoard ticketType="Engineering" /></ProtectedRoute>} />
+            <Route path="administration/tickets" element={<ProtectedRoute requiredRoute="/administration/tickets"><TicketBoard ticketType="Administration" /></ProtectedRoute>} />
             <Route path="production" element={<ProtectedRoute requiredRoute="/production"><Production /></ProtectedRoute>} />
             <Route path="production-plan/add" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="production-plan/edit" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />

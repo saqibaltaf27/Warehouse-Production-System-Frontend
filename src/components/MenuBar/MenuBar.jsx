@@ -35,6 +35,18 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
     setOpenFlyoutTitle(null);
   };
 
+  // Block menu navigation while Create/Edit Sample form is open (QCSampling listens)
+  const guardNavClick = (event, path) => {
+    if (!window.__wpsSampleFormBlocking || !path || path === '#') return false;
+    event.preventDefault();
+    event.stopPropagation();
+    window.dispatchEvent(
+      new CustomEvent('wps-sample-leave-attempt', { detail: { path } })
+    );
+    if (typeof onNavigate === 'function') onNavigate();
+    return true;
+  };
+
   const menuItems = [
     {
       title: "My Workspace",
@@ -56,7 +68,6 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
      //   { title: 'Production Tracking ', path: '/production?tab=production-tracking', tabKey: 'production-tracking', sub_module: 'Production Tracking' },
         { title: 'Production Forecast', path: '/production?tab=lds-dx-forecast', tabKey: 'lds-dx-forecast', sub_module: 'Production Forecast' },
         { title: 'Tickets', path: '/production/tickets' ,sub_module: 'ProductionTickets' },
-
         {
           title: 'Reports',
           sub_module: 'Reports',
@@ -112,6 +123,15 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       subItems: [
         { title: 'Inventory Overview', path: '/inventory?tab=overview', tabKey: 'overview', sub_module: 'Inventory Overview' },
         { title: 'Item Master', path: '/inventory?tab=master', tabKey: 'master', sub_module: 'Item Master' },
+      ]
+    },
+    {
+      title: "Administration",
+      path: "/administration",
+      main_module: "Administration",
+      icon: <IconSettings size={18} stroke={1.5} />,
+      subItems: [
+        { title: 'Tickets', path: '/administration/tickets' ,sub_module: 'Administration Tickets' },
       ]
     },
 
@@ -273,9 +293,10 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
                     onClick={(e) => {
                       if (hasSubItems) {
                         toggleMenu(item.title, e);
-                      } else {
-                        onNavigate();
+                        return;
                       }
+                      if (guardNavClick(e, item.path)) return;
+                      onNavigate();
                     }}
                   >
                     <div className="nav-item-left">
@@ -344,7 +365,12 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
                                             key={`fly-${flyIdx}`}
                                             to={flyItem.path}
                                             className={() => `sidebar-flyout-item ${isFlyActive ? 'active' : ''}`}
-                                            onClick={() => {
+                                            onClick={(e) => {
+                                              if (guardNavClick(e, flyItem.path)) {
+                                                setOpenFlyoutTitle(null);
+                                                setFlyoutDismissed(true);
+                                                return;
+                                              }
                                               setOpenFlyoutTitle(null);
                                               setFlyoutDismissed(true);
                                               onNavigate();
@@ -362,7 +388,8 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
                               <NavLink
                                 to={subItem.path}
                                 className={() => `sidebar-subnav-item ${isSubActive ? "active" : ""}`}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  if (guardNavClick(e, subItem.path)) return;
                                   onNavigate();
                                 }}
                               >

@@ -7,6 +7,9 @@ const PermissionContext = createContext(null);
 
 const normalizeName = (value) => String(value || "").trim().toLowerCase();
 
+const permissionKey = (mainModule, subModule = '', childModule = '') =>
+  `${normalizeName(mainModule)}||${normalizeName(subModule)}||${normalizeName(childModule)}`;
+
 const setHasName = (set, name) => {
   const target = normalizeName(name);
   if (!target || !set) return false;
@@ -22,6 +25,7 @@ export const PermissionProvider = ({ children }) => {
   const [allowedModules, setAllowedModules] = useState(new Set());
   const [allowedSubModules, setAllowedSubModules] = useState(new Set());
   const [allowedChildModules, setAllowedChildModules] = useState(new Set());
+  const [allowedPermissionKeys, setAllowedPermissionKeys] = useState(new Set());
   const [allowedRoutes, setAllowedRoutes] = useState(new Set());
   const [loadingPermissions, setLoadingPermissions] = useState(true);
 
@@ -53,6 +57,7 @@ export const PermissionProvider = ({ children }) => {
           const allowedMainModules = new Set();
           const allowedSubModuleSet = new Set();
           const allowedChildModuleSet = new Set();
+          const allowedPermissionKeySet = new Set();
           const allowedRouteSet = new Set();
           
           allPermissions.forEach(perm => {
@@ -66,6 +71,9 @@ export const PermissionProvider = ({ children }) => {
               if (perm.child_module) {
                 allowedChildModuleSet.add(perm.child_module);
               }
+              allowedPermissionKeySet.add(
+                permissionKey(perm.main_module, perm.sub_module, perm.child_module)
+              );
               if (perm.Route) {
                 allowedRouteSet.add(perm.Route);
                 const routePath = perm.Route.split('?')[0];
@@ -77,6 +85,7 @@ export const PermissionProvider = ({ children }) => {
           setAllowedModules(allowedMainModules);
           setAllowedSubModules(allowedSubModuleSet);
           setAllowedChildModules(allowedChildModuleSet);
+          setAllowedPermissionKeys(allowedPermissionKeySet);
           setAllowedRoutes(allowedRouteSet);
         }
       } catch (err) {
@@ -98,20 +107,31 @@ export const PermissionProvider = ({ children }) => {
     return setHasName(allowedSubModules, subModule);
   }, [user, allowedModules, allowedSubModules]);
 
+  /** Exact main + sub + child match from granted ACL rows. */
+  const hasChildPermission = useCallback((mainModule, subModule, childModule) => {
+    if (user?.isSuperAdmin) return true;
+    if (!mainModule || !subModule || !childModule) return false;
+    return allowedPermissionKeys.has(permissionKey(mainModule, subModule, childModule));
+  }, [user, allowedPermissionKeys]);
+
   const value = useMemo(() => ({
     allowedModules,
     allowedSubModules,
     allowedChildModules,
+    allowedPermissionKeys,
     allowedRoutes,
     loadingPermissions,
     hasModulePermission,
+    hasChildPermission,
   }), [
     allowedModules,
     allowedSubModules,
     allowedChildModules,
+    allowedPermissionKeys,
     allowedRoutes,
     loadingPermissions,
     hasModulePermission,
+    hasChildPermission,
   ]);
 
   return (

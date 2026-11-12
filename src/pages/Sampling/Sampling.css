@@ -107,21 +107,16 @@
   margin-bottom: 8px;
 }
 
-.sample-header-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
 .qc-decision-summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   width: fit-content;
-  min-height: 34px;
-  padding: 6px 14px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 14px;
+  box-sizing: border-box;
   border: 1px solid transparent;
   border-radius: 4px;
   font-size: 12px;
@@ -573,14 +568,18 @@
 
 .sample-header-left {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  min-height: 36px;
 }
 
 .sample-mode-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-left: auto;
+  min-height: 36px;
 }
 
 .sample-doc-field {
@@ -671,6 +670,42 @@
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.global-popup.sample-leave-confirm-popup {
+  width: min(100%, 440px);
+  max-width: 440px;
+  border-radius: 12px;
+  overflow: visible;
+}
+
+.sample-leave-confirm {
+  padding: 28px 24px 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sample-leave-confirm-title {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.3;
+}
+
+.sample-leave-confirm-text {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.sample-leave-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
 }
 
 @page {

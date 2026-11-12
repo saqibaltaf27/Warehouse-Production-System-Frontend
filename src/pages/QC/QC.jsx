@@ -39,7 +39,7 @@ const QC = () => {
 
   return (
     <div>
-      <div className="qc-header">
+      <div>
         
         {/* <div style={{ marginBottom: '20px' }}>
           <Tabs

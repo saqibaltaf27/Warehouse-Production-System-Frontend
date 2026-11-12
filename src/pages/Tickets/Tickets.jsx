@@ -52,6 +52,7 @@ const Tickets = () => {
       width: "320px",
       render: (row) => <ExpandableText text={row.description} />,
     },
+    { header: "Department", key: "department" },
     {
       header: "Status",
       key: "status",
@@ -126,10 +127,10 @@ const Tickets = () => {
       />
       {error && <p className="tickets-error">{error}</p>}
       {showForm && (
-        <GlobalPopup className="tickets-popup" title="Create IT Support Request" onClose={closeForm} showClose={false}>
+        <GlobalPopup className="tickets-popup" title="Create Ticket" onClose={closeForm} showClose={false}>
           <form className="tickets-form" onSubmit={createTicket}>
             <div className="tickets-form-head">
-              <h3>Create IT Support Request</h3>
+              <h3>Create Ticket</h3>
               <button type="button" className="tickets-form-close" onClick={closeForm} aria-label="Close">×</button>
             </div>
             <div className="tickets-form-body">
@@ -146,6 +147,7 @@ const Tickets = () => {
                   <option value="Quality">Quality</option>
                   <option value="Production">Production</option>
                   <option value="Engineering">Engineering</option>
+                  <option value="Administration">Administration</option>
                 </select>
               </label>
               <label className="tickets-field">

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
+import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Select from 'react-select';
@@ -156,6 +157,10 @@ const QCSampling = () => {
   const [qcCounter, setQcCounter] = useState(1); // Local counter for sampling number
   const [printModalRow, setPrintModalRow] = useState(null);
   const [linesLoading, setLinesLoading] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [pendingLeavePath, setPendingLeavePath] = useState('');
+  const allowParamActionRef = useRef(false);
   
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -173,6 +178,18 @@ const QCSampling = () => {
     BatchNo: ''
   });
   const [sampleItems, setSampleItems] = useState([]);
+
+  const hasUnsavedSampleWork = (() => {
+    if (!showAddSample) return false;
+    if (formMode === 'edit') return true;
+    if (formMode !== 'create') return false;
+    // Only warn on create after the user actually starts the form (document selected)
+    if (sampleForm.DocumentEntry) return true;
+    if (sampleItems.some((item) => item.CollectSample || item.ManualQCNo || item.QCRequestNumber)) return true;
+    return false;
+  })();
+
+  const isSampleFormBlocking = hasUnsavedSampleWork;
 
   const handleDocumentSelect = async (value, label, row) => {
     if (!row) {
@@ -335,9 +352,7 @@ const QCSampling = () => {
     fetchSavedSamples();
   }, [page, limit, listMode, statusFilter, qcCompleteFilter, docTypeFilter, fromDate, toDate, debouncedSearch]);
 
-  useEffect(() => {
-    if (searchParams.get('create') !== '1') return;
-
+  const openCreateSampleForm = () => {
     setFormMode('create');
     setSampleForm({
       DocumentType: 'Goods Receipt PO',
@@ -352,18 +367,71 @@ const QCSampling = () => {
     });
     setSampleItems([]);
     setShowAddSample(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
+  useEffect(() => {
+    window.__wpsSampleFormBlocking = isSampleFormBlocking;
+    return () => {
+      window.__wpsSampleFormBlocking = false;
+    };
+  }, [isSampleFormBlocking]);
+
+  useEffect(() => {
+    const onLeaveAttempt = (event) => {
+      if (!isSampleFormBlocking) return;
+      setPendingLeavePath(event?.detail?.path || '');
+      setShowLeaveConfirm(true);
+    };
+    window.addEventListener('wps-sample-leave-attempt', onLeaveAttempt);
+    return () => window.removeEventListener('wps-sample-leave-attempt', onLeaveAttempt);
+  }, [isSampleFormBlocking]);
+
+  useEffect(() => {
+    if (!isSampleFormBlocking) return undefined;
+    const onBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [isSampleFormBlocking]);
+
+  useEffect(() => {
+    if (searchParams.get('create') !== '1') return;
+
+    if (isSampleFormBlocking && !allowParamActionRef.current) {
+      setPendingLeavePath('/sampling?tab=qc&create=1');
+      setShowLeaveConfirm(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('create');
+      setSearchParams(next, { replace: true });
+      return;
+    }
+
+    allowParamActionRef.current = false;
+    openCreateSampleForm();
     const next = new URLSearchParams(searchParams);
     next.delete('create');
     setSearchParams(next, { replace: true });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get('view') === 'list') {
-      setShowAddSample(false);
-      setListMode('all');
+    if (searchParams.get('view') !== 'list') return;
+
+    if (isSampleFormBlocking && !allowParamActionRef.current) {
+      setPendingLeavePath('/sampling?tab=qc&view=list');
+      setShowLeaveConfirm(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('view');
+      setSearchParams(next, { replace: true });
+      return;
     }
+
+    allowParamActionRef.current = false;
+    setShowAddSample(false);
+    setFormMode('create');
+    setListMode('all');
   }, [searchParams]);
 
   useEffect(() => {
@@ -371,6 +439,59 @@ const QCSampling = () => {
       setSampleForm(prev => ({ ...prev, SamplingBy: user.firstName || user.FirstName || '' }));
     }
   }, [user, formMode]);
+
+  const closeSampleForm = () => {
+    const nextPath = pendingLeavePath;
+    setShowLeaveConfirm(false);
+    setPendingLeavePath('');
+    setShowAddSample(false);
+    setFormMode('create');
+
+    if (!nextPath) return;
+
+    if (nextPath.includes('create=1')) {
+      allowParamActionRef.current = true;
+      navigate(nextPath);
+      return;
+    }
+    if (nextPath.includes('view=list')) {
+      allowParamActionRef.current = true;
+      navigate(nextPath);
+      return;
+    }
+    navigate(nextPath);
+  };
+
+  const stayOnSampleForm = () => {
+    setShowLeaveConfirm(false);
+    setPendingLeavePath('');
+  };
+
+  const requestLeaveSampleForm = () => {
+    if (hasUnsavedSampleWork) {
+      setPendingLeavePath('');
+      setShowLeaveConfirm(true);
+      return;
+    }
+    closeSampleForm();
+  };
+
+  const requestSaveSample = () => {
+    if (!sampleForm.DocumentEntry) {
+      toast.error('Please select a document first.');
+      return;
+    }
+    if (!sampleItems.length) {
+      toast.error('Please add at least one sample line.');
+      return;
+    }
+    setShowSaveConfirm(true);
+  };
+
+  const confirmSaveSample = () => {
+    setShowSaveConfirm(false);
+    handleSave();
+  };
 
   const handleSave = () => {
     let uType = null;
@@ -848,13 +969,63 @@ const QCSampling = () => {
         </div>,
         document.body
       )}
+      {showLeaveConfirm && (
+        <GlobalPopup
+          title="Leave without saving?"
+          onClose={stayOnSampleForm}
+          showClose={false}
+          className="sample-leave-confirm-popup"
+        >
+          <div className="sample-leave-confirm">
+            <h3 className="sample-leave-confirm-title">
+              {formMode === 'edit' ? 'Discard sample changes?' : 'Leave create sample?'}
+            </h3>
+            <p className="sample-leave-confirm-text">
+              {formMode === 'edit'
+                ? 'You have unsaved edits. If you go back now, your changes will be lost.'
+                : 'You have not saved this sample. If you go back now, your entered data will be lost.'}
+            </p>
+            <div className="sample-leave-confirm-actions">
+              <Button variant="outline" onClick={stayOnSampleForm}>Stay</Button>
+              <Button variant="primary" onClick={closeSampleForm}>
+                {formMode === 'edit' ? 'Discard & Leave' : 'Leave without saving'}
+              </Button>
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
+
+      {showSaveConfirm && (
+        <GlobalPopup
+          title={formMode === 'edit' ? 'Confirm update' : 'Confirm create'}
+          onClose={() => setShowSaveConfirm(false)}
+          showClose={false}
+          className="sample-leave-confirm-popup"
+        >
+          <div className="sample-leave-confirm">
+            <h3 className="sample-leave-confirm-title">
+              {formMode === 'edit' ? 'Update this sample?' : 'Create this sample?'}
+            </h3>
+            <p className="sample-leave-confirm-text">
+              {formMode === 'edit'
+                ? 'Are you sure you want to update this sample? This action cannot be undone.'
+                : 'Are you sure you want to create this sample? This action cannot be undone.'}
+            </p>
+            <div className="sample-leave-confirm-actions">
+              <Button variant="outline" onClick={() => setShowSaveConfirm(false)}>Cancel</Button>
+              <Button variant="primary" disabled={loading} onClick={confirmSaveSample}>
+                {formMode === 'edit' ? 'Yes, Update Sample' : 'Yes, Create Sample'}
+              </Button>
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
+
       {showAddSample && (
         <div className="add-sample-wrapper">
           <div className="add-sample-header section-header-flex">
             <div className="sample-header-left">
-              {formMode !== 'create' && (
-                <Button variant="outline" icon={<IconArrowLeft size={16} />} onClick={() => setShowAddSample(false)}>Back</Button>
-              )}
+              <Button variant="outline" icon={<IconArrowLeft size={16} />} onClick={requestLeaveSampleForm}>Back</Button>
               {formMode !== 'create' && (
                 <div
                   className={`qc-decision-summary qc-decision-${qcDecisionSummary.toLowerCase().replace(/\s+/g, '-')}`}
@@ -988,8 +1159,10 @@ const QCSampling = () => {
           
           <div className="add-sample-footer">
             {formMode !== 'view' && (
-              <Button variant="primary" disabled={loading} onClick={handleSave}>
-                {loading ? 'Creating' : 'Create Sample'}
+              <Button variant="primary" disabled={loading} onClick={requestSaveSample}>
+                {loading
+                  ? (formMode === 'edit' ? 'Updating...' : 'Creating...')
+                  : (formMode === 'edit' ? 'Update Sample' : 'Create Sample')}
               </Button>
             )}
           </div>
