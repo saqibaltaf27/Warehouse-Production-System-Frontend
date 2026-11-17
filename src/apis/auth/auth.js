@@ -11,6 +11,6 @@ export const authApi = {
   },
 
   getMe: async () => {
-    return axiosInstance.get(API_ENDPOINTS.AUTH.ME);
+    return axiosInstance.get(API_ENDPOINTS.AUTH.ME, { skipGlobalLoading: true });
   }
 };

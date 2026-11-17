@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import axios from 'axios';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { axiosInstance } from '../../apis/axiosinstance';
 import Select from 'react-select';
 import { IconRefresh, IconSearch, IconArrowLeft, IconFileSpreadsheet } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
@@ -210,8 +210,9 @@ const QCSampling = () => {
     setLinesLoading(true);
 
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/document-details`, {
-        params: { docType: sampleForm.DocumentType, docEntry: row.DocEntry }
+      const res = await axiosInstance.get('/sampling/document-details', {
+        params: { docType: sampleForm.DocumentType, docEntry: row.DocEntry },
+        skipGlobalLoading: true,
       });
       if (res.data?.success) {
         const grouped = new Map();
@@ -244,12 +245,15 @@ const QCSampling = () => {
         setSampleItems(lines);
       }
       
-      const qcRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/next-qc-number`);
+      const qcRes = await axiosInstance.get('/sampling/next-qc-number', {
+        skipGlobalLoading: true,
+      });
       if (qcRes.data?.success) {
         setQcCounter(qcRes.data.nextId);
       }
     } catch (err) {
       console.error("Failed to fetch document details", err);
+      toast.error(err.response?.data?.message || 'Failed to load document lines');
     } finally {
       setLinesLoading(false);
     }
@@ -274,8 +278,9 @@ const QCSampling = () => {
   const fetchSavedSamples = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
+      const res = await axiosInstance.get('/sampling/saved-samples', {
         params: buildSampleParams(),
+        skipGlobalLoading: true,
       });
       if (res.data?.success) {
         setData(res.data.data);
@@ -290,8 +295,9 @@ const QCSampling = () => {
   const handleExportExcel = async () => {
     try {
       setExporting(true);
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-samples`, {
+      const res = await axiosInstance.get('/sampling/saved-samples', {
         params: buildSampleParams({ page: 1, limit: Math.max(totalRecords, 1000) }),
+        skipGlobalLoading: true,
       });
       if (!res.data?.success) {
         toast.error(res.data?.message || 'Failed to export samples');
@@ -527,7 +533,9 @@ const QCSampling = () => {
     };
     
     setLoading(true);
-    const savePromise = axios.post(`${import.meta.env.VITE_API_BASE_URL}/sampling/save`, payload)
+    const savePromise = axiosInstance.post('/sampling/save', payload, {
+      skipGlobalLoading: true,
+    })
       .then(res => {
         if (!res.data?.success) {
           throw new Error(res.data?.message || "Failed to save sample");
@@ -550,7 +558,9 @@ const QCSampling = () => {
   const handleRowClick = async (row) => {
     const docnum = row['Sampling No'];
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/sampling/saved-sample/${docnum}`);
+      const res = await axiosInstance.get(`/sampling/saved-sample/${docnum}`, {
+        skipGlobalLoading: true,
+      });
       if (res.data?.success) {
         const { header, lines } = res.data.data;
         

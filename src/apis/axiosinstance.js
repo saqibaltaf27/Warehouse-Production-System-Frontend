@@ -38,6 +38,23 @@ const stopGlobalLoading = () => {
   }
 };
 
+const shouldTrackLoading = (config) =>
+  Boolean(config) &&
+  config.url !== API_ENDPOINTS.AUTH.REFRESH &&
+  !config.skipGlobalLoading;
+
+const markLoadingStarted = (config) => {
+  if (!shouldTrackLoading(config) || config.__loadingStarted) return;
+  config.__loadingStarted = true;
+  startGlobalLoading();
+};
+
+const markLoadingStopped = (config) => {
+  if (!config?.__loadingStarted) return;
+  config.__loadingStarted = false;
+  stopGlobalLoading();
+};
+
 // --- REQUEST INTERCEPTOR ---
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -54,16 +71,14 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
-    
-    // Do not show global loading for background refresh calls or if explicitly skipped
-    if (config.url !== API_ENDPOINTS.AUTH.REFRESH && !config.skipGlobalLoading) {
-      startGlobalLoading();
-    }
-    
+
+    // Count each logical request once (retries must not double-open the overlay)
+    markLoadingStarted(config);
+
     return config;
   },
   (error) => {
-    stopGlobalLoading();
+    markLoadingStopped(error?.config);
     return Promise.reject(error);
   }
 );
@@ -71,34 +86,25 @@ axiosInstance.interceptors.request.use(
 // --- RESPONSE INTERCEPTOR ---
 axiosInstance.interceptors.response.use(
   (response) => {
-    if (response.config.url !== API_ENDPOINTS.AUTH.REFRESH && !response.config.skipGlobalLoading) {
-      stopGlobalLoading();
-    }
+    markLoadingStopped(response.config);
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
 
-    // We make sure to stop loading if it's an error and not retrying yet
-    if (originalRequest && originalRequest.url !== API_ENDPOINTS.AUTH.REFRESH && !originalRequest.skipGlobalLoading && error.response?.status !== 401) {
-      stopGlobalLoading();
-    } else if (originalRequest && originalRequest._retry && !originalRequest.skipGlobalLoading) {
-      // If we are already retrying and it fails, stop loading
-      stopGlobalLoading();
-    }
-
     // A failed login is a bad email or password, not an expired session.
     if (error.response?.status === 401 && originalRequest?.url === API_ENDPOINTS.AUTH.LOGIN) {
-      stopGlobalLoading();
+      markLoadingStopped(originalRequest);
       return Promise.reject(error);
     }
 
     // If the error is 401 (Unauthorized) and we haven't already retried this request
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
       
       // If the failing request WAS the refresh endpoint, it means our refresh token is dead.
       // We must log out the user.
       if (originalRequest.url === API_ENDPOINTS.AUTH.REFRESH) {
+        markLoadingStopped(originalRequest);
         localStorage.removeItem('accessToken');
         window.location.href = '/login'; // Redirect to login
         return Promise.reject(error);
@@ -123,17 +129,15 @@ axiosInstance.interceptors.response.use(
             onRefreshed(newAccessToken);
             isRefreshing = false;
 
-            // Retry the original request immediately
+            // Retry the original request immediately (keeps __loadingStarted so overlay isn't doubled)
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            // This is a retry, so it will go through the request interceptor again.
-            // We shouldn't double increment, so we let the request interceptor handle it
             return axiosInstance(originalRequest);
           }
         } catch (refreshError) {
           // Refresh failed (e.g. cookie expired or invalid). Log out.
           isRefreshing = false;
           refreshSubscribers = []; // Clear queue
-          stopGlobalLoading();
+          markLoadingStopped(originalRequest);
           localStorage.removeItem('accessToken');
           window.location.href = '/login'; 
           return Promise.reject(refreshError);
@@ -141,14 +145,17 @@ axiosInstance.interceptors.response.use(
       } else {
         // If a refresh is already happening, we put this request into the queue
         // It returns a promise that resolves once the refresh succeeds.
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           subscribeTokenRefresh((newToken) => {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            resolve(axiosInstance(originalRequest));
+            axiosInstance(originalRequest).then(resolve).catch(reject);
           });
         });
       }
     }
+
+    // Non-401 / failed retry: always release the overlay for this request
+    markLoadingStopped(originalRequest);
 
     if (error.response?.status === 403 || error.response?.status === 429) {
       localStorage.removeItem('accessToken');
