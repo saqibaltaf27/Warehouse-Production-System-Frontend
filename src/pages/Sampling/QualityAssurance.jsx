@@ -2,14 +2,39 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
+import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
+import Select from 'react-select';
 import toast from 'react-hot-toast';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { IconFileSpreadsheet } from '@tabler/icons-react';
+import { IconFileSpreadsheet, IconPlus, IconTrash } from '@tabler/icons-react';
 import * as XLSX from 'xlsx';
 import './Sampling.css';
 import '../ProductionOrders/ProductionOrders.css';
+
+const paramSelectStyles = {
+  control: (base) => ({
+    ...base,
+    minHeight: '30px',
+    height: '30px',
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    height: '30px',
+    padding: '0 6px',
+  }),
+  input: (base) => ({
+    ...base,
+    margin: '0px',
+  }),
+  indicatorSeparator: () => ({ display: 'none' }),
+  indicatorsContainer: (base) => ({
+    ...base,
+    height: '30px',
+  }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+};
 
 const QualityAssurance = () => {
   const { user } = useAuth();
@@ -20,6 +45,8 @@ const QualityAssurance = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [createSaving, setCreateSaving] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [recordDetails, setRecordDetails] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -28,6 +55,7 @@ const QualityAssurance = () => {
   const [sampleQty, setSampleQty] = useState('');
   const [tableData, setTableData] = useState([]);
   const [equipmentOptions, setEquipmentOptions] = useState([]);
+  const [parameterOptions, setParameterOptions] = useState([]);
   const [employeeOptions, setEmployeeOptions] = useState([]);
   const [warehouseOptions, setWarehouseOptions] = useState([]);
   const [nextDocEntry, setNextDocEntry] = useState('');
@@ -94,6 +122,17 @@ const QualityAssurance = () => {
       }
     } catch (err) {
       console.error("Error fetching equipments:", err);
+    }
+  };
+
+  const fetchParameters = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/quality/parameters`);
+      if (res.data?.success) {
+        setParameterOptions(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching parameters:", err);
     }
   };
 
@@ -286,6 +325,7 @@ const QualityAssurance = () => {
 
   useEffect(() => {
     fetchEquipments();
+    fetchParameters();
     fetchEmployees();
     fetchDecisionOptions();
     fetchWarehouses();
@@ -432,6 +472,19 @@ const QualityAssurance = () => {
     });
   };
 
+  const openCreateConfirm = () => {
+    if (!itemCode) {
+      toast.error("Please select an item.");
+      return;
+    }
+    setShowCreateConfirm(true);
+  };
+
+  const closeCreateConfirm = () => {
+    if (createSaving) return;
+    setShowCreateConfirm(false);
+  };
+
   const handleSaveQuality = async () => {
     if (!itemCode) {
       toast.error("Please select an item.");
@@ -439,6 +492,7 @@ const QualityAssurance = () => {
     }
 
     try {
+      setCreateSaving(true);
       const payload = {
         itemCode,
         itemName,
@@ -481,6 +535,7 @@ const QualityAssurance = () => {
 
         if (!returnTo) {
           toast.success(`${itemLabel} has been ${decisionLabel}`);
+          setShowCreateConfirm(false);
           setShowForm(false);
           fetchQualityRecords(1);
           return;
@@ -503,12 +558,12 @@ const QualityAssurance = () => {
           stillPending = true; // safer: return to sample so user can continue
         }
 
+        setShowCreateConfirm(false);
         setFromSample('');
         const toastMessage = stillPending
           ? `${itemLabel} has been ${decisionLabel}. Add the next testing result.`
           : `${itemLabel} has been ${decisionLabel}. All testing results are complete.`;
-        // App Toaster + handoff for tab switch (qc-test-report unmounts this page)
-        toast.success(toastMessage, { duration: 4500, id: 'sampling-qc-decision' });
+        // Handoff only — Sampling tab shows the toast once after navigate (avoids stuck duplicate)
         sessionStorage.setItem('wps_sampling_toast', toastMessage);
         if (stillPending) {
           navigate(`/sampling?tab=qc&openSample=${encodeURIComponent(returnTo)}`);
@@ -521,6 +576,8 @@ const QualityAssurance = () => {
     } catch (err) {
       console.error("Failed to save quality record:", err);
       toast.error(err.response?.data?.message || "Failed to save quality record");
+    } finally {
+      setCreateSaving(false);
     }
   };
 
@@ -592,43 +649,163 @@ const QualityAssurance = () => {
     { key: 'QC Decision', header: 'QC Decision' }
   ];
 
+  const updateTableCell = (rowIndex, field, value) => {
+    setTableData((prev) => {
+      const next = [...prev];
+      next[rowIndex] = { ...next[rowIndex], [field]: value };
+      return next;
+    });
+  };
+
+  const addParameterRow = () => {
+    setTableData((prev) => [
+      ...prev,
+      {
+        'Parameter Line': prev.length + 1,
+        'Parameter Code': '',
+        'Parameter Name': '',
+        Action: '',
+        Criteria: '',
+        'Equipment Code': '',
+        'Equipment Name': '',
+        UOM: '',
+        'Std Value': '',
+        'Min Value': '',
+        'Max Value': '',
+        Type: 'M',
+        'Observed Value 1': '',
+        'Observed Value 2': '',
+        'Observed Value 3': '',
+      },
+    ]);
+  };
+
+  const removeParameterRow = (rowIndex) => {
+    setTableData((prev) =>
+      prev
+        .filter((_, index) => index !== rowIndex)
+        .map((row, index) => ({ ...row, 'Parameter Line': index + 1 })),
+    );
+  };
+
   const detailColumns = [
+    {
+      key: 'actions',
+      header: '',
+      width: '48px',
+      render: (_row, rowIndex) => (
+        <button
+          type="button"
+          className="qa-param-remove-btn"
+          title="Remove parameter"
+          onClick={() => removeParameterRow(rowIndex)}
+        >
+          <IconTrash size={16} />
+        </button>
+      ),
+    },
     { key: 'Parameter Line', header: '#' },
-    { key: 'Parameter Code', header: 'Parameter Code' },
-    { key: 'Parameter Name', header: 'Parameter Name' },
-    { 
-      key: 'Action', 
+    {
+      key: 'Parameter Code',
+      header: 'Parameter Code',
+      render: (row) => (
+        <input
+          type="text"
+          className="qa-cell-input qc-param-input-disabled"
+          value={row['Parameter Code'] || ''}
+          disabled
+        />
+      ),
+    },
+    {
+      key: 'Parameter Name',
+      header: 'Parameter Name',
+      render: (row, rowIndex) => {
+        const selectedOption = parameterOptions.find((p) => p.Name === row['Parameter Name'])
+          ? { value: row['Parameter Name'], label: row['Parameter Name'] }
+          : row['Parameter Name']
+            ? { value: row['Parameter Name'], label: row['Parameter Name'] }
+            : null;
+        const options = parameterOptions.map((p) => ({ value: p.Name, label: p.Name }));
+
+        return (
+          <div className="qc-param-select-wrapper">
+            <Select
+              value={selectedOption}
+              options={options}
+              isClearable
+              isSearchable
+              menuPortalTarget={document.body}
+              menuPlacement="auto"
+              styles={paramSelectStyles}
+              onChange={(selected) => {
+                setTableData((prev) => {
+                  const next = [...prev];
+                  if (selected) {
+                    const selectedParam = parameterOptions.find((p) => p.Name === selected.value);
+                    next[rowIndex] = {
+                      ...next[rowIndex],
+                      'Parameter Name': selected.value,
+                      'Parameter Code': selectedParam?.Code || '',
+                    };
+                  } else {
+                    next[rowIndex] = {
+                      ...next[rowIndex],
+                      'Parameter Name': '',
+                      'Parameter Code': '',
+                    };
+                  }
+                  return next;
+                });
+              }}
+            />
+          </div>
+        );
+      },
+    },
+    {
+      key: 'Action',
       header: 'Action',
-      render: (row) => (
-        <div className="qc-param-text" title={row['Action'] || ''}>
-          {row['Action'] || '\u00A0'}
-        </div>
-      )
+      render: (row, rowIndex) => (
+        <textarea
+          rows={1}
+          className="qc-param-textarea"
+          value={row['Action'] || ''}
+          onChange={(e) => updateTableCell(rowIndex, 'Action', e.target.value)}
+          title={row['Action'] || ''}
+        />
+      ),
     },
-    { 
-      key: 'Criteria', 
+    {
+      key: 'Criteria',
       header: 'Criteria',
-      render: (row) => (
-        <div className="qc-param-text" title={row['Criteria'] || ''}>
-          {row['Criteria'] || '\u00A0'}
-        </div>
-      )
+      render: (row, rowIndex) => (
+        <textarea
+          rows={1}
+          className="qc-param-textarea"
+          value={row['Criteria'] || ''}
+          onChange={(e) => updateTableCell(rowIndex, 'Criteria', e.target.value)}
+          title={row['Criteria'] || ''}
+        />
+      ),
     },
-    { 
-      key: 'Equipment Code', 
+    {
+      key: 'Equipment Code',
       header: 'Equipment Code',
       render: (row, rowIndex) => (
-        <select 
-          value={row['Equipment Code'] || ''} 
+        <select
+          value={row['Equipment Code'] || ''}
           onChange={(e) => {
-            const newData = [...tableData];
-            newData[rowIndex]['Equipment Code'] = e.target.value;
-            // Optionally update Equipment Name if needed based on selection
-            const selectedEqp = equipmentOptions.find(eq => eq.U_EqpCode === e.target.value);
-            if (selectedEqp) {
-              newData[rowIndex]['Equipment Name'] = selectedEqp.U_EqpName;
-            }
-            setTableData(newData);
+            const selectedEqp = equipmentOptions.find((eq) => eq.U_EqpCode === e.target.value);
+            setTableData((prev) => {
+              const next = [...prev];
+              next[rowIndex] = {
+                ...next[rowIndex],
+                'Equipment Code': e.target.value,
+                'Equipment Name': selectedEqp?.U_EqpName || '',
+              };
+              return next;
+            });
           }}
           className="qa-cell-input"
         >
@@ -639,79 +816,63 @@ const QualityAssurance = () => {
             </option>
           ))}
         </select>
-      )
+      ),
     },
     { key: 'Equipment Name', header: 'Equipment Name' },
     { key: 'UOM', header: 'UOM' },
     { key: 'Std Value', header: 'Std Value' },
     { key: 'Min Value', header: 'Min Value' },
     { key: 'Max Value', header: 'Max Value' },
-    { 
-      key: 'Type', 
+    {
+      key: 'Type',
       header: 'Type',
       render: (row, rowIndex) => (
-        <select 
-          value={row.Type || 'M'} 
-          onChange={(e) => {
-            const newData = [...tableData];
-            newData[rowIndex].Type = e.target.value;
-            setTableData(newData);
-          }}
+        <select
+          value={row.Type || 'M'}
+          onChange={(e) => updateTableCell(rowIndex, 'Type', e.target.value)}
           className="qa-cell-input"
         >
           <option value="M">M - Material</option>
           <option value="P">P - Process</option>
         </select>
-      )
+      ),
     },
-    { 
-      key: 'Observed Value 1', 
+    {
+      key: 'Observed Value 1',
       header: 'Observed Value 1',
       render: (row, rowIndex) => (
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={row['Observed Value 1'] || ''}
-          onChange={(e) => {
-            const newData = [...tableData];
-            newData[rowIndex]['Observed Value 1'] = e.target.value;
-            setTableData(newData);
-          }}
+          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 1', e.target.value)}
           className="qa-cell-input"
         />
-      )
+      ),
     },
-    { 
-      key: 'Observed Value 2', 
+    {
+      key: 'Observed Value 2',
       header: 'Observed Value 2',
       render: (row, rowIndex) => (
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={row['Observed Value 2'] || ''}
-          onChange={(e) => {
-            const newData = [...tableData];
-            newData[rowIndex]['Observed Value 2'] = e.target.value;
-            setTableData(newData);
-          }}
+          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 2', e.target.value)}
           className="qa-cell-input"
         />
-      )
+      ),
     },
-    { 
-      key: 'Observed Value 3', 
+    {
+      key: 'Observed Value 3',
       header: 'Observed Value 3',
       render: (row, rowIndex) => (
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={row['Observed Value 3'] || ''}
-          onChange={(e) => {
-            const newData = [...tableData];
-            newData[rowIndex]['Observed Value 3'] = e.target.value;
-            setTableData(newData);
-          }}
+          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 3', e.target.value)}
           className="qa-cell-input"
         />
-      )
-    }
+      ),
+    },
   ];
 
   const viewDetailColumns = [
@@ -945,15 +1106,28 @@ const QualityAssurance = () => {
 
                
 
+        
                 <div className="add-sample-table-wrapper qa-plain-table">
-                  <Table 
+                  <Table
                     data={tableData}
                     columns={detailColumns}
                     showActions={false}
                     showPagination={false}
                   />
+                  
                 </div>
-
+                <div className="qa-param-toolbar">
+                  <h4 className="qa-section-title">Parameters</h4>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={<IconPlus size={16} />}
+                    onClick={addParameterRow}
+                  >
+                    Add Parameter
+                  </Button>
+                </div>
                 <div className="add-sample-grid">
                   <div className="add-sample-col">
                     <div className="add-sample-field">
@@ -1053,7 +1227,7 @@ const QualityAssurance = () => {
                       </div>
                     </div>
                     
-                    <div className="qa-pair">
+                    {/* <div className="qa-pair">
                       <div className="add-sample-field qa-pair-field">
                         <label className="add-sample-label qa-pair-label">Accepted ITR</label>
                         <input type="text" className="add-sample-input" disabled value={acceptedITR} />
@@ -1062,13 +1236,18 @@ const QualityAssurance = () => {
                         <label className="add-sample-label qa-pair-label">Rejected ITR</label>
                         <input type="text" className="add-sample-input" disabled value={rejectedITR} />
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="qa-actions qa-actions-end">
-                      <Button variant="primary" onClick={handleSaveQuality}>
+                      <Button
+                        variant="primary"
+                        onClick={openCreateConfirm}
+                        disabled={createSaving}
+                        isLoading={createSaving}
+                      >
                         Create Quality Test
                       </Button>
-                      <Button variant="secondary" onClick={leaveQualityForm}>
+                      <Button variant="secondary" onClick={leaveQualityForm} disabled={createSaving}>
                         Cancel
                       </Button>
                     </div>
@@ -1158,7 +1337,7 @@ const QualityAssurance = () => {
                       </div>
                     </div>
                     
-                    <div className="qa-pair">
+                    {/* <div className="qa-pair">
                       <div className="add-sample-field qa-pair-field">
                         <label className="add-sample-label qa-pair-label">Accepted ITR</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Accepted ITR'] || ''} />
@@ -1167,7 +1346,7 @@ const QualityAssurance = () => {
                         <label className="add-sample-label qa-pair-label">Rejected ITR</label>
                         <input type="text" className="add-sample-input" disabled value={selectedRecord['Rejected ITR'] || ''} />
                       </div>
-                    </div>
+                    </div> */}
                     
                
                   </div>
@@ -1180,11 +1359,12 @@ const QualityAssurance = () => {
 
       {!showForm && (
       <div className="dome-card-wrapper qa-card">
-        <div className="po-table-header">
+        {/* <div className="po-table-header">
+          <div></div>
           <Button variant="primary" onClick={handleAddQuality}>
             Add Test Report
           </Button>
-        </div>
+        </div> */}
 
         <div className="po-filter-toolbar-card">
           <div className="po-filter-toolbar-grid">
@@ -1247,6 +1427,35 @@ const QualityAssurance = () => {
           onItemsPerPageChange={setLimit}
         />
       </div>
+      )}
+
+      {showCreateConfirm && (
+        <GlobalPopup
+          title="Confirm create"
+          onClose={closeCreateConfirm}
+          showClose={false}
+          className="po-create-confirm-popup"
+        >
+          <div className="po-create-confirm">
+            <h3 className="po-create-confirm-title">Create this quality test?</h3>
+            <p className="po-create-confirm-text">
+              Are you sure you want to create this quality test? This action cannot be undone.
+            </p>
+            <div className="po-create-confirm-actions">
+              <Button variant="outline" onClick={closeCreateConfirm} disabled={createSaving}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={createSaving}
+                isLoading={createSaving}
+                onClick={handleSaveQuality}
+              >
+                Yes, Create Quality Test
+              </Button>
+            </div>
+          </div>
+        </GlobalPopup>
       )}
     </div>
   );

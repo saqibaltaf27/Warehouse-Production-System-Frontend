@@ -1,0 +1,22 @@
+.inv-plan-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: calc(100vh - 140px);
+  min-height: 0;
+}
+
+.inv-plan-table-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.inv-plan-table-wrap .dome-table-container,
+.inv-plan-table-wrap .dome-table-wrapper {
+  height: 100%;
+  max-height: 100%;
+}
+
+.inv-plan-table-wrap .dome-table-wrapper {
+  overflow: auto;
+}

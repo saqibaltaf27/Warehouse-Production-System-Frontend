@@ -654,6 +654,33 @@
   color: #333;
 }
 
+.qa-param-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.qa-param-toolbar .qa-section-title {
+  margin-bottom: 0;
+}
+
+.qa-param-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.qa-param-remove-btn:hover {
+  color: #ef4444;
+}
+
 .qa-card {
   display: flex;
   flex-direction: column;

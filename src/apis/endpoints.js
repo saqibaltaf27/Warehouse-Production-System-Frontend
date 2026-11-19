@@ -87,6 +87,7 @@ export const API_ENDPOINTS = {
       const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
       if (search && search.trim()) params.append('search', search.trim());
       if (filters.status) params.append('status', filters.status);
+      if (filters.lifecycle) params.append('lifecycle', filters.lifecycle);
       if (filters.project) params.append('project', filters.project);
       if (filters.product) params.append('product', filters.product);
       if (filters.warehouse) params.append('warehouse', filters.warehouse);
@@ -170,5 +171,22 @@ export const API_ENDPOINTS = {
     UPDATE: (id) => `/tickets/${id}`,
     REMARKS: (id) => `/tickets/${id}/remarks`,
     EMPLOYEES: '/tickets/employees',
-  }
+  },
+
+  STANDARD_UNIT_MAN_HOURS: {
+    LIST: '/standard-unit-man-hours',
+    CREATE: '/standard-unit-man-hours',
+    ITEMS: '/standard-unit-man-hours/items',
+  },
+
+  INVENTORY_PLANNING: {
+    RAW_MATERIALS: '/inventory-planning/raw-materials',
+  },
+
+  POLICIES: {
+    LIST: '/policies',
+    CREATE: '/policies',
+    FILE_URL: (id) => `/policies/${id}/file-url`,
+    DELETE: (id) => `/policies/${id}`,
+  },
 };

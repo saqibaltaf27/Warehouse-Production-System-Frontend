@@ -1,0 +1,178 @@
+.policy-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.policy-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.policy-table-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  padding: 12px;
+}
+
+.policy-doc-name {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.policy-file-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 360px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.policy-file-cell span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.policy-pdf-icon {
+  flex-shrink: 0;
+  color: #dc2626;
+}
+
+.policy-image-icon {
+  flex-shrink: 0;
+  color: #2563eb;
+}
+
+.policy-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.policy-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.policy-action-download {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.policy-action-download:hover {
+  background: #bfdbfe;
+}
+
+.policy-action-delete {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.policy-action-delete:hover {
+  background: #fecaca;
+}
+
+/* Upload modal */
+.policy-upload-modal {
+  width: min(720px, 92vw) !important;
+  max-height: 85vh;
+}
+
+.policy-upload-body {
+  gap: 20px;
+  overflow: auto;
+}
+
+.policy-upload-grid {
+  margin-bottom: 0 !important;
+}
+
+.policy-upload-grid .po-detail-item {
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+}
+
+.policy-upload-grid .po-detail-item strong {
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.policy-detail-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 12px;
+  color: #1f2937;
+  padding: 0;
+}
+
+.policy-detail-input::placeholder {
+  color: #9ca3af;
+}
+
+.policy-detail-select {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.policy-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 140px;
+  padding: 20px;
+  border: 1px dashed #d1d5db;
+  border-radius: 3px;
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.policy-dropzone:hover,
+.policy-dropzone.is-dragging {
+  border-color: #94a3b8;
+  background: #eef2f7;
+}
+
+.policy-dropzone.has-file {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.policy-drop-title {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.policy-drop-sub {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.policy-upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}

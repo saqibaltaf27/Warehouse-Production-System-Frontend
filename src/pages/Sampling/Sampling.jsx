@@ -38,10 +38,14 @@ const Sampling = () => {
       const pending = sessionStorage.getItem('wps_sampling_toast');
       if (!pending) return;
       sessionStorage.removeItem('wps_sampling_toast');
-      toast.success(pending, { duration: 4500, id: 'sampling-qc-decision' });
-    }, 100);
+      toast.dismiss('sampling-qc-decision');
+      toast.success(pending, {
+        id: 'sampling-qc-decision',
+        duration: 4500,
+      });
+    }, 150);
     return () => window.clearTimeout(timer);
-  }, [activeTab, tabParam, searchParams]);
+  }, [activeTab, tabParam]);
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);

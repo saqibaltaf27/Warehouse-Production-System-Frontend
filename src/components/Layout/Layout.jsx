@@ -55,6 +55,7 @@ const Layout = () => {
     "/qc": "Quality Control",
     "/engineering-dashboard": "Engineering Dashboard",
     "/inventory": "Inventory",
+    "/inventory-planning": "Inventory Planning",
     "/machine": "Machine",
     "/machine-efficiency": "Machine Efficiency",
     // "/cost-analysis": "Cost Analysis",
@@ -64,6 +65,8 @@ const Layout = () => {
     "/costing/overview": "Costing Overview",
     "/costing": "Costing",
     "/dashboard": "Dashboard",
+    "/policy-management": "SOP Record Management",
+    "/standard-unit-man-hours": "Standard Unit / Man Hours",
     "/": "My Workspace"
   };
 
@@ -223,7 +226,9 @@ const Layout = () => {
         <main className="dribbble-content">
           <div className="content-page-title-bar">
             <h1 className="content-page-title-text">{pageTitle}</h1>
-            {(pathname === "/workspace" || pathname === "/") && (
+            
+
+              {(pathname === "/workspace" || pathname === "/") && (
               <button
                 type="button"
                 className="content-page-title-action"

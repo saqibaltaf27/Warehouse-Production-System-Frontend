@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Select from 'react-select';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
+import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import ChooseFromList from '../../global-components/ChooseFromList/ChooseFromList';
 import { purchaseOrderApi } from '../../apis/purchase-order/purchaseOrderApi';
 import { axiosInstance } from '../../apis/axiosinstance';
@@ -116,6 +117,8 @@ const PurchaseOrder = () => {
   const [selectedPO, setSelectedPO] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [createConfirmPreview, setCreateConfirmPreview] = useState(false);
   const [exporting, setExporting] = useState(false);
 
   // Filters state
@@ -305,6 +308,30 @@ const PurchaseOrder = () => {
     setCreateRows(getInitialCreateRows());
   };
 
+  const openCreateConfirm = () => {
+    if (!createHeaderData.DocDate || !createHeaderData.RequiredDate) {
+      toast.error('Document Date and Required Date are required.');
+      return;
+    }
+    const validLines = createRows.filter((r) => r.ItemCode && r.ReqQty);
+    if (validLines.length === 0) {
+      toast.error('At least one item with a quantity is required.');
+      return;
+    }
+    setCreateConfirmPreview(false);
+    setShowCreateConfirm(true);
+  };
+
+  const openCreateConfirmPreview = () => {
+    setCreateConfirmPreview(true);
+    setShowCreateConfirm(true);
+  };
+
+  const closeCreateConfirm = () => {
+    setShowCreateConfirm(false);
+    setCreateConfirmPreview(false);
+  };
+
   const handleCreateSubmit = async () => {
     if (!createHeaderData.DocDate || !createHeaderData.RequiredDate) {
       toast.error('Document Date and Required Date are required.');
@@ -338,6 +365,7 @@ const PurchaseOrder = () => {
       const res = await axiosInstance.post(API_ENDPOINTS.PURCHASE_ORDER.CREATE_REQUEST, payload);
       if (res.data?.success) {
         toast.success(res.data?.data?.Message || res.data?.message || 'Purchase Order created successfully!');
+        closeCreateConfirm();
         setShowCreateForm(false);
         handleClearForm();
         fetchPurchaseOrders(1, pagination.limit, filters, debouncedSearch);
@@ -406,7 +434,7 @@ const PurchaseOrder = () => {
   };
 
   const columns = [
-    { key: 'DocEntry', header: 'DocEntry', width: 90 },
+    // { key: 'DocEntry', header: 'DocEntry', width: 90 },
     { key: 'DocNum', header: 'DocNum', width: 90 },
     { key: 'DocStatus', header: 'DocStatus', width: 100 },
     {
@@ -668,9 +696,9 @@ const PurchaseOrder = () => {
               variant="primary"
               disabled={createLoading}
               isLoading={createLoading}
-              onClick={handleCreateSubmit}
+              onClick={openCreateConfirm}
             >
-              Create
+              Create Purchase Order
             </Button>
             <Button
               variant="secondary"
@@ -692,6 +720,7 @@ const PurchaseOrder = () => {
         /* Purchase Order Table View with Filter Toolbar */
         <div className="layout-page-padding">
           <div className="po-table-header">
+            <div></div>
             <Button
               variant="primary"
               onClick={() => setShowCreateForm(true)}
@@ -826,6 +855,43 @@ const PurchaseOrder = () => {
         }}
         data={selectedPO}
       />
+
+      {showCreateConfirm && (
+        <GlobalPopup
+          title={createConfirmPreview ? 'Preview confirmation' : 'Confirm create'}
+          onClose={closeCreateConfirm}
+          showClose={false}
+          className="po-create-confirm-popup"
+        >
+          <div className="po-create-confirm">
+            <h3 className="po-create-confirm-title">
+              {createConfirmPreview
+                ? 'Confirmation modal preview'
+                : 'Create this purchase order?'}
+            </h3>
+            <p className="po-create-confirm-text">
+              {createConfirmPreview
+                ? 'This is only a preview of the confirmation modal. Nothing will be created.'
+                : 'Are you sure you want to create this purchase order? This action cannot be undone.'}
+            </p>
+            <div className="po-create-confirm-actions">
+              <Button variant="outline" onClick={closeCreateConfirm} disabled={createLoading}>
+                {createConfirmPreview ? 'Close' : 'Cancel'}
+              </Button>
+              {!createConfirmPreview && (
+                <Button
+                  variant="primary"
+                  disabled={createLoading}
+                  isLoading={createLoading}
+                  onClick={handleCreateSubmit}
+                >
+                  Yes, Create Order
+                </Button>
+              )}
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
     </div>
   );
 };

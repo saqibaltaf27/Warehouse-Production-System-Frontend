@@ -28,6 +28,9 @@ import AddTodayPlan from './pages/ProductionPlanning/AddTodayPlan.jsx';
 import Staff from './pages/Staff/Staff.jsx';
 import Sampling from './pages/Sampling/Sampling.jsx';
 import Costing from './pages/Costing/Costing.jsx';
+import PolicyManagement from './pages/PolicyManagement/PolicyManagement.jsx';
+import StandardUnitManHours from './pages/StandardUnitManHours/StandardUnitManHours.jsx';
+import InventoryPlanning from './pages/InventoryPlanning/InventoryPlanning.jsx';
 import './App.css'
 
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
@@ -59,6 +62,7 @@ function AppContent() {
             <Route path="engineering-dashboard" element={<ProtectedRoute requiredRoute="/engineering-dashboard"><EngineeringDashboard /></ProtectedRoute>} />
             <Route path="analytics" element={<SimplePlaceholder title="Analytics" />} />
             <Route path="workspace" element={<MyWorkspace />} />
+            <Route path="policy-management" element={<PolicyManagement />} />
             <Route path="workspace/ticket" element={<Tickets />} />
             <Route path="production/tickets" element={<ProtectedRoute requiredRoute="/production"><TicketBoard ticketType="Production" /></ProtectedRoute>} />
             <Route path="qc/tickets" element={<ProtectedRoute requiredRoute="/qc"><TicketBoard ticketType="Quality" /></ProtectedRoute>} />
@@ -70,6 +74,7 @@ function AppContent() {
             <Route path="production-plan/view" element={<ProtectedRoute requiredRoute="/production"><AddTodayPlan /></ProtectedRoute>} />
             <Route path="inventory" element={<ProtectedRoute requiredRoute="/inventory"><Inventory /></ProtectedRoute>} />
             <Route path="inventory/item-master/:itemCode" element={<ProtectedRoute requiredRoute="/inventory"><ItemMasterView /></ProtectedRoute>} />
+            <Route path="inventory-planning" element={<ProtectedRoute requiredRoute="/inventory"><InventoryPlanning /></ProtectedRoute>} />
             <Route path="orders" element={<SimplePlaceholder title="Orders" />} />
             <Route path="delivery" element={<SimplePlaceholder title="Delivery" />} />
             <Route path="machine-efficiency" element={<ProtectedRoute requiredRoute="/machine-efficiency"><MachineEfficiency /></ProtectedRoute>} />
@@ -83,6 +88,8 @@ function AppContent() {
             </Route>
             <Route path="costing" element={<Costing />} />
             <Route path="costing/overview" element={<Navigate to="/costing?tab=dashboard" replace />} />
+            <Route path="standard-unit-man-hours" element={<StandardUnitManHours />} />
+            <Route path="Standard-Unit/Man-Hours" element={<Navigate to="/standard-unit-man-hours" replace />} />
             <Route path="staff" element={<ProtectedRoute requiredRoute="/staff"><Staff /></ProtectedRoute>} />
             <Route path="sampling" element={<ProtectedRoute requiredRoute="/sampling"><Sampling /></ProtectedRoute>} />
             <Route path="settings" element={<SimplePlaceholder title="Settings" />} />

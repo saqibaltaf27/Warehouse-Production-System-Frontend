@@ -1,0 +1,77 @@
+.sumh-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sumh-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.sumh-table-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  padding: 12px;
+}
+
+.sumh-modal {
+  width: min(560px, 92vw) !important;
+}
+
+.sumh-modal-body {
+  gap: 18px;
+}
+
+.sumh-form-grid {
+  margin-bottom: 0 !important;
+  grid-template-columns: 1fr !important;
+}
+
+.sumh-form-grid .po-detail-item {
+  grid-template-columns: 140px minmax(0, 1fr);
+  align-items: center;
+}
+
+.sumh-form-grid .po-detail-item > span {
+  min-height: 36px;
+  padding: 6px 10px !important;
+  box-sizing: border-box;
+}
+
+.sumh-full-row {
+  grid-column: 1 / -1;
+}
+
+.sumh-select-span {
+  display: flex !important;
+  align-items: center;
+}
+
+.sumh-detail-input {
+  width: 100%;
+  height: 24px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  line-height: 24px;
+  color: #1f2937;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.sumh-detail-input::placeholder {
+  color: #9ca3af;
+}
+
+.sumh-detail-input[readonly] {
+  color: #475569;
+}
+
+.sumh-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Select from "react-select";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../apis/axiosinstance";
 import { API_ENDPOINTS } from "../../apis/endpoints";
 import Button from "../../global-components/Button/Button";
-import { IconSearch, IconRefresh, IconPlus, IconFileSpreadsheet } from "@tabler/icons-react";
+import GlobalPopup from "../../global-components/GlobalPopup/GlobalPopup";
+import { IconSearch, IconRefresh, IconPlus, IconFileSpreadsheet, IconList, IconLayoutKanban } from "@tabler/icons-react";
 import * as XLSX from "xlsx";
 import ProductionOrderHeader from "./ProductionOrderHeader";
 import ProductionOrderComponents from "./ProductionOrderComponents";
@@ -130,27 +131,66 @@ const ProductionOrders = () => {
   const [sortConfig, setSortConfig] = useState(null);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [createConfirmPreview, setCreateConfirmPreview] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
-    status: "",
-    project: "",
+    lifecycle: "",
     product: "",
     warehouse: "",
     fromDate: "",
     toDate: "",
   });
+  const [kanbanByStatus, setKanbanByStatus] = useState({
+    "New Order": [],
+    Planned: [],
+    "In Progress": [],
+    Completed: [],
+    Cancelled: [],
+  });
+  const [kanbanTotals, setKanbanTotals] = useState({
+    "New Order": 0,
+    Planned: 0,
+    "In Progress": 0,
+    Completed: 0,
+    Cancelled: 0,
+  });
+  const [kanbanLoading, setKanbanLoading] = useState(false);
+  const [kanbanLoadingMore, setKanbanLoadingMore] = useState("");
+  const kanbanListRefs = useRef({});
+  const prevViewModeRef = useRef(viewMode);
 
-  const statusOptions = [
-    { value: "Planned", label: "Planned" },
-    { value: "Released", label: "Released" },
-    { value: "Closed", label: "Closed" },
-    { value: "Cancelled", label: "Cancelled" },
+  const KANBAN_PAGE_SIZE = 15;
+
+  const kanbanColumns = [
+    { key: "New Order", label: "New Order", tone: "planned" },
+    { key: "Planned", label: "Planned", tone: "released" },
+    { key: "In Progress", label: "In Progress", tone: "progress" },
+    { key: "Completed", label: "Completed", tone: "completed" },
+    { key: "Cancelled", label: "Cancelled", tone: "cancelled" },
   ];
 
-  const projectOptions = (projectList || []).map((p) => ({
-    value: p.PrjCode,
-    label: p.PrjName ? `${p.PrjCode} - ${p.PrjName}` : p.PrjCode,
+  const statusOptions = kanbanColumns.map((column) => ({
+    value: column.key,
+    label: column.label,
   }));
+
+  const emptyKanbanByStatus = {
+    "New Order": [],
+    Planned: [],
+    "In Progress": [],
+    Completed: [],
+    Cancelled: [],
+  };
+
+  const emptyKanbanTotals = {
+    "New Order": 0,
+    Planned: 0,
+    "In Progress": 0,
+    Completed: 0,
+    Cancelled: 0,
+  };
 
   const productOptions = (products || []).map((pr) => {
     const code = pr.Code || pr.ItemCode;
@@ -226,8 +266,18 @@ const ProductionOrders = () => {
   }, []);
 
   useEffect(() => {
-    fetchPaginatedOrders(currentPage, pageSize, searchQuery, filters, sortConfig);
-  }, [currentPage, pageSize, searchQuery, filters, sortConfig]);
+    const switchedView = prevViewModeRef.current !== viewMode;
+    prevViewModeRef.current = viewMode;
+
+    if (viewMode === "list") {
+      const silent = switchedView && paginatedOrders.length > 0;
+      fetchPaginatedOrders(currentPage, pageSize, searchQuery, filters, sortConfig, { silent });
+    } else {
+      const hasKanbanData = Object.values(kanbanByStatus).some((rows) => rows.length > 0);
+      const silent = switchedView && hasKanbanData;
+      loadKanbanBoard(searchQuery, filters, sortConfig, { silent });
+    }
+  }, [currentPage, pageSize, searchQuery, filters, sortConfig, viewMode]);
 
   const fetchPaginatedOrders = async (
     page,
@@ -235,8 +285,9 @@ const ProductionOrders = () => {
     search,
     currentFilters = filters,
     currentSort = sortConfig,
+    { silent = false } = {},
   ) => {
-    setTableLoading(true);
+    if (!silent) setTableLoading(true);
     try {
       const response = await axiosInstance.get(
         API_ENDPOINTS.PRODUCTION_ORDERS.PAGINATED_ORDERS(
@@ -246,6 +297,7 @@ const ProductionOrders = () => {
           currentFilters,
           currentSort,
         ),
+        { skipGlobalLoading: true },
       );
       if (response.data?.success) {
         setPaginatedOrders(response.data.data);
@@ -254,8 +306,110 @@ const ProductionOrders = () => {
     } catch (err) {
       toast.error("Failed to fetch production orders table.");
     } finally {
-      setTableLoading(false);
+      if (!silent) setTableLoading(false);
     }
+  };
+
+  const fetchKanbanColumn = async ({
+    lifecycle,
+    page = 1,
+    search = searchQuery,
+    currentFilters = filters,
+    currentSort = sortConfig,
+  }) => {
+    const response = await axiosInstance.get(
+      API_ENDPOINTS.PRODUCTION_ORDERS.PAGINATED_ORDERS(
+        page,
+        KANBAN_PAGE_SIZE,
+        search,
+        { ...currentFilters, lifecycle },
+        currentSort,
+      ),
+      { skipGlobalLoading: true },
+    );
+    if (!response.data?.success) {
+      throw new Error(response.data?.message || "Failed to load kanban column");
+    }
+    return {
+      lifecycle,
+      rows: response.data.data || [],
+      total: response.data.total || 0,
+    };
+  };
+
+  const loadKanbanBoard = async (
+    search = searchQuery,
+    currentFilters = filters,
+    currentSort = sortConfig,
+    { silent = false } = {},
+  ) => {
+    if (!silent) setKanbanLoading(true);
+    try {
+      const stages = currentFilters.lifecycle
+        ? [currentFilters.lifecycle]
+        : kanbanColumns.map((column) => column.key);
+
+      const results = await Promise.all(
+        stages.map((lifecycle) =>
+          fetchKanbanColumn({
+            lifecycle,
+            page: 1,
+            search,
+            currentFilters,
+            currentSort,
+          }),
+        ),
+      );
+
+      const nextByStatus = { ...emptyKanbanByStatus };
+      const nextTotals = { ...emptyKanbanTotals };
+      results.forEach(({ lifecycle, rows, total }) => {
+        nextByStatus[lifecycle] = rows;
+        nextTotals[lifecycle] = total;
+      });
+      setKanbanByStatus(nextByStatus);
+      setKanbanTotals(nextTotals);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch kanban board.");
+    } finally {
+      if (!silent) setKanbanLoading(false);
+    }
+  };
+
+  const loadMoreKanbanColumn = async (status) => {
+    const loaded = kanbanByStatus[status]?.length || 0;
+    const nextPage = Math.floor(loaded / KANBAN_PAGE_SIZE) + 1;
+    setKanbanLoadingMore(status);
+    try {
+      const { rows, total } = await fetchKanbanColumn({
+        lifecycle: status,
+        page: nextPage,
+      });
+      setKanbanByStatus((prev) => ({
+        ...prev,
+        [status]: [...(prev[status] || []), ...rows],
+      }));
+      setKanbanTotals((prev) => ({ ...prev, [status]: total }));
+
+      if (rows.length > 0) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const listEl = kanbanListRefs.current[status];
+            if (!listEl) return;
+            listEl.scrollBy({ top: 72, behavior: "smooth" });
+          });
+        });
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to load more orders.");
+    } finally {
+      setKanbanLoadingMore("");
+    }
+  };
+
+  const openOrderDetails = (row) => {
+    setSelectedDocNum(row.DocNum);
+    setIsDetailsModalOpen(true);
   };
 
   const handleSortChange = (newSortConfig) => {
@@ -274,8 +428,7 @@ const ProductionOrders = () => {
   const handleResetFilters = () => {
     setSearchQuery("");
     setFilters({
-      status: "",
-      project: "",
+      lifecycle: "",
       product: "",
       warehouse: "",
       fromDate: "",
@@ -287,8 +440,7 @@ const ProductionOrders = () => {
 
   const hasActiveFilters = Boolean(
     searchQuery.trim() ||
-    filters.status ||
-    filters.project ||
+    filters.lifecycle ||
     filters.product ||
     filters.warehouse ||
     filters.fromDate ||
@@ -437,6 +589,25 @@ const ProductionOrders = () => {
     );
   };
 
+  const openCreateConfirm = () => {
+    if (!isFormValid) {
+      toast.error("Please complete the required fields before creating.");
+      return;
+    }
+    setCreateConfirmPreview(false);
+    setShowCreateConfirm(true);
+  };
+
+  const openCreateConfirmPreview = () => {
+    setCreateConfirmPreview(true);
+    setShowCreateConfirm(true);
+  };
+
+  const closeCreateConfirm = () => {
+    setShowCreateConfirm(false);
+    setCreateConfirmPreview(false);
+  };
+
   const handleAddPO = async () => {
     if (!itemCode || !headerData.PlannedQuantity) {
       toast.error("Please select a product and provide a planned quantity.");
@@ -498,6 +669,7 @@ const ProductionOrders = () => {
         toast.success(message || "Production Order created successfully!", {
           duration: 5000,
         });
+        closeCreateConfirm();
         handleClear();
         fetchPaginatedOrders(1, pageSize, searchQuery, filters, sortConfig); // Refresh list
         setCurrentPage(1);
@@ -551,6 +723,7 @@ const ProductionOrders = () => {
         "Due Date": formatDate(row.DueDate) || "",
         Project: row.Project ?? "",
         Status: row.Status ?? "",
+        "Lifecycle Stage": row.ProductionLifecycleStage ?? "",
       }));
       if (!rows.length) {
         toast.error("No records to export");
@@ -573,18 +746,19 @@ const ProductionOrders = () => {
   };
 
   const tableColumns = [
-    { key: "DocNum", header: "PO No.", width: "10%" },
-    { key: "ProductNo", header: "Item No.", width: "15%" },
-    { key: "ProductDescription", header: "Item Name", width: "25%" },
-    { key: "PlannedQty", header: "Planned Qty", width: "10%" },
+    { key: "DocNum", header: "PO No.", width: "8%" },
+    { key: "ProductNo", header: "Item No.", width: "11%" },
+    { key: "ProductDescription", header: "Item Name", width: "24%" },
+    { key: "PlannedQty", header: "Planned Qty", width: "9%" },
     {
       key: "DueDate",
       header: "Due Date",
-      width: "15%",
+      width: "10%",
       render: (row) => formatDate(row.DueDate),
     },
-    { key: "Project", header: "Project", width: "15%" },
-    { key: "Status", header: "Status", width: "10%" },
+    { key: "Project", header: "Project", width: "12%" },
+    // { key: "Status", header: "Status", width: "9%" },
+    { key: "ProductionLifecycleStage", header: "Status", width: "18%" },
   ];
 
   const isFormValid = Boolean(
@@ -636,10 +810,11 @@ const ProductionOrders = () => {
               variant="primary"
               disabled={loading || !isFormValid}
               isLoading={loading}
-              onClick={handleAddPO}
+              onClick={openCreateConfirm}
             >
-              Create
+              Create Production Order
             </Button>
+          
             <Button
               variant="secondary"
               onClick={handleClear}
@@ -659,6 +834,26 @@ const ProductionOrders = () => {
       ) : (
         <div className="layout-page-padding">
           <div className="po-table-header">
+            <div className="po-view-toggle" role="group" aria-label="View mode">
+              <button
+                type="button"
+                className={`po-view-toggle-btn ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+                title="List view"
+                aria-pressed={viewMode === "list"}
+              >
+                <IconList size={18} />
+              </button>
+              <button
+                type="button"
+                className={`po-view-toggle-btn ${viewMode === "kanban" ? "active" : ""}`}
+                onClick={() => setViewMode("kanban")}
+                title="Kanban view"
+                aria-pressed={viewMode === "kanban"}
+              >
+                <IconLayoutKanban size={18} />
+              </button>
+            </div>
             <Button
               variant="primary"
               onClick={() => setShowCreateForm(true)}
@@ -677,7 +872,7 @@ const ProductionOrders = () => {
                   <IconSearch size={18} className="po-filter-search-icon" />
                   <input
                     type="text"
-                    placeholder="Search by Doc No, Item, Project..."
+                    placeholder="Search by Doc No, Item..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
@@ -688,39 +883,19 @@ const ProductionOrders = () => {
                 </div>
               </div>
 
-              {/* Status Filter */}
-              <div className="po-filter-item" style={{ minWidth: "160px" }}>
+              {/* Lifecycle filter */}
+              <div className="po-filter-item" style={{ minWidth: "200px" }}>
                 <label className="po-filter-label">Status</label>
                 <Select
                   value={
-                    statusOptions.find((opt) => opt.value === filters.status) ||
+                    statusOptions.find((opt) => opt.value === filters.lifecycle) ||
                     null
                   }
                   onChange={(opt) =>
-                    handleFilterChange("status", opt ? opt.value : "")
+                    handleFilterChange("lifecycle", opt ? opt.value : "")
                   }
                   options={statusOptions}
-                  placeholder="All Statuses"
-                  isClearable
-                  isSearchable
-                  menuPortalTarget={document.body}
-                  styles={filterSelectStyles}
-                />
-              </div>
-
-              {/* Project Filter */}
-              <div className="po-filter-item" style={{ minWidth: "200px" }}>
-                <label className="po-filter-label">Project</label>
-                <Select
-                  value={
-                    projectOptions.find((opt) => opt.value === filters.project) ||
-                    null
-                  }
-                  onChange={(opt) =>
-                    handleFilterChange("project", opt ? opt.value : "")
-                  }
-                  options={projectOptions}
-                  placeholder="All Projects"
+                  placeholder="All stages"
                   isClearable
                   isSearchable
                   menuPortalTarget={document.body}
@@ -799,23 +974,89 @@ const ProductionOrders = () => {
               </div>
             </div>
           </div>
-          <Table
-            data={paginatedOrders}
-            columns={tableColumns}
-            totalEntries={totalOrders}
-            currentPage={currentPage}
-            pageSize={pageSize}
-            isLoading={tableLoading}
-            onPageChange={setCurrentPage}
-            onItemsPerPageChange={setPageSize}
-            showActions={false}
-            sortConfig={sortConfig}
-            onSortChange={handleSortChange}
-            onRowClick={(row) => {
-              setSelectedDocNum(row.DocNum);
-              setIsDetailsModalOpen(true);
-            }}
-          />
+          {viewMode === "list" ? (
+            <div className="po-list-table">
+            <Table
+              data={paginatedOrders}
+              columns={tableColumns}
+              totalEntries={totalOrders}
+              currentPage={currentPage}
+              pageSize={pageSize}
+              isLoading={tableLoading}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setPageSize}
+              showActions={false}
+              sortConfig={sortConfig}
+              onSortChange={handleSortChange}
+              onRowClick={openOrderDetails}
+            />
+            </div>
+          ) : (
+            <div className={`po-kanban-board ${kanbanLoading && !Object.values(kanbanByStatus).some((rows) => rows.length) ? "po-kanban-loading" : ""}`}>
+              {kanbanColumns.map((column) => {
+                const cards = kanbanByStatus[column.key] || [];
+                const total = kanbanTotals[column.key] || 0;
+                return (
+                  <section
+                    key={column.key}
+                    className={`po-kanban-column po-kanban-column-${column.tone}`}
+                  >
+                    <header>
+                      <span className="po-kanban-column-label">
+                        <i />
+                        {column.label}
+                      </span>
+                      <strong>{total}</strong>
+                    </header>
+                    <div
+                      className="po-kanban-column-list"
+                      ref={(node) => {
+                        kanbanListRefs.current[column.key] = node;
+                      }}
+                    >
+                      {cards.length === 0 ? (
+                        <p className="po-kanban-empty">No orders</p>
+                      ) : (
+                        cards.map((order) => (
+                          <article
+                            key={order.DocNum}
+                            className="po-kanban-card"
+                            onClick={() => openOrderDetails(order)}
+                          >
+                            <div className="po-kanban-card-meta">
+                              <span>PO #{order.DocNum}</span>
+                              <span>{order.Project || "—"}</span>
+                            </div>
+                            <h3>{order.ProductNo}</h3>
+                            <p>{order.ProductDescription || "—"}</p>
+                            <div className="po-kanban-card-footer">
+                              <span>Qty: {order.PlannedQty ?? "—"}</span>
+                              <time>Due: {formatDate(order.DueDate) || "—"}</time>
+                            </div>
+                          </article>
+                        ))
+                      )}
+                    </div>
+                    {cards.length < total && (
+                      <button
+                        type="button"
+                        className="po-kanban-see-more"
+                        disabled={kanbanLoadingMore === column.key}
+                        onClick={() => loadMoreKanbanColumn(column.key)}
+                        aria-label={kanbanLoadingMore === column.key ? "Loading more" : "Show more"}
+                      >
+                        {kanbanLoadingMore === column.key ? (
+                          <span className="po-kanban-see-more-spinner" aria-hidden="true" />
+                        ) : (
+                          "Show more"
+                        )}
+                      </button>
+                    )}
+                  </section>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -824,6 +1065,43 @@ const ProductionOrders = () => {
         onClose={() => setIsDetailsModalOpen(false)}
         docNum={selectedDocNum}
       />
+
+      {showCreateConfirm && (
+        <GlobalPopup
+          title={createConfirmPreview ? "Preview confirmation" : "Confirm create"}
+          onClose={closeCreateConfirm}
+          showClose={false}
+          className="po-create-confirm-popup"
+        >
+          <div className="po-create-confirm">
+            <h3 className="po-create-confirm-title">
+              {createConfirmPreview
+                ? "Confirmation modal preview"
+                : "Create this production order?"}
+            </h3>
+            <p className="po-create-confirm-text">
+              {createConfirmPreview
+                ? "This is only a preview of the confirmation modal. Nothing will be created."
+                : "Are you sure you want to create this production order? This action cannot be undone."}
+            </p>
+            <div className="po-create-confirm-actions">
+              <Button variant="outline" onClick={closeCreateConfirm} disabled={loading}>
+                {createConfirmPreview ? "Close" : "Cancel"}
+              </Button>
+              {!createConfirmPreview && (
+                <Button
+                  variant="primary"
+                  disabled={loading}
+                  isLoading={loading}
+                  onClick={handleAddPO}
+                >
+                  Yes, Create Order
+                </Button>
+              )}
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
     </div>
   );
 };

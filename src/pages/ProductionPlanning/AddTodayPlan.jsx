@@ -493,9 +493,27 @@ const formatDate = (dateString) => {
             ) : (
               <div style={{ flex: 1, minWidth: 0 }}>
               <Select
-                options={openPOs.map(po => ({ value: po.DocNum, label: po.DocNum.toString() }))}
+                options={openPOs.map(po => ({
+                  value: po.DocNum,
+                  label: po.DocNum.toString(),
+                  itemCode: po.ItemCode || '',
+                  manHour: po.ManHour,
+                }))}
                 value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
-                onChange={(selected) => setPlanFormData({ ...planFormData, po: selected ? selected.value : '' })}
+                onChange={(selected) => {
+                  const matched = selected
+                    ? openPOs.find((po) => String(po.DocNum) === String(selected.value))
+                    : null;
+                  const autoManHour =
+                    matched?.ManHour !== undefined && matched?.ManHour !== null && matched?.ManHour !== ''
+                      ? matched.ManHour
+                      : '';
+                  setPlanFormData({
+                    ...planFormData,
+                    po: selected ? selected.value : '',
+                    standardUnitsPerHour: selected ? autoManHour : '',
+                  });
+                }}
                 placeholder="Select PO"
                 isClearable
                 isSearchable

@@ -601,6 +601,7 @@ const QCSampling = () => {
             UomEntry: item.U_UomEntry,
             UOM: item.U_Uom,
             Warehouse: item.U_WhsCode,
+            WarehouseName: item.WarehouseName || '',
             ActualQty: item.U_ActualQty,
             ManagedBy: item.U_Manage === 'B' ? 'Batch Managed' : item.U_Manage === 'S' ? 'Serial Managed' : 'Non Batch/Serial',
             BatchSerial: item.U_Batch,
@@ -685,7 +686,7 @@ const QCSampling = () => {
     { key: 'Sampling No', header: 'Sampling No' },
     { key: 'Sampling Date', header: 'Sampling Date', render: row => formatDisplayDate(row['Sampling Date']) },
     { key: 'Docnument Type', header: 'Document Type' },
-    { key: 'Document Entry', header: 'Document Entry' },
+    // { key: 'Document Entry', header: 'Document Entry' },
     { key: 'Document No', header: 'Document No' },
     { key: 'Supplier Code', header: 'Supplier Code' },
     { key: 'Supplier Name', header: 'Supplier Name' },
@@ -712,7 +713,7 @@ const QCSampling = () => {
   const addSampleColumns = [
     { key: 'Index', header: '#' },
     { key: 'QCRequestNumber', header: 'QC Request Number' },
-    { key: 'ManualQCNo', header: 'Manual QC No.' },
+    // { key: 'ManualQCNo', header: 'Manual QC No.' },
     { 
       key: 'CollectSample', 
       header: 'Collect Sample', 
@@ -757,28 +758,46 @@ const QCSampling = () => {
         />
       ) 
     },
-    { key: 'BaseLine', header: 'BaseLine' },
+    // { key: 'BaseLine', header: 'BaseLine' },
     { key: 'ItemCode', header: 'ItemCode' },
     { key: 'ItemName', header: 'ItemName' },
-    { key: 'UomEntry', header: 'UomEntry' },
-    { key: 'UOM', header: 'UOM' },
-    { key: 'Warehouse', header: 'Warehouse' },
-    { key: 'ActualQty', header: 'Actual Qty' },
-    { key: 'AbsEntry', header: 'AbsEntry' },
-    { key: 'ManagedBy', header: 'Managed By' },
+    {
+      key: 'UOM',
+      header: 'UOM',
+      render: (row) => {
+        if (row.UOM && row.UomEntry != null && row.UomEntry !== '') {
+          return ` ${row.UomEntry} ${row.UOM} `;
+        }
+        return row.UOM || row.UomEntry || '';
+      },
+    },
+    // { key: 'UomEntry', header: 'UomEntry' },
+    {
+      key: 'Warehouse',
+      header: 'Warehouse',
+      render: (row) => {
+        if (row.Warehouse && row.WarehouseName) {
+          return `${row.Warehouse} - ${row.WarehouseName}`;
+        }
+        return row.Warehouse || row.WarehouseName || '';
+      },
+    },
+    // { key: 'ActualQty', header: 'Actual Qty' },
+    // { key: 'AbsEntry', header: 'AbsEntry' },
+    // { key: 'ManagedBy', header: 'Managed By' },
     { key: 'BatchSerial', header: 'Batch/Serial' },
     { key: 'SupplierBatchSerial', header: 'Supplier Batch/Serial' },
-    { key: 'BatchSerialQty', header: 'Batch/Serial Qty' },
+    // { key: 'BatchSerialQty', header: 'Batch/Serial Qty' },
     { 
       key: 'ExpiryDate', 
       header: 'Expiry Date',
       render: (row) => row.ExpiryDate ? new Date(row.ExpiryDate).toLocaleDateString() : ''
     },
-    { 
-      key: 'ManufactureDate', 
-      header: 'Manufacture Date',
-      render: (row) => row.ManufactureDate ? new Date(row.ManufactureDate).toLocaleDateString() : ''
-    },
+    // {
+    //   key: 'ManufactureDate',
+    //   header: 'Manufacture Date',
+    //   render: (row) => row.ManufactureDate ? new Date(row.ManufactureDate).toLocaleDateString() : ''
+    // },
     { 
       key: 'SampleQty', 
       header: 'Sample Qty',
@@ -906,20 +925,17 @@ const QCSampling = () => {
       {printModalRow && createPortal(
         <div className="sample-form-print-overlay">
           <div className="sample-form-sheet">
-            <div className="sample-form-toolbar no-print">
-               <Button className="sample-form-print-btn" variant="primary" onClick={() => window.print()}>Print</Button>
-               <Button className="sample-form-close-btn" variant="outline" onClick={() => setPrintModalRow(null)}>Close</Button>
-            </div>
+         
             
             <div id="print-area" className="sample-form">
               <div className="sample-form-head">
+              <h3 className="sample-form-title">Raw Material Sampling Form</h3>
+             
                 <div className="sample-form-brand">
                   <img className="sample-form-logo" src="/images/ldslogo.png" alt="LDS Logo" />
                   <span className="sample-form-brand-name">Lab Diagnostic Systems<br/>(SMC) Pvt Ltd</span>
                 </div>
-                <div className="sample-form-title-wrap">
-                  <h3 className="sample-form-title">Raw Material Sampling Form</h3>
-                </div>
+             
               </div>
               
               <table className="sample-form-table">
@@ -974,6 +990,10 @@ const QCSampling = () => {
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <div className="sample-form-toolbar no-print">
+               <Button className="sample-form-print-btn" variant="primary" onClick={() => window.print()}>Print</Button>
+               <Button className="sample-form-close-btn" variant="outline" onClick={() => setPrintModalRow(null)}>Close</Button>
             </div>
           </div>
         </div>,

@@ -8,6 +8,7 @@ import {
   IconTool,
   IconBox,
   IconStack2,
+  IconFile,
   IconEngine,
   IconUsers,
   IconFlask,
@@ -53,6 +54,12 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       path: "/workspace",
       public: true,
       icon: <IconStack2 size={18} stroke={1.5} />,
+    },
+    {
+      title: "SOP Record Management",
+      path: "/policy-management",
+      public: true,
+      icon: <IconFile size={18} stroke={1.5} />,
     },
     {
       title: "Production",
@@ -101,7 +108,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
         { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
         { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
         { title: 'Tickets', path: '/qc/tickets' ,sub_module: 'QC Tickets' },
-      ]
+       ]
     },
     {
       title: "Engineering",
@@ -123,6 +130,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       subItems: [
         { title: 'Inventory Overview', path: '/inventory?tab=overview', tabKey: 'overview', sub_module: 'Inventory Overview' },
         { title: 'Item Master', path: '/inventory?tab=master', tabKey: 'master', sub_module: 'Item Master' },
+        { title: 'Inventory Planning', path: '/inventory-planning', tabKey: 'inventory-planning', sub_module: 'Inventory Planning' },
       ]
     },
     {
@@ -170,6 +178,12 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           tabKey: 'tab=quality-testing-cost',
           sub_module: 'Quality Testing Cost'
         },
+        {
+          title: 'Standard Unit/Man Hours',
+          path: '/standard-unit-man-hours',
+          sub_module: 'Standard Unit',
+        },
+   
         {
           title: 'Factory Overhead',
           path: '/costing?tab=factory-overhead&sub=repair-maintenance',
