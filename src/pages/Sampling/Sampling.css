@@ -626,6 +626,47 @@
   box-shadow: none;
 }
 
+.qa-plain-table .dome-table th,
+.qa-plain-table .dome-table td {
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+
+.qa-plain-table .qc-param-textarea,
+.qa-plain-table .qc-param-text {
+  min-width: 110px;
+  max-width: 200px;
+  min-height: 28px;
+  padding: 3px 6px;
+}
+
+.qa-plain-table .qc-param-input-disabled,
+.qa-plain-table .qa-cell-input {
+  width: 84px;
+  padding: 2px 4px;
+}
+
+.qa-plain-table select.qa-cell-input {
+  width: 130px;
+}
+
+.qa-plain-table .qa-observed-input {
+  width: 140px;
+  min-height: 28px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  box-sizing: border-box;
+  field-sizing: content;
+}
+
 .qa-actions {
   display: flex;
   gap: 8px;

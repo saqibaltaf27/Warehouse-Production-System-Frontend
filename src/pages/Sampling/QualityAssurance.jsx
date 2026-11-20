@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
@@ -11,6 +11,41 @@ import { useAuth } from '../../context/AuthContext';
 import { IconFileSpreadsheet, IconPlus, IconTrash } from '@tabler/icons-react';
 import * as XLSX from 'xlsx';
 import './Sampling.css';
+
+const ObservedValueField = ({ value, onChange }) => {
+  const ref = useRef(null);
+  const focused = useRef(false);
+  const [text, setText] = useState(value || '');
+
+  const fit = (el) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  useEffect(() => {
+    if (!focused.current) setText(value || '');
+  }, [value]);
+
+  useEffect(() => {
+    fit(ref.current);
+  }, [text]);
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className="qa-observed-input"
+      value={text}
+      onFocus={() => { focused.current = true; }}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => {
+        focused.current = false;
+        if ((value || '') !== text) onChange(text);
+      }}
+    />
+  );
+};
 import '../ProductionOrders/ProductionOrders.css';
 
 const paramSelectStyles = {
@@ -331,15 +366,39 @@ const QualityAssurance = () => {
     fetchWarehouses();
   }, []);
 
+  const resolveEmpId = (id) => {
+    const match = employeeOptions.find((e) => String(e.EmpID) === String(id));
+    return match ? match.EmpID : '';
+  };
+
   useEffect(() => {
-    if (!showForm || selectedRecord || inspectedBy || !employeeOptions.length) return;
-    const currentEmpId = getCurrentEmpId();
-    if (currentEmpId) setInspectedBy(currentEmpId);
-  }, [showForm, selectedRecord, inspectedBy, employeeOptions, user]);
+    if (!showForm || selectedRecord || !employeeOptions.length) return;
+    if (!inspectedBy) {
+      const currentEmpId = getCurrentEmpId();
+      if (currentEmpId) setInspectedBy(currentEmpId);
+    }
+    if (!analyzedBy) {
+      const id = resolveEmpId(2130);
+      if (id) setAnalyzedBy(id);
+    }
+    if (!reviewedBy) {
+      const id = resolveEmpId(2221);
+      if (id) setReviewedBy(id);
+    }
+    if (!reportBy) {
+      const id = resolveEmpId(916);
+      if (id) setReportBy(id);
+    }
+  }, [showForm, selectedRecord, inspectedBy, analyzedBy, reviewedBy, reportBy, employeeOptions, user]);
 
   useEffect(() => {
     fetchQualityRecords(page, statusFilter, debouncedSearch);
   }, [page, limit, statusFilter, debouncedSearch]);
+
+  useEffect(() => {
+    if (selectedRecord) return;
+    setAcceptedQty(sampleQty);
+  }, [sampleQty, selectedRecord]);
 
   const handleRowClick = async (row) => {
     setSelectedRecord(row);
@@ -420,9 +479,9 @@ const QualityAssurance = () => {
     setQcType('B');
     setSampleBy('');
     setInspectedBy(getCurrentEmpId());
-    setAnalyzedBy('');
-    setReviewedBy('');
-    setReportBy('');
+    setAnalyzedBy(resolveEmpId(2130));
+    setReviewedBy(resolveEmpId(2221));
+    setReportBy(resolveEmpId(916));
     setQcDecision('A');
     setQcRemarks('');
     setAcceptedQty('');
@@ -818,6 +877,36 @@ const QualityAssurance = () => {
         </select>
       ),
     },
+    {
+      key: 'Observed Value 1',
+      header: 'Observed Value 1',
+      render: (row, rowIndex) => (
+        <ObservedValueField
+          value={row['Observed Value 1']}
+          onChange={(value) => updateTableCell(rowIndex, 'Observed Value 1', value)}
+        />
+      ),
+    },
+    {
+      key: 'Observed Value 2',
+      header: 'Observed Value 2',
+      render: (row, rowIndex) => (
+        <ObservedValueField
+          value={row['Observed Value 2']}
+          onChange={(value) => updateTableCell(rowIndex, 'Observed Value 2', value)}
+        />
+      ),
+    },
+    {
+      key: 'Observed Value 3',
+      header: 'Observed Value 3',
+      render: (row, rowIndex) => (
+        <ObservedValueField
+          value={row['Observed Value 3']}
+          onChange={(value) => updateTableCell(rowIndex, 'Observed Value 3', value)}
+        />
+      ),
+    },
     { key: 'Equipment Name', header: 'Equipment Name' },
     { key: 'UOM', header: 'UOM' },
     { key: 'Std Value', header: 'Std Value' },
@@ -835,42 +924,6 @@ const QualityAssurance = () => {
           <option value="M">M - Material</option>
           <option value="P">P - Process</option>
         </select>
-      ),
-    },
-    {
-      key: 'Observed Value 1',
-      header: 'Observed Value 1',
-      render: (row, rowIndex) => (
-        <input
-          type="text"
-          value={row['Observed Value 1'] || ''}
-          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 1', e.target.value)}
-          className="qa-cell-input"
-        />
-      ),
-    },
-    {
-      key: 'Observed Value 2',
-      header: 'Observed Value 2',
-      render: (row, rowIndex) => (
-        <input
-          type="text"
-          value={row['Observed Value 2'] || ''}
-          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 2', e.target.value)}
-          className="qa-cell-input"
-        />
-      ),
-    },
-    {
-      key: 'Observed Value 3',
-      header: 'Observed Value 3',
-      render: (row, rowIndex) => (
-        <input
-          type="text"
-          value={row['Observed Value 3'] || ''}
-          onChange={(e) => updateTableCell(rowIndex, 'Observed Value 3', e.target.value)}
-          className="qa-cell-input"
-        />
       ),
     },
   ];
@@ -894,6 +947,9 @@ const QualityAssurance = () => {
       ),
     },
     { key: 'Equipment Code', header: 'Equipment Code' },
+    { key: 'Observed Value 1', header: 'Observed Value 1' },
+    { key: 'Observed Value 2', header: 'Observed Value 2' },
+    { key: 'Observed Value 3', header: 'Observed Value 3' },
     { key: 'Equipment Name', header: 'Equipment Name' },
     { key: 'UOM', header: 'UOM' },
     { key: 'Std Value', header: 'Std Value' },
@@ -904,9 +960,6 @@ const QualityAssurance = () => {
       header: 'Type',
       render: (row) => (row.Type === 'P' || row['Parameter Type'] === 'P' ? 'P - Process' : 'M - Material'),
     },
-    { key: 'Observed Value 1', header: 'Observed Value 1' },
-    { key: 'Observed Value 2', header: 'Observed Value 2' },
-    { key: 'Observed Value 3', header: 'Observed Value 3' },
   ];
 
   return (
@@ -1139,7 +1192,7 @@ const QualityAssurance = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="add-sample-field">
+                    {/* <div className="add-sample-field">
                       <label className="add-sample-label">Inspected By</label>
                       <select className="add-sample-input" value={inspectedBy} onChange={e => setInspectedBy(e.target.value)}>
                         <option value="">Select Employee</option>
@@ -1147,7 +1200,7 @@ const QualityAssurance = () => {
                           <option key={emp.EmpID} value={emp.EmpID}>{emp.EmpID} - {emp.FirstName}</option>
                         ))}
                       </select>
-                    </div>
+                    </div> */}
                     <div className="add-sample-field">
                       <label className="add-sample-label">Analyzed By</label>
                       <select className="add-sample-input" value={analyzedBy} onChange={e => setAnalyzedBy(e.target.value)}>

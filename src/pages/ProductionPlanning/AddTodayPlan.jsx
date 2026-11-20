@@ -493,13 +493,30 @@ const formatDate = (dateString) => {
             ) : (
               <div style={{ flex: 1, minWidth: 0 }}>
               <Select
-                options={openPOs.map(po => ({
-                  value: po.DocNum,
-                  label: po.DocNum.toString(),
-                  itemCode: po.ItemCode || '',
-                  manHour: po.ManHour,
-                }))}
-                value={planFormData.po ? { value: planFormData.po, label: planFormData.po.toString() } : null}
+                options={openPOs.map(po => {
+                  const name = po.ItemName || '';
+                  const description = po.ItemDescription || '';
+                  const label = [po.DocNum, name, description].filter(Boolean).join(' — ');
+                  return {
+                    value: po.DocNum,
+                    label,
+                    itemCode: po.ItemCode || '',
+                    manHour: po.ManHour,
+                  };
+                })}
+                value={planFormData.po
+                  ? (openPOs
+                      .map((po) => {
+                        const name = po.ItemName || '';
+                        const description = po.ItemDescription || '';
+                        return {
+                          value: po.DocNum,
+                          label: [po.DocNum, name, description].filter(Boolean).join(' — '),
+                        };
+                      })
+                      .find((po) => String(po.value) === String(planFormData.po))
+                    || { value: planFormData.po, label: String(planFormData.po) })
+                  : null}
                 onChange={(selected) => {
                   const matched = selected
                     ? openPOs.find((po) => String(po.DocNum) === String(selected.value))

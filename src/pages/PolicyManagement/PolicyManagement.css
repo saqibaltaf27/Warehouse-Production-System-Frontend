@@ -106,8 +106,7 @@
 
 /* Upload modal */
 .policy-upload-modal {
-  width: min(720px, 92vw) !important;
-  max-height: 85vh;
+  width: min(900px, 92vw) !important;
 }
 
 .policy-upload-body {
@@ -117,6 +116,7 @@
 
 .policy-upload-grid {
   margin-bottom: 0 !important;
+  grid-template-columns: 1.2fr 1fr 1fr;
 }
 
 .policy-upload-grid .po-detail-item {

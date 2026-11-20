@@ -21,7 +21,8 @@ const MAX_FILE_MB = 50;
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
 const MAIN_MODULE = 'Policy Management';
 const DEPARTMENTS = ['Quality', 'Production', 'Engineering', 'Administration'];
-const emptyForm = { title: '', department: '', file: null };
+const DOCUMENT_DOMAINS = ['Procedure', 'Standards', 'Template'];
+const emptyForm = { title: '', department: '', domain: '', file: null };
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -152,6 +153,10 @@ const PolicyManagement = () => {
       toast.error('Department is required');
       return;
     }
+    if (!form.domain.trim()) {
+      toast.error('Document Domain is required');
+      return;
+    }
     if (!form.file) {
       toast.error('Please choose a file');
       return;
@@ -160,6 +165,7 @@ const PolicyManagement = () => {
     const body = new FormData();
     body.append('title', form.title.trim());
     body.append('department', form.department.trim());
+    body.append('domain', form.domain.trim());
     body.append('file', form.file);
 
     setSaving(true);
@@ -220,6 +226,7 @@ const PolicyManagement = () => {
         render: (row) => <span className="policy-doc-name">{row.Title}</span>,
       },
       { key: 'Department', header: 'Department', width: '140px' },
+      { key: 'Domain', header: 'Document Domain', width: '140px' },
       {
         key: 'FilePath',
         header: 'File',
@@ -375,6 +382,30 @@ const PolicyManagement = () => {
                         {DEPARTMENTS.map((dept) => (
                           <option key={dept} value={dept}>
                             {dept}
+                          </option>
+                        ))}
+                      </select>
+                    </span>
+                  </div>
+
+                  <div className="po-detail-item">
+                    <strong>Document Domain:</strong>
+                    <span>
+                      <select
+                        className="policy-detail-input policy-detail-select"
+                        value={form.domain}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, domain: e.target.value }))
+                        }
+                        disabled={saving}
+                        required
+                      >
+                        <option value="" disabled>
+                          Select domain
+                        </option>
+                        {DOCUMENT_DOMAINS.map((domain) => (
+                          <option key={domain} value={domain}>
+                            {domain}
                           </option>
                         ))}
                       </select>
