@@ -296,6 +296,12 @@ const PolicyManagement = () => {
         </div>
       )}
 
+      {!loadingPermissions && viewableDepartments.length === 0 ? (
+        <div className="policy-no-access">
+          <h2>No department access</h2>
+          <p>You do not have permission to view SOP records. A department view such as View Quality, View Production, View Engineering, or View Administration is required.</p>
+        </div>
+      ) : (
       <div className="policy-table-wrap">
         <Table
           data={pagedRows}
@@ -313,6 +319,7 @@ const PolicyManagement = () => {
           showPagination={true}
         />
       </div>
+      )}
 
       {showUpload &&
         createPortal(

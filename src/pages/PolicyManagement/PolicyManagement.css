@@ -18,6 +18,27 @@
   padding: 12px;
 }
 
+.policy-no-access {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.policy-no-access h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.policy-no-access p {
+  margin: 0 auto;
+  max-width: 520px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
 .policy-doc-name {
   font-weight: 600;
   color: #0f172a;
