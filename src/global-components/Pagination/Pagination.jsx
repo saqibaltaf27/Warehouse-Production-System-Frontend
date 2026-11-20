@@ -35,7 +35,9 @@ const Pagination = ({
   };
 
   const handlePageSizeChange = (event) => {
-    if (onPageSizeChange) onPageSizeChange(Number(event.target.value));
+    const value = event.target.value;
+    const nextSize = value === 'all' ? totalItems : Number(value);
+    if (onPageSizeChange) onPageSizeChange(nextSize);
     goToPage(1);
   };
 
@@ -76,7 +78,12 @@ const Pagination = ({
 
         <label className="global-pagination-size">
           <span>Rows</span>
-          <select value={pageSize} onChange={handlePageSizeChange} aria-label="Rows per page">
+          <select
+            value={pageSize >= totalItems ? 'all' : pageSize}
+            onChange={handlePageSizeChange}
+            aria-label="Rows per page"
+          >
+            <option value="all">All</option>
             {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
         </label>

@@ -17,31 +17,46 @@ const formatNum = (value) => {
 };
 
 const columns = [
+  { key: 'Product Line', header: 'Product Line' },
+  { key: 'Cat#', header: 'Cat#' },
   { key: 'ItemCode', header: 'Item Code', width: '140px' },
   { key: 'ItemName', header: 'Item Name' },
+   { key: 'Open Qty', header: 'Open FG Qty', width: '120px', render: (r) => formatNum(r['Open Qty']) },
+  { key: 'Required', header: 'RM Required', width: '120px', render: (r) => formatNum(r['Required']) },
   { key: 'Available Stock', header: 'Available Stock', width: '140px', render: (r) => formatNum(r['Available Stock']) },
-  { key: 'Committed', header: 'Committed', width: '120px', render: (r) => formatNum(r.Committed) },
-  { key: 'Trend 3M', header: 'Trend 3M', width: '120px', render: (r) => formatNum(r['Trend 3M']) },
-  { key: 'Trend 6M', header: 'Trend 6M', width: '120px', render: (r) => formatNum(r['Trend 6M']) },
-  { key: 'On Order', header: 'On Order', width: '120px', render: (r) => formatNum(r['On Order']) },
+  { key: 'On Order', header: 'RM On Order', width: '120px', render: (r) => formatNum(r['On Order']) },
+  { key: 'Trend 3M', header: 'RM Trend 3M', width: '120px', render: (r) => formatNum(r['Trend 3M']) },
+  { key: 'Trend 6M', header: 'RM Trend 6M', width: '120px', render: (r) => formatNum(r['Trend 6M']) },
+ 
 ];
 
 const InventoryPlanning = () => {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [productLine, setProductLine] = useState('');
+  const [productLines, setProductLines] = useState([]);
   const [exporting, setExporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [sortConfig, setSortConfig] = useState(null);
 
-  const loadItems = useCallback(async (page, size, search) => {
+  const loadItems = useCallback(async (page, size, search, line, sort) => {
     setLoading(true);
     try {
-      const res = await inventoryPlanningApi.getRawMaterials({ page, pageSize: size, search });
+      const res = await inventoryPlanningApi.getRawMaterials({
+        page,
+        pageSize: size,
+        search,
+        productLine: line,
+        sortBy: sort?.key || '',
+        sortOrder: sort?.direction === 'descending' ? 'desc' : sort?.direction === 'ascending' ? 'asc' : '',
+      });
       if (res?.success) {
         setRows(res.data || []);
+        setProductLines(res.productLines || []);
         setTotalItems(res.total || 0);
         setTotalPages(res.totalPages || 1);
       } else {
@@ -60,15 +75,21 @@ const InventoryPlanning = () => {
 
   useEffect(() => {
     const handle = setTimeout(() => {
-      loadItems(currentPage, pageSize, searchQuery.trim());
+      loadItems(currentPage, pageSize, searchQuery.trim(), productLine, sortConfig);
     }, 300);
     return () => clearTimeout(handle);
-  }, [currentPage, pageSize, searchQuery, loadItems]);
+  }, [currentPage, pageSize, searchQuery, productLine, sortConfig, loadItems]);
 
   const handleExport = async () => {
     setExporting(true);
     try {
-      const imported = await inventoryPlanningApi.getRawMaterials({ all: true, search: searchQuery.trim() });
+      const imported = await inventoryPlanningApi.getRawMaterials({
+        all: true,
+        search: searchQuery.trim(),
+        productLine,
+        sortBy: sortConfig?.key || '',
+        sortOrder: sortConfig?.direction === 'descending' ? 'desc' : sortConfig?.direction === 'ascending' ? 'asc' : '',
+      });
       const workbook = XLSX.utils.book_new();
       const data = imported?.data || [];
       const sheet = XLSX.utils.json_to_sheet(data.length ? data : [{ Message: 'No rows' }]);
@@ -103,6 +124,23 @@ const InventoryPlanning = () => {
           </div>
 
           <div className="po-filter-item">
+            <label className="po-filter-label">Product Line</label>
+            <select
+              className="po-filter-search-input"
+              value={productLine}
+              onChange={(e) => {
+                setProductLine(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All product lines</option>
+              {productLines.map((line) => (
+                <option key={line} value={line}>{line}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="po-filter-item">
             <label className="po-filter-label">&nbsp;</label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <button
@@ -119,9 +157,10 @@ const InventoryPlanning = () => {
                 className="po-filter-reset-btn"
                 onClick={() => {
                   setSearchQuery('');
+                  setProductLine('');
                   setCurrentPage(1);
                 }}
-                disabled={!searchQuery}
+                disabled={!searchQuery && !productLine}
               >
                 <IconRefresh size={16} />
                 Reset
@@ -138,6 +177,11 @@ const InventoryPlanning = () => {
           isLoading={loading}
           showActions={false}
           showPagination={false}
+          sortConfig={sortConfig}
+          onSortChange={(next) => {
+            setSortConfig(next);
+            setCurrentPage(1);
+          }}
         />
       </div>
       <Pagination
