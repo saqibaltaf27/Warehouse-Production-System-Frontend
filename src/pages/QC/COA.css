@@ -1,5 +1,4 @@
 .coa-document-wrapper {
-  padding: 0;
   background-color: transparent;
   display: flex;
   justify-content: center;
@@ -7,6 +6,7 @@
 
 .coa-document-container {
   width: 100%;
+  
 }
 
 .coa-top-header {
@@ -107,6 +107,180 @@
 .coa-header {
   display: flex;
   border-bottom: 1px solid #333;
+}
+
+.coa-cert-head {
+  border-bottom: 1px solid #111;
+  color: #111;
+}
+
+.coa-cert-head .coa-title-section {
+  width: 68%;
+  text-align: left;
+  padding: 12px 14px;
+  border-right: 1px solid #111;
+  color: #111;
+}
+
+.coa-cert-head .coa-title-section h2,
+.coa-cert-head .coa-title-section h3,
+.coa-cert-head .coa-title-section h4,
+.coa-cert-head .coa-title-section p {
+  margin: 0;
+  color: #111;
+  text-align: left;
+}
+
+.coa-cert-head .coa-title-section h2 { font-size: 16px; margin-bottom: 4px; }
+.coa-cert-head .coa-title-section p { font-size: 13px; margin-bottom: 10px; }
+.coa-cert-head .coa-title-section h3 { font-size: 22px; }
+.coa-cert-head .coa-title-section h4 { font-size: 18px; }
+
+.coa-cert-head .coa-form-info {
+  width: 32%;
+  padding: 8px 10px;
+  color: #111;
+  align-items: flex-start;
+}
+
+.coa-meta {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  color: #111;
+}
+
+.coa-meta td {
+  border: 1px solid #111;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.coa-cert {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coa-cert th,
+.coa-cert td {
+  border: 1px solid #111;
+  padding: 4px 6px;
+  vertical-align: middle;
+}
+
+.coa-cert th {
+  width: 18%;
+  text-align: left;
+  font-size: 12px;
+  color: #111;
+}
+
+.coa-cert td {
+  width: 32%;
+}
+
+.coa-document input[readonly],
+.coa-document textarea[readonly] {
+  caret-color: transparent;
+  cursor: default;
+  outline: none;
+}
+
+.coa-document input[readonly]:focus,
+.coa-document textarea[readonly]:focus {
+  caret-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+  width: 100%;
+  border: 0;
+  color: #111;
+  font-weight: 600;
+  background: transparent;
+  resize: vertical;
+}
+
+.coa-notes,
+.coa-conformity {
+  padding: 8px 12px;
+  border-bottom: 1px solid #111;
+  font-size: 13px;
+}
+
+.coa-notes p,
+.coa-conformity-label {
+  margin: 0 0 4px;
+}
+
+.coa-conformity select {
+  width: 100%;
+  border: 1px solid #d0d5dd;
+  padding: 6px;
+}
+
+.coa-sign-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #111;
+}
+
+.coa-sign-table th,
+.coa-sign-table td {
+  border: 1px solid #111;
+  padding: 8px;
+  text-align: center;
+  color: #111;
+}
+
+.coa-sign-table th {
+  font-weight: 700;
+}
+
+.coa-sign-table tr:first-child th {
+  width: 140px;
+  text-align: left;
+}
+
+.coa-sign-table tr:first-child td {
+  text-align: left;
+}
+
+.coa-sign-table textarea,
+.coa-sign-table select {
+  width: 100%;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: #111;
+  text-align: center;
+  font-weight: 700;
+  appearance: none;
+}
+
+.coa-sign-table select:focus {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.coa-sign-table textarea {
+  text-align: left;
+  font-weight: 500;
+  min-height: 28px;
+  resize: vertical;
+}
+
+.coa-sign-role {
+  font-weight: 700;
+}
+
+.coa-end-document {
+  text-align: center;
+  padding: 10px 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111;
 }
 
 .coa-logo-section {
@@ -573,6 +747,77 @@
   align-items: center;
 }
 
+.qa-clearance-tabs {
+  padding: 20px 20px 0;
+  box-sizing: border-box;
+}
+
+.line-clearance-page {
+  padding: 16px 0 20px;
+}
+
+.qa-clearance-page {
+  align-items: stretch;
+  padding: 16px 0 20px;
+  box-sizing: border-box;
+}
+
+.qa-clearance-page .coa-reports-section {
+  margin: 0;
+}
+
+.qa-clearance-decision {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.qa-clearance-decision > span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.qa-clearance-status-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.qa-clearance-status-btn {
+  min-width: 110px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 2px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.qa-clearance-status-btn--released {
+  color: #166534;
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.qa-clearance-status-btn--hold {
+  color: #92400e;
+  border-color: #fcd34d;
+  background: #fffbeb;
+}
+
+.qa-clearance-status-btn--reject {
+  color: #991b1b;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
 .coa-print-action-container {
   width: 100%;
   display: flex;
@@ -660,6 +905,26 @@
 .coa-status-draft {
   background: #f1f5f9;
   color: #475569;
+}
+
+.coa-status-pending {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.coa-status-released {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.coa-status-hold {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.coa-status-reject {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .coa-status-generated {

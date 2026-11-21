@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AsyncSelect from 'react-select/async';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import { axiosInstance } from '../../apis/axiosinstance';
@@ -7,7 +7,7 @@ import Button from '../../global-components/Button/Button';
 import Table from '../../global-components/Table/Table';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import toast, { Toaster } from 'react-hot-toast';
-import { IconEdit, IconPlus } from '@tabler/icons-react';
+import { IconEdit, IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
 import './COA.css';
 import '../Sampling/Sampling.css';
 import '../ProductionOrders/ProductionOrders.css';
@@ -30,6 +30,9 @@ const COATemplates = () => {
     ]
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const fetchSavedTemplates = async () => {
     try {
@@ -48,6 +51,21 @@ const COATemplates = () => {
   useEffect(() => {
     fetchSavedTemplates();
   }, []);
+
+  const filteredTemplates = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return (savedTemplates || []).filter((row) => {
+      const created = String(row.CreatedDate || '').slice(0, 10);
+      if (fromDate && created && created < fromDate) return false;
+      if (toDate && created && created > toDate) return false;
+      if (!query) return true;
+      const haystack = [row.ItemCode, row.ItemName, row.CreatedByName, row.CreatedBy]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [savedTemplates, searchQuery, fromDate, toDate]);
 
   const fetchProducts = async (inputValue) => {
     try {
@@ -393,10 +411,50 @@ const COATemplates = () => {
       </div>
       )}
 
-      {/* Saved Templates Table */}
       {!showCreateForm && <div className="coa-document-container coa-template-container">
+        <div className="po-filter-toolbar-card">
+          <div className="po-filter-toolbar-grid">
+            <div className="po-filter-item po-filter-search-box">
+              <label className="po-filter-label">Search</label>
+              <div style={{ position: 'relative' }}>
+                <IconSearch size={18} className="po-filter-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Item code, name, created by..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="po-filter-search-input"
+                />
+              </div>
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Created From</label>
+              <input type="date" className="po-filter-date-input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Created To</label>
+              <input type="date" className="po-filter-date-input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">&nbsp;</label>
+              <button
+                type="button"
+                className="po-filter-reset-btn"
+                disabled={!searchQuery && !fromDate && !toDate}
+                onClick={() => {
+                  setSearchQuery('');
+                  setFromDate('');
+                  setToDate('');
+                }}
+              >
+                <IconRefresh size={16} />
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
         <Table 
-          data={savedTemplates}
+          data={filteredTemplates}
           columns={tableColumns}
           isLoading={isFetchingTemplates}
           showActions={false}

@@ -138,10 +138,14 @@ const ProductionOrders = () => {
   const [filters, setFilters] = useState({
     lifecycle: "",
     product: "",
+    productLine: "",
     warehouse: "",
     fromDate: "",
     toDate: "",
+    createdFrom: "",
+    createdTo: "",
   });
+  const [productLines, setProductLines] = useState([]);
   const [kanbanByStatus, setKanbanByStatus] = useState({
     "New Order": [],
     Planned: [],
@@ -302,6 +306,9 @@ const ProductionOrders = () => {
       if (response.data?.success) {
         setPaginatedOrders(response.data.data);
         setTotalOrders(response.data.total);
+        if (Array.isArray(response.data.productLines)) {
+          setProductLines(response.data.productLines);
+        }
       }
     } catch (err) {
       toast.error("Failed to fetch production orders table.");
@@ -330,6 +337,9 @@ const ProductionOrders = () => {
     if (!response.data?.success) {
       throw new Error(response.data?.message || "Failed to load kanban column");
     }
+    if (Array.isArray(response.data.productLines)) {
+      setProductLines(response.data.productLines);
+    }
     return {
       lifecycle,
       rows: response.data.data || [],
@@ -343,7 +353,11 @@ const ProductionOrders = () => {
     currentSort = sortConfig,
     { silent = false } = {},
   ) => {
-    if (!silent) setKanbanLoading(true);
+    if (!silent) {
+      setKanbanLoading(true);
+      setKanbanByStatus(emptyKanbanByStatus);
+      setKanbanTotals(emptyKanbanTotals);
+    }
     try {
       const stages = currentFilters.lifecycle
         ? [currentFilters.lifecycle]
@@ -430,9 +444,12 @@ const ProductionOrders = () => {
     setFilters({
       lifecycle: "",
       product: "",
+      productLine: "",
       warehouse: "",
       fromDate: "",
       toDate: "",
+      createdFrom: "",
+      createdTo: "",
     });
     setSortConfig(null);
     setCurrentPage(1);
@@ -442,9 +459,12 @@ const ProductionOrders = () => {
     searchQuery.trim() ||
     filters.lifecycle ||
     filters.product ||
+    filters.productLine ||
     filters.warehouse ||
     filters.fromDate ||
-    filters.toDate,
+    filters.toDate ||
+    filters.createdFrom ||
+    filters.createdTo,
   );
 
   const fetchProductionOrder = async (codeToFetch) => {
@@ -903,6 +923,22 @@ const ProductionOrders = () => {
                 />
               </div>
 
+              <div className="po-filter-item">
+                <label className="po-filter-label">Product Line</label>
+                <select
+                  className="po-filter-select"
+                  value={filters.productLine}
+                  onChange={(e) => handleFilterChange("productLine", e.target.value)}
+                >
+                  <option value="">All lines</option>
+                  {productLines.map((line) => (
+                    <option key={line} value={line}>
+                      {line}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Product Filter */}
               <div className="po-filter-item" style={{ minWidth: "220px" }}>
                 <label className="po-filter-label">Product</label>
@@ -923,9 +959,8 @@ const ProductionOrders = () => {
                 />
               </div>
 
-              {/* Due Date From */}
               <div className="po-filter-item">
-                <label className="po-filter-label">Due From</label>
+                <label className="po-filter-label">Due Date From</label>
                 <input
                   type="date"
                   className="po-filter-date-input"
@@ -934,14 +969,33 @@ const ProductionOrders = () => {
                 />
               </div>
 
-              {/* Due Date To */}
               <div className="po-filter-item">
-                <label className="po-filter-label">Due To</label>
+                <label className="po-filter-label">Due Date To</label>
                 <input
                   type="date"
                   className="po-filter-date-input"
                   value={filters.toDate}
                   onChange={(e) => handleFilterChange("toDate", e.target.value)}
+                />
+              </div>
+
+              <div className="po-filter-item">
+                <label className="po-filter-label">Created From</label>
+                <input
+                  type="date"
+                  className="po-filter-date-input"
+                  value={filters.createdFrom}
+                  onChange={(e) => handleFilterChange("createdFrom", e.target.value)}
+                />
+              </div>
+
+              <div className="po-filter-item">
+                <label className="po-filter-label">Created To</label>
+                <input
+                  type="date"
+                  className="po-filter-date-input"
+                  value={filters.createdTo}
+                  onChange={(e) => handleFilterChange("createdTo", e.target.value)}
                 />
               </div>
 
@@ -992,7 +1046,7 @@ const ProductionOrders = () => {
             />
             </div>
           ) : (
-            <div className={`po-kanban-board ${kanbanLoading && !Object.values(kanbanByStatus).some((rows) => rows.length) ? "po-kanban-loading" : ""}`}>
+            <div className="po-kanban-board">
               {kanbanColumns.map((column) => {
                 const cards = kanbanByStatus[column.key] || [];
                 const total = kanbanTotals[column.key] || 0;
@@ -1014,7 +1068,12 @@ const ProductionOrders = () => {
                         kanbanListRefs.current[column.key] = node;
                       }}
                     >
-                      {cards.length === 0 ? (
+                      {kanbanLoading && cards.length === 0 ? (
+                        <div className="po-kanban-column-loading">
+                          <span className="table-loader-spinner" />
+                          Loading...
+                        </div>
+                      ) : cards.length === 0 ? (
                         <p className="po-kanban-empty">No orders</p>
                       ) : (
                         cards.map((order) => (
@@ -1025,7 +1084,7 @@ const ProductionOrders = () => {
                           >
                             <div className="po-kanban-card-meta">
                               <span>PO #{order.DocNum}</span>
-                              <span>{order.Project || "—"}</span>
+                              <span>Created: {formatDate(order.CreateDate) || "—"}</span>
                             </div>
                             <h3>{order.ProductNo}</h3>
                             <p>{order.ProductDescription || "—"}</p>

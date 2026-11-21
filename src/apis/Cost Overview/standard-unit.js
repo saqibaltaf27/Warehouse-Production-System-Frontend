@@ -23,4 +23,12 @@ export const standardUnitApi = {
     );
     return response.data;
   },
+
+  update: async (id, payload) => {
+    const response = await axiosInstance.put(
+      API_ENDPOINTS.STANDARD_UNIT_MAN_HOURS.UPDATE(id),
+      payload,
+    );
+    return response.data;
+  },
 };

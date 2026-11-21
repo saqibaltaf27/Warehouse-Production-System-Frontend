@@ -2,14 +2,15 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Select from 'react-select';
 import toast from 'react-hot-toast';
-import { IconPlus } from '@tabler/icons-react';
+import { IconPlus, IconEdit, IconSearch, IconRefresh } from '@tabler/icons-react';
 import Button from '../../global-components/Button/Button';
 import Table from '../../global-components/Table/Table';
 import { standardUnitApi } from '../../apis/Cost Overview/standard-unit';
 import '../ProductionOrders/SalesOrderModal.css';
+import '../ProductionOrders/ProductionOrders.css';
 import './StandardUnitManHours.css';
 
-const emptyForm = { itemCode: '', itemDescription: '', manHour: '' };
+const emptyForm = { itemCodes: [], manHour: '' };
 
 const formatDate = (value) => {
   if (!value) return '—';
@@ -30,6 +31,8 @@ const StandardUnitManHours = () => {
   const [showAdd, setShowAdd] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -84,27 +87,40 @@ const StandardUnitManHours = () => {
   );
 
   const openAdd = () => {
+    setEditingId(null);
     setForm(emptyForm);
+    setShowAdd(true);
+  };
+
+  const openEdit = (row) => {
+    setEditingId(row.Id);
+    setForm({
+      itemCodes: [row.ItemName],
+      manHour: row.ManHour ?? '',
+    });
     setShowAdd(true);
   };
 
   const closeAdd = () => {
     if (saving) return;
     setShowAdd(false);
+    setEditingId(null);
     setForm(emptyForm);
   };
 
+  const selectedOptions = itemOptions.filter((option) => form.itemCodes.includes(option.value));
+
   const handleItemChange = (selected) => {
+    const next = Array.isArray(selected) ? selected : selected ? [selected] : [];
     setForm((prev) => ({
       ...prev,
-      itemCode: selected?.value || '',
-      itemDescription: selected?.description || '',
+      itemCodes: next.map((option) => option.value),
     }));
   };
 
   const handleSave = async (event) => {
     event.preventDefault();
-    if (!form.itemCode) {
+    if (!form.itemCodes.length) {
       toast.error('Item name is required');
       return;
     }
@@ -120,13 +136,17 @@ const StandardUnitManHours = () => {
 
     setSaving(true);
     try {
-      const res = await standardUnitApi.create({
-        itemName: form.itemCode,
-        manHour,
-      });
+      const res = editingId
+        ? await standardUnitApi.update(editingId, { manHour })
+        : await standardUnitApi.create({
+            itemNames: form.itemCodes,
+            manHour,
+          });
       if (res?.success) {
         toast.success(res.message || 'Standard unit saved');
-        closeAdd();
+        setShowAdd(false);
+        setEditingId(null);
+        setForm(emptyForm);
         setCurrentPage(1);
         fetchList();
       } else {
@@ -164,12 +184,42 @@ const StandardUnitManHours = () => {
       width: '130px',
       render: (row) => formatDate(row.CreatedAt),
     },
+    {
+      key: 'actions',
+      header: 'Actions',
+      width: '80px',
+      render: (row) => (
+        <button
+          type="button"
+          className="dome-table-action-btn dome-table-action-btn--info"
+          title="Edit"
+          onClick={(event) => {
+            event.stopPropagation();
+            openEdit(row);
+          }}
+        >
+          <IconEdit size={16} stroke={2} />
+        </button>
+      ),
+    },
   ];
+
+  const filteredRows = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return rows;
+    return rows.filter((row) =>
+      [row.ItemName, row.ItemDescription, row.ManHour, row.CreatedByName]
+        .filter((value) => value !== undefined && value !== null)
+        .join(' ')
+        .toLowerCase()
+        .includes(query),
+    );
+  }, [rows, searchQuery]);
 
   const pagedRows = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
-    return rows.slice(start, start + pageSize);
-  }, [rows, currentPage, pageSize]);
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, currentPage, pageSize]);
 
   return (
     <div className="sumh-page layout-page-padding">
@@ -179,11 +229,47 @@ const StandardUnitManHours = () => {
         </Button>
       </div>
 
+      <div className="po-filter-toolbar-card">
+        <div className="po-filter-toolbar-grid">
+          <div className="po-filter-item po-filter-search-box">
+            <label className="po-filter-label">Search</label>
+            <div style={{ position: 'relative' }}>
+              <IconSearch size={18} className="po-filter-search-icon" />
+              <input
+                type="text"
+                placeholder="Item, description, man hour..."
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setCurrentPage(1);
+                }}
+                className="po-filter-search-input"
+              />
+            </div>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <button
+              type="button"
+              className="po-filter-reset-btn"
+              disabled={!searchQuery}
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+              }}
+            >
+              <IconRefresh size={16} />
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="sumh-table-wrap">
         <Table
           data={pagedRows}
           columns={columns}
-          totalEntries={rows.length}
+          totalEntries={filteredRows.length}
           currentPage={currentPage}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
@@ -205,7 +291,7 @@ const StandardUnitManHours = () => {
               onMouseDown={(e) => e.stopPropagation()}
             >
               <div className="so-modal-header">
-                <h3>Add Standard Unit / Man Hours</h3>
+                <h3>{editingId ? 'Edit Standard Unit / Man Hours' : 'Add Standard Unit / Man Hours'}</h3>
                 <button type="button" className="so-modal-close" onClick={closeAdd} disabled={saving}>
                   &times;
                 </button>
@@ -218,16 +304,25 @@ const StandardUnitManHours = () => {
                     <span className="sumh-select-span">
                       <Select
                         options={itemOptions}
-                        value={
-                          form.itemCode
-                            ? itemOptions.find((o) => o.value === form.itemCode) || null
-                            : null
-                        }
+                        isMulti={!editingId}
+                        closeMenuOnSelect={Boolean(editingId)}
+                        hideSelectedOptions={false}
+                        value={editingId ? (selectedOptions[0] || null) : selectedOptions}
                         onChange={handleItemChange}
                         placeholder={loadingItems ? 'Loading items…' : 'Search Item Code'}
                         isClearable
                         isSearchable
-                        isDisabled={saving || loadingItems}
+                        isDisabled={saving || loadingItems || Boolean(editingId)}
+                        formatOptionLabel={(option, { context }) => {
+                          if (editingId || context === 'value') return option.label;
+                          const checked = form.itemCodes.includes(option.value);
+                          return (
+                            <span className="sumh-option">
+                              <input type="checkbox" checked={checked} readOnly />
+                              <span>{option.label}</span>
+                            </span>
+                          );
+                        }}
                         filterOption={(option, input) => {
                           const q = String(input || '').toLowerCase();
                           if (!q) return true;
@@ -244,7 +339,7 @@ const StandardUnitManHours = () => {
                           control: (base) => ({
                             ...base,
                             minHeight: 24,
-                            height: 24,
+                            height: editingId ? 24 : 'auto',
                             border: 'none',
                             boxShadow: 'none',
                             background: 'transparent',
@@ -252,7 +347,11 @@ const StandardUnitManHours = () => {
                           valueContainer: (base) => ({
                             ...base,
                             padding: 0,
-                            height: 24,
+                            height: editingId ? 24 : 'auto',
+                          }),
+                          multiValue: (base) => ({
+                            ...base,
+                            fontSize: 12,
                           }),
                           input: (base) => ({
                             ...base,
@@ -295,7 +394,7 @@ const StandardUnitManHours = () => {
                       <input
                         type="text"
                         className="sumh-detail-input"
-                        value={form.itemDescription}
+                        value={selectedOptions.map((option) => option.description || option.value).filter(Boolean).join(', ')}
                         readOnly
                         placeholder="Auto-filled from ProdName"
                       />
@@ -325,7 +424,7 @@ const StandardUnitManHours = () => {
                     Cancel
                   </Button>
                   <Button type="submit" variant="primary" disabled={saving} isLoading={saving}>
-                    Save
+                    {editingId ? 'Update' : 'Save'}
                   </Button>
                 </div>
               </form>

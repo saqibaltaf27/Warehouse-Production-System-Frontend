@@ -53,6 +53,7 @@ const Layout = () => {
     "/production-plan/edit": "Edit Production Plan",
     "/production-plan/view": "View Production Plan",
     "/qc": "Quality Control",
+    "/QA-Clearance": "QA Clearance",
     "/engineering-dashboard": "Engineering Dashboard",
     "/inventory": "Inventory",
     "/inventory-planning": "Inventory Planning",

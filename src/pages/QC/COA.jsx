@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import toast, { Toaster } from 'react-hot-toast';
-import { IconArrowLeft, IconEdit, IconEye, IconPlus, IconPrinter } from '@tabler/icons-react';
+import { IconArrowLeft, IconEdit, IconEye, IconPlus, IconPrinter, IconSearch, IconRefresh, IconHourglass } from '@tabler/icons-react';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { useAuth } from '../../context/AuthContext';
 import { usePermission } from '../../context/permissioncheck';
 import Button from '../../global-components/Button/Button';
+import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import Table from '../../global-components/Table/Table';
 import './COA.css';
+import '../ProductionOrders/ProductionOrders.css';
 import '../Sampling/Sampling.css';
 
 const getTodayFormatted = () => {
@@ -44,14 +46,41 @@ const emptyForm = () => ({
   revisionNo: '',
   reg: '',
   dateReported: '',
+  nominalVolume: '',
+  samplingDate: '',
+  sampleQuantity: '',
+  sampleCompletionDate: '',
   tests: [
     { id: 1, tests: '', specifications: '', analyzedBy: '', result: '', conclusion: '' }
   ],
-  remarks: '',
-  analyzedBy: { name: 'Husnain', title: 'QC Analyst', date: getTodayFormattedUpper() },
-  checkedBy: { name: 'Saba Abbas', title: 'QC Officer', date: getTodayFormattedUpper() },
-  approvedBy: { name: 'Madiha Rashid', title: 'QC Manager', date: getTodayFormattedUpper() }
+  remarks: 'This product complies as per approved specifications.',
+  footerNotes: [],
+  conformityOptions: [],
+  conformity: '',
+  approvalStatus: 'APPROVED',
+  analyzedBy: { name: '', title: 'QC Analyst', date: getTodayFormattedUpper() },
+  checkedBy: { name: '', title: 'QC Officer', date: getTodayFormattedUpper() },
+  approvedBy: { name: '', title: 'QC Manager', date: getTodayFormattedUpper() }
 });
+
+const emptyHeaderExtras = () => ({
+  nominalVolume: '',
+  samplingDate: '',
+  sampleQuantity: '',
+  sampleCompletionDate: '',
+  conformity: '',
+  approvalStatus: 'APPROVED',
+});
+
+const readHeaderExtras = (formNo) => {
+  if (!formNo || String(formNo).charAt(0) !== '{') return emptyHeaderExtras();
+  try {
+    const parsed = JSON.parse(formNo);
+    return { ...emptyHeaderExtras(), ...parsed };
+  } catch {
+    return emptyHeaderExtras();
+  }
+};
 
 const escapeHtml = (value) => String(value ?? '')
   .replace(/&/g, '&amp;')
@@ -77,36 +106,25 @@ const COA_PRINT_CSS = `
     font-size: 13px;
     background: #fff;
   }
-  .coa-header { display: flex; border-bottom: 1px solid #333; }
-  .coa-logo-section {
-    width: 15%;
-    border-right: 1px solid #333;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-  }
-  .coa-logo-section img { height: 54px; object-fit: contain; }
+  .coa-header { display: flex; border-bottom: 1px solid #111; color: #111; }
   .coa-title-section {
-    width: 65%;
-    text-align: center;
-    padding: 15px;
-    border-right: 1px solid #333;
+    width: 68%;
+    text-align: left;
+    padding: 10px 12px;
+    border-right: 1px solid #111;
   }
-  .coa-title-section h2,
-  .coa-title-section h3,
-  .coa-title-section h4 { margin: 5px 0; }
-  .coa-title-section h2 { font-size: 16px; }
-  .coa-title-section h3,
-  .coa-title-section h4 { font-size: 14px; }
-  .coa-form-info {
-    width: 20%;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    font-size: 11px;
-  }
+  .coa-title-section h2 { margin: 0 0 4px; font-size: 15px; font-weight: 700; }
+  .coa-title-section p { margin: 0 0 8px; font-size: 12px; }
+  .coa-title-section h3 { margin: 0; font-size: 18px; font-weight: 700; }
+  .coa-title-section h4 { margin: 0; font-size: 16px; font-weight: 700; }
+  .coa-form-info { width: 32%; padding: 8px; font-size: 12px; color: #111; }
+  .coa-form-info img { height: 48px; object-fit: contain; }
+  .coa-meta { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  .coa-meta td { border: 1px solid #111; padding: 3px 6px; }
+  .coa-cert { width: 100%; border-collapse: collapse; }
+  .coa-cert th, .coa-cert td { border: 1px solid #111; padding: 3px 6px; vertical-align: top; }
+  .coa-cert th { width: 18%; text-align: left; font-weight: 700; color: #111; }
+  .coa-cert td { width: 32%; color: #111; font-weight: 600; }
   .coa-form-row { display: flex; margin-bottom: 5px; }
   .coa-form-row label { white-space: nowrap; margin-right: 5px; }
   .coa-details-section { padding: 15px; border-bottom: 1px solid #333; }
@@ -213,89 +231,65 @@ const buildCoaPrintHtml = (data) => {
 <body>
   <div class="coa-document">
     <div class="coa-header">
-      <div class="coa-logo-section">
-        <img src="${logoUrl}" alt="LDS Logo" />
-      </div>
       <div class="coa-title-section">
-        <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PVT LTD.</h2>
-        <h3>QUALITY CONTROL LABORATORY</h3>
-        <h4>CERTIFICATE OF ANALYSIS FOR FINISHED PRODUCT</h4>
+        <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PRIVATE LIMITED</h2>
+        <p>Plot No 36-A, PSIC, SIE, Taxila – Rawalpindi, Pakistan</p>
+        <h3>CERTIFICATE OF ANALYSIS</h3>
+        <h4>(Finished Product)</h4>
       </div>
       <div class="coa-form-info">
-        <div class="coa-form-row">
-          <label>Issue Date:</label>
-          <span>${escapeHtml(data.issueDate)}</span>
-        </div>
+        <img src="${logoUrl}" alt="LDS Logo" />
+        <table class="coa-meta">
+          <tr><td>Document No</td><td>LDS-QC-FRM-LMS-011AV</td></tr>
+          <tr><td>Version No</td><td>02</td></tr>
+        </table>
       </div>
     </div>
-    <div class="coa-details-section">
-      <div class="coa-detail-row">
-        <label>PRODUCT:</label>
-        <div class="coa-detail-value">${escapeHtml(data.productTop)}</div>
-      </div>
-      <div class="coa-detail-row">
-        <label>COMPOSITION:</label>
-        <div class="coa-detail-value">${escapeHtml(data.composition)}</div>
-      </div>
-      <div class="coa-grid-details">
-        <div>
-          <div class="coa-detail-row"><label>PRODUCT</label><div class="coa-detail-value">${escapeHtml(data.product)}</div></div>
-          <div class="coa-detail-row"><label>BATCH:</label><div class="coa-detail-value">${escapeHtml(data.batch)}</div></div>
-          <div class="coa-detail-row"><label>BATCH SIZE:</label><div class="coa-detail-value">${escapeHtml(data.batchSize)}</div></div>
-          <div class="coa-detail-row"><label>SOP NO.:</label><div class="coa-detail-value">${escapeHtml(data.sopNo)}</div></div>
-          <div class="coa-detail-row"><label>PROCESS STAGE:</label><div class="coa-detail-value">${escapeHtml(data.processStage)}</div></div>
-          <div class="coa-detail-row"><label>REG:</label><div class="coa-detail-value">${escapeHtml(data.reg)}</div></div>
-        </div>
-        <div>
-          <div class="coa-detail-row"><label>CAT No:</label><div class="coa-detail-value">${escapeHtml(data.catNo)}</div></div>
-          <div class="coa-detail-row"><label>PACK SIZE:</label><div class="coa-detail-value">${escapeHtml(data.packSize)}</div></div>
-          <div class="coa-detail-row"><label>MFG DATE:</label><div class="coa-detail-value">${escapeHtml(data.mfgDate)}</div></div>
-          <div class="coa-detail-row"><label>EXP DATE:</label><div class="coa-detail-value">${escapeHtml(data.expDate)}</div></div>
-          <div class="coa-detail-row"><label>REVISION NO.:</label><div class="coa-detail-value">${escapeHtml(data.revisionNo)}</div></div>
-          <div class="coa-detail-row"><label>DATE REPORTED:</label><div class="coa-detail-value">${escapeHtml(data.dateReported)}</div></div>
-        </div>
-      </div>
-    </div>
+    <table class="coa-cert">
+      <tr><th>Product Name:</th><td>${escapeHtml(data.product || data.productTop)}</td><th>Sampling Date:</th><td>${escapeHtml(data.samplingDate)}</td></tr>
+      <tr><th>Product Code:</th><td>${escapeHtml(data.itemCode)}</td><th>Sample Quantity:</th><td>${escapeHtml(data.sampleQuantity)}</td></tr>
+      <tr><th>Nominal Volume:</th><td>${escapeHtml(data.nominalVolume)}</td><th>Sample Completion Date:</th><td>${escapeHtml(data.sampleCompletionDate)}</td></tr>
+      <tr><th>Batch No:</th><td>${escapeHtml(data.batch)}</td><th>Reporting Date:</th><td>${escapeHtml(data.dateReported)}</td></tr>
+      <tr><th>Batch Size:</th><td>${escapeHtml(data.batchSize)}</td><th>Revision No:</th><td>${escapeHtml(data.revisionNo)}</td></tr>
+      <tr><th>Pack Presentation:</th><td>${escapeHtml(data.packSize)}</td><th>CoA Issuance Date:</th><td>${escapeHtml(data.issueDate)}</td></tr>
+      <tr><th>Registration No:</th><td>${escapeHtml(data.reg)}</td><th>Manufacturing Date:</th><td>${escapeHtml(data.mfgDate)}</td></tr>
+      <tr><th>CAT No:</th><td>${escapeHtml(data.catNo)}</td><th>Expiry Date:</th><td>${escapeHtml(data.expDate)}</td></tr>
+      <tr><th>Tube Type:</th><td>${escapeHtml(data.processStage)}</td><th>Test Procedure No:</th><td>${escapeHtml(data.sopNo)}</td></tr>
+      <tr><th>Specifications:</th><td colspan="3">${escapeHtml(data.composition)}</td></tr>
+    </table>
     <div class="coa-table-section">
       <table class="coa-table">
         <thead>
           <tr>
             <th class="coa-col-sn">S.#</th>
-            <th class="coa-col-tests">TESTS</th>
-            <th class="coa-col-specs">SPECIFICATIONS</th>
-            <th class="coa-col-analyzed">ANALYZED BY</th>
-            <th class="coa-col-result">RESULT</th>
-            <th class="coa-col-conclusion">CONCLUSION</th>
+            <th class="coa-col-tests">Test</th>
+            <th class="coa-col-specs">Specifications</th>
+            <th class="coa-col-analyzed">Analyzed By</th>
+            <th class="coa-col-result">Results</th>
+            <th class="coa-col-conclusion">Conclusion</th>
           </tr>
         </thead>
         <tbody>${testRows}</tbody>
       </table>
     </div>
-    <div class="coa-remarks-section">
-      <div class="coa-remarks-label">REMARKS</div>
-      <div class="coa-remarks-input">${escapeHtml(data.remarks)}</div>
-    </div>
-    <div class="coa-signatures-section">
-      <div class="coa-signature-block">
-        <div class="coa-sig-header">ANALYZED BY</div>
-        <div class="coa-sig-line">${escapeHtml(data.analyzedBy?.name)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.analyzedBy?.title)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.analyzedBy?.date)}</div>
-      </div>
-      <div class="coa-signature-block">
-        <div class="coa-sig-header">CHECKED BY</div>
-        <div class="coa-sig-line">${escapeHtml(data.checkedBy?.name)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.checkedBy?.title)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.checkedBy?.date)}</div>
-      </div>
-      <div class="coa-signature-block">
-        <div class="coa-sig-header">APPROVED BY</div>
-        <div class="coa-sig-line">${escapeHtml(data.approvedBy?.name)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.approvedBy?.title)}</div>
-        <div class="coa-sig-line">${escapeHtml(data.approvedBy?.date)}</div>
-      </div>
-    </div>
-    <div class="coa-footer-status">APPROVED</div>
+    ${(Array.isArray(data.footerNotes) ? data.footerNotes : []).map((note) => `<p class="coa-note">Note ${escapeHtml(note.NoteNo)}: ${escapeHtml(note.Text)}</p>`).join('')}
+    ${data.conformity ? `<p class="coa-note"><strong>Statement of Conformity:</strong> ${escapeHtml((data.conformityOptions || []).find((option) => option.Value === data.conformity)?.Text || data.conformity)}</p>` : ''}
+    <table class="coa-sign-table">
+      <tr><th>REMARKS</th><td colspan="2">${escapeHtml(data.remarks)}</td></tr>
+      <tr>
+        <th>ANALYZED BY</th>
+        <th>CHECKED BY</th>
+        <th>APPROVED BY</th>
+      </tr>
+      <tr>
+        <td><strong>${escapeHtml(data.analyzedBy?.title)}</strong><br/>${escapeHtml(data.analyzedBy?.date)}</td>
+        <td><strong>${escapeHtml(data.checkedBy?.title)}</strong><br/>${escapeHtml(data.checkedBy?.date)}</td>
+        <td><strong>${escapeHtml(data.approvedBy?.title)}</strong><br/>${escapeHtml(data.approvedBy?.date)}</td>
+      </tr>
+      <tr><td colspan="3" style="text-align:center;font-weight:700;">${escapeHtml(data.approvalStatus || 'APPROVED')}</td></tr>
+      <tr><td colspan="3">This is SAP-PMS generated Document and does not require signature</td></tr>
+    </table>
+    <div class="coa-end">End of Document</div>
   </div>
 </body>
 </html>`;
@@ -347,7 +341,7 @@ const printCoaData = (data) => {
   });
 };
 
-const COA = () => {
+const COA = ({ clearance = false }) => {
   const { user } = useAuth();
   const { hasChildPermission } = usePermission();
   const [batchOptions, setBatchOptions] = useState([]);
@@ -356,16 +350,26 @@ const COA = () => {
   const [showForm, setShowForm] = useState(false);
   const [mode, setMode] = useState('create'); // create | edit | view
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingSave, setPendingSave] = useState(null);
+  const [clearanceTarget, setClearanceTarget] = useState(null);
+  const [clearanceStatus, setClearanceStatus] = useState('');
+  const [clearanceReview, setClearanceReview] = useState(false);
   const [reports, setReports] = useState([]);
   const [isFetchingReports, setIsFetchingReports] = useState(false);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
   const [totalReports, setTotalReports] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({ status: '', productLine: '', fromDate: '', toDate: '' });
+  const [statusOptions, setStatusOptions] = useState([]);
+  const [productLines, setProductLines] = useState([]);
 
   const isReadOnly = mode === 'view';
 
   const canGenerate = hasChildPermission('QC', 'Certificate of Analysis', 'Can Generate');
   const canEdit = hasChildPermission('QC', 'Certificate of Analysis', 'Can edit');
+  const qaPermission = hasChildPermission('QC', 'Certificate of Analysis', 'QA Permission');
+  const qaStatuses = ['Pending', 'Released', 'Hold', 'Reject'];
 
   const getUserMeta = () => ({
     createdBy: user?.empId || user?.EmpID || user?.id || user?.emp_id || 0,
@@ -378,12 +382,32 @@ const COA = () => {
     try {
       setIsFetchingReports(true);
       const res = await axiosInstance.get(API_ENDPOINTS.QC.LIST_COA_REPORTS, {
-        params: { page: pageOverride, limit: limitOverride },
+        params: {
+          page: pageOverride,
+          limit: limitOverride,
+          search: searchQuery.trim() || undefined,
+          status: filters.status || undefined,
+          productLine: filters.productLine || undefined,
+          fromDate: filters.fromDate || undefined,
+          toDate: filters.toDate || undefined,
+          excludeStatus: clearance ? 'Draft' : undefined,
+          statusIn: qaPermission && !filters.status ? qaStatuses.join(',') : undefined,
+        },
         skipGlobalLoading: true
       });
       if (res.data.success) {
         setReports(res.data.data || []);
         setTotalReports(res.data.pagination?.total || 0);
+        if (qaPermission) {
+          setStatusOptions(qaStatuses);
+        } else if (Array.isArray(res.data.statuses)) {
+          setStatusOptions(
+            clearance
+              ? res.data.statuses.filter((item) => String(item).toLowerCase() !== 'draft')
+              : res.data.statuses,
+          );
+        }
+        if (Array.isArray(res.data.productLines)) setProductLines(res.data.productLines);
       }
     } catch (error) {
       console.error('Error fetching COA reports:', error);
@@ -394,7 +418,7 @@ const COA = () => {
 
   useEffect(() => {
     fetchReports(page, limit);
-  }, [page, limit]);
+  }, [page, limit, searchQuery, filters, qaPermission]);
 
   const handleInputChange = (e, field, subField = null) => {
     if (isReadOnly) return;
@@ -487,24 +511,34 @@ const COA = () => {
       const data = await response.json();
       
       let presetTests = formData.tests;
-      
+      let templateHeader = null;
+      let templateFooter = null;
+
       try {
-        const templateRes = await axiosInstance.get(API_ENDPOINTS.QC.GET_TEMPLATE(itemCode), {
-          skipGlobalLoading: true
-        });
-        if (templateRes.data.success && templateRes.data.data) {
-          const parsedTests = JSON.parse(templateRes.data.data);
-          presetTests = parsedTests.map((t, i) => ({
-            id: i + 1,
-            tests: t.test || '',
-            specifications: t.specification || '',
-            analyzedBy: '',
-            result: t.result || '',
-            conclusion: ''
-          }));
+        if (productLineStr) {
+          const templateRes = await axiosInstance.get(API_ENDPOINTS.QC.GET_TEMPLATE_BY_LINE, {
+            params: { line: productLineStr },
+            skipGlobalLoading: true
+          });
+          if (templateRes.data.success && templateRes.data.data) {
+            const row = templateRes.data.data;
+            const parsedTests = typeof row.Description === 'string' ? JSON.parse(row.Description) : row.Description;
+            templateHeader = typeof row.Header === 'string' ? JSON.parse(row.Header || '{}') : (row.Header || {});
+            templateFooter = typeof row.Footer === 'string' ? JSON.parse(row.Footer || '{}') : (row.Footer || {});
+            if (Array.isArray(parsedTests)) {
+              presetTests = parsedTests.map((t, i) => ({
+                id: t.SrNo || i + 1,
+                tests: t.Test || t.test || '',
+                specifications: t.Specifications || t.specification || '',
+                analyzedBy: t.AnalyzedBy || '',
+                result: t.Results || t.result || '',
+                conclusion: t.Conclusion || ''
+              }));
+            }
+          }
         }
       } catch (err) {
-        console.error('Error fetching dynamic template:', err);
+        console.error('Error fetching line template:', err);
       }
 
       if (data.success && data.data) {
@@ -526,18 +560,34 @@ const COA = () => {
           ...prev,
           product: details['PRODUCT'] || '',
           batch: firstBatch?.batch || '',
-          batchSize: firstBatch?.batchSize || '',
-          sopNo: firstBatch?.bmrNo || '',
+          batchSize: firstBatch?.batchSize || details['BATCH SIZE'] || '',
           processStage: details['PROCESS STAGE'] || '',
           catNo: details['CAT NO.'] || '',
-          packSize: details['PACK SIZE'] || '',
+          packSize: templateHeader?.['Pack Presentation'] || details['PACK SIZE'] || '',
           mfgDate: firstBatch ? (formatDate(firstBatch.mfgDate) || '') : '',
           expDate: firstBatch ? (formatDate(firstBatch.expDate) || '') : '',
           dateReported: formatDate(details['DATE REPORTED']) || '',
-          composition: details['COMPOSITION'] || prev.composition,
-          reg: details['REG'] || prev.reg,
-          revisionNo: details['REVISION NO.'] || prev.revisionNo,
+          composition: templateHeader?.Specifications || details['COMPOSITION'] || prev.composition,
+          reg: '',
+          revisionNo: templateHeader?.['Revision No'] || prev.revisionNo,
+          sopNo: templateHeader?.['Test Procedure No'] || firstBatch?.bmrNo || '',
+          footerNotes: templateFooter?.Notes || [],
+          conformityOptions: templateFooter?.StatementOfConformity?.Options || [],
+          conformity: '',
           tests: presetTests,
+          testsFromTemplate: Boolean(templateHeader),
+          locked: {
+            batchSize: Boolean(firstBatch?.batchSize || details['BATCH SIZE']),
+            processStage: Boolean(details['PROCESS STAGE']),
+            catNo: Boolean(details['CAT NO.']),
+            packSize: Boolean(templateHeader?.['Pack Presentation'] || details['PACK SIZE']),
+            mfgDate: Boolean(firstBatch?.mfgDate),
+            expDate: Boolean(firstBatch?.expDate),
+            dateReported: Boolean(details['DATE REPORTED']),
+            composition: Boolean(templateHeader?.Specifications || details['COMPOSITION']),
+            revisionNo: Boolean(templateHeader?.['Revision No']),
+            sopNo: Boolean(templateHeader?.['Test Procedure No'] || firstBatch?.bmrNo),
+          },
           remarks: prev.remarks
         }));
       }
@@ -551,7 +601,14 @@ const COA = () => {
     return {
       coaNo: formData.coaNo,
       status,
-      formNo: formData.formNo,
+      formNo: JSON.stringify({
+        nominalVolume: formData.nominalVolume,
+        samplingDate: formData.samplingDate,
+        sampleQuantity: formData.sampleQuantity,
+        sampleCompletionDate: formData.sampleCompletionDate,
+        conformity: formData.conformity,
+        approvalStatus: formData.approvalStatus,
+      }),
       issueDate: formData.issueDate,
       itemCode: formData.itemCode || selectedProduct?.value || '',
       itemName: formData.itemName || selectedProduct?.itemName || '',
@@ -582,10 +639,10 @@ const COA = () => {
   };
 
   const handleSave = async (status) => {
-    if (isReadOnly) return;
+    if (isReadOnly) return false;
     if (!formData.itemCode && !selectedProduct?.value) {
       toast.error('Please select a product first.');
-      return;
+      return false;
     }
 
     try {
@@ -601,12 +658,46 @@ const COA = () => {
         } else {
           fetchReports(1, limit);
         }
-      } else {
-        toast.error(res.data.message || 'Failed to save COA');
+        return true;
       }
+      toast.error(res.data.message || 'Failed to save COA');
+      return false;
     } catch (error) {
       console.error('Error saving COA:', error);
       toast.error('An error occurred while saving the COA');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const applyClearanceStatus = async () => {
+    if (!clearanceTarget?.COA_No || !clearanceStatus) return;
+    try {
+      setIsSaving(true);
+      const userMeta = getUserMeta();
+      const res = await axiosInstance.patch(
+        API_ENDPOINTS.QC.UPDATE_COA_STATUS(clearanceTarget.COA_No),
+        {
+          status: clearanceStatus,
+          updatedBy: userMeta.createdBy,
+          updatedByName: userMeta.createdByName,
+        },
+        { skipGlobalLoading: true },
+      );
+      if (!res.data?.success) {
+        toast.error(res.data?.message || 'Failed to update status');
+        return;
+      }
+      toast.success(res.data.message || 'Status updated');
+      setClearanceTarget(null);
+      setClearanceStatus('');
+      setClearanceReview(false);
+      handleCloseForm();
+      fetchReports(page, limit);
+    } catch (error) {
+      console.error('Error updating COA status:', error);
+      toast.error('Failed to update status');
     } finally {
       setIsSaving(false);
     }
@@ -614,7 +705,7 @@ const COA = () => {
 
   const mapReportToForm = (data) => ({
     coaNo: data.COA_No,
-    status: data.Status === 'Generated' ? 'Generated' : 'Draft',
+    status: data.Status || 'Draft',
     formNo: data.FormNo || '',
     issueDate: data.IssueDate || getTodayFormatted(),
     itemCode: data.ItemCode || '',
@@ -634,6 +725,7 @@ const COA = () => {
     revisionNo: data.RevisionNo || '',
     reg: data.RegNo || '',
     dateReported: data.DateReported || '',
+    ...readHeaderExtras(data.FormNo),
     tests: (data.tests || []).map((t, i) => ({
       id: t.LineId || i + 1,
       tests: t.Tests || '',
@@ -685,6 +777,40 @@ const COA = () => {
       setBatchOptions([]);
       setMode(nextMode);
       setShowForm(true);
+      if (data.ProductLine) {
+        try {
+          const templateRes = await axiosInstance.get(API_ENDPOINTS.QC.GET_TEMPLATE_BY_LINE, {
+            params: { line: data.ProductLine },
+            skipGlobalLoading: true
+          });
+          if (templateRes.data.success && templateRes.data.data) {
+            const footer = typeof templateRes.data.data.Footer === 'string'
+              ? JSON.parse(templateRes.data.data.Footer || '{}')
+              : (templateRes.data.data.Footer || {});
+            setFormData((prev) => ({
+              ...prev,
+              footerNotes: footer.Notes || [],
+              conformityOptions: footer.StatementOfConformity?.Options || [],
+              testsFromTemplate: true,
+              locked: {
+                ...(prev.locked || {}),
+                packSize: true,
+                composition: true,
+                revisionNo: true,
+                sopNo: true,
+                batchSize: true,
+                catNo: true,
+                processStage: true,
+                mfgDate: true,
+                expDate: true,
+                dateReported: true,
+              },
+            }));
+          }
+        } catch (err) {
+          console.error('Error loading template footer:', err);
+        }
+      }
     } catch (error) {
       console.error('Error loading COA report:', error);
       toast.error('Failed to load COA report');
@@ -705,6 +831,9 @@ const COA = () => {
     setSelectedProduct(null);
     setBatchOptions([]);
     setMode('create');
+    setClearanceReview(false);
+    setClearanceTarget(null);
+    setClearanceStatus('');
   };
 
   const handleDirectPrint = async (coaNo) => {
@@ -832,18 +961,21 @@ const COA = () => {
       width: '12%',
       render: (row) => (
         <div className="coa-report-actions">
+          {(!qaPermission || String(row.Status || '').toLowerCase() === 'released') && (
           <button
             type="button"
             className="dome-table-action-btn dome-table-action-btn--list"
             title="View"
-            onClick={(e) => {
-              e.stopPropagation();
-              loadReport(row.COA_No, 'view');
-            }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setClearanceReview(false);
+                loadReport(row.COA_No, 'view');
+              }}
           >
             <IconEye size={16} stroke={2} />
           </button>
-          {canEdit && (
+          )}
+          {!qaPermission && !clearance && canEdit && String(row.Status || '').toLowerCase() === 'draft' && (
             <button
               type="button"
               className="dome-table-action-btn dome-table-action-btn--info"
@@ -856,27 +988,45 @@ const COA = () => {
               <IconEdit size={16} stroke={2} />
             </button>
           )}
-          <button
-            type="button"
-            className="dome-table-action-btn dome-table-action-btn--check"
-            title="Print"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDirectPrint(row.COA_No);
-            }}
-          >
-            <IconPrinter size={16} stroke={2} />
-          </button>
+          {qaPermission && ['pending', 'generated', 'hold'].includes(String(row.Status || '').toLowerCase()) && (
+            <button
+              type="button"
+              className="dome-table-action-btn dome-table-action-btn--list"
+              title="QA clearance"
+              onClick={(e) => {
+                e.stopPropagation();
+                setClearanceTarget(row);
+                setClearanceStatus('');
+                setClearanceReview(true);
+                loadReport(row.COA_No, 'view');
+              }}
+            >
+              <IconHourglass size={16} stroke={2} />
+            </button>
+          )}
+          {!clearance && String(row.Status || '').toLowerCase() === 'released' && (
+            <button
+              type="button"
+              className="dome-table-action-btn dome-table-action-btn--check"
+              title="Print"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDirectPrint(row.COA_No);
+              }}
+            >
+              <IconPrinter size={16} stroke={2} />
+            </button>
+          )}
         </div>
       )
     }
   ];
 
   return (
-    <div className="coa-document-wrapper coa-wrapper-centered">
+    <div className={`coa-document-wrapper coa-wrapper-centered${clearance ? ' qa-clearance-page' : ''}`}>
       <Toaster position="top-right" />
 
-      {canGenerate && (
+      {(Boolean(user?.isSuperAdmin) || (canGenerate && !qaPermission)) && !clearance && (
         <div className={`coa-create-header no-print${showForm ? ' coa-section-hidden' : ''}`}>
           <Button variant="primary" onClick={handleCreateNew} icon={<IconPlus size={18} />}>
             Create New
@@ -906,142 +1056,132 @@ const COA = () => {
         <div className={`coa-document${isReadOnly ? ' coa-document--readonly' : ''}`}>
           
           {/* Header Section */}
-        <div className="coa-header">
-          <div className="coa-logo-section coa-logo-section-padded">
-            <img src="/images/ldslogo.png" alt="LDS Logo" className="coa-header-logo-img" />
-          </div>
-          <div className="coa-title-section">
-            <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PVT LTD.</h2>
-            <h3>QUALITY CONTROL LABORATORY</h3>
-            <h4>CERTIFICATE OF ANALYSIS FOR FINISHED PRODUCT</h4>
-          </div>
-          <div className="coa-form-info">
-            <div className="coa-form-row">
-              <label>Issue Date:</label>
-              <input type="text" value={formData.issueDate} onChange={(e) => handleInputChange(e, 'issueDate')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
+          <div className="coa-header coa-cert-head">
+            <div className="coa-title-section">
+              <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PRIVATE LIMITED</h2>
+              <p>Plot No 36-A, PSIC, SIE, Taxila – Rawalpindi, Pakistan</p>
+              <h3>CERTIFICATE OF ANALYSIS</h3>
+              <h4>(Finished Product)</h4>
+            </div>
+            <div className="coa-form-info">
+              <img src="/images/ldslogo.png" alt="LDS Logo" className="coa-header-logo-img" />
+              <table className="coa-meta">
+                <tbody>
+                  <tr><td>Document No</td><td>LDS-QC-FRM-LMS-011AV</td></tr>
+                  <tr><td>Version No</td><td>02</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
 
-        {/* Product Details Section */}
-        <div className="coa-details-section">
-          <div className="coa-detail-row full-width coa-detail-row-centered">
-            <label>PRODUCT:</label>
-            <div className="coa-print-only coa-print-product-text">{formData.productTop}</div>
-            {isReadOnly ? (
-              <div className="coa-readonly-value coa-screen-only">{formData.productTop || '—'}</div>
-            ) : (
-            <div className="coa-item-select-container coa-screen-only">
-              <AsyncSelect
-                cacheOptions
-                defaultOptions
-                loadOptions={fetchProducts}
-                value={selectedProduct}
-                onChange={(selected) => {
-                  setSelectedProduct(selected);
-                  setFormData(prev => ({
-                    ...prev,
-                    itemCode: selected ? selected.value : '',
-                    itemName: selected ? (selected.itemName || '') : '',
-                    productTop: selected ? selected.label : '',
-                    productLine: selected ? selected.productLine : ''
-                  }));
-                  if (selected && selected.value) {
-                    fetchProductDetails(selected.value, selected.productLine);
-                  }
-                }}
-                styles={customSelectStyles}
-                placeholder="Search Product..."
-                isClearable
-              />
-            </div>
-            )}
-          </div>
-          <div className="coa-detail-row full-width">
-            <label>COMPOSITION:</label>
-            <input type="text" value={formData.composition} onChange={(e) => handleInputChange(e, 'composition')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-          </div>
-          
-          <div className="coa-grid-details">
-            <div className="coa-grid-col">
-              <div className="coa-detail-row">
-                <label>PRODUCT</label>
-                <input type="text" value={formData.product} onChange={(e) => handleInputChange(e, 'product')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>BATCH:</label>
-                <div className="coa-print-only">{formData.batch}</div>
-                {isReadOnly ? (
-                  <div className="coa-readonly-value coa-screen-only">{formData.batch || '—'}</div>
-                ) : (
-                <div className="coa-item-select-container coa-screen-only">
-                  <Select
-                    value={formData.batch ? { value: formData.batch, label: formData.batch } : null}
-                    onChange={(selected) => {
-                      const match = batchOptions.find((batch) => batch.batch === selected?.value);
-                      setFormData(prev => ({
-                        ...prev,
-                        batch: selected ? selected.value : '',
-                        batchSize: match?.batchSize || prev.batchSize,
-                        sopNo: match?.bmrNo || prev.sopNo,
-                        mfgDate: match ? formatDate(match.mfgDate) : prev.mfgDate,
-                        expDate: match ? formatDate(match.expDate) : prev.expDate,
-                      }));
-                    }}
-                    options={batchOptions.map((batch) => ({ value: batch.batch, label: batch.batch }))}
-                    styles={customSelectStyles}
-                    placeholder="Select batch..."
-                    isClearable
-                    isSearchable
-                  />
-                </div>
-                )}
-              </div>
-              <div className="coa-detail-row">
-                <label>BATCH SIZE:</label>
-                <input type="text" value={formData.batchSize} onChange={(e) => handleInputChange(e, 'batchSize')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>SOP NO.:</label>
-                <input type="text" value={formData.sopNo} onChange={(e) => handleInputChange(e, 'sopNo')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>PROCESS STAGE:</label>
-                <input type="text" value={formData.processStage} onChange={(e) => handleInputChange(e, 'processStage')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>REG:</label>
-                <input type="text" value={formData.reg} onChange={(e) => handleInputChange(e, 'reg')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-            </div>
-            <div className="coa-grid-col">
-              <div className="coa-detail-row">
-                <label>CAT No:</label>
-                <input type="text" value={formData.catNo} onChange={(e) => handleInputChange(e, 'catNo')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>PACK SIZE:</label>
-                <input type="text" value={formData.packSize} onChange={(e) => handleInputChange(e, 'packSize')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>MFG DATE:</label>
-                <input type="text" value={formData.mfgDate} onChange={(e) => handleInputChange(e, 'mfgDate')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>EXP DATE:</label>
-                <input type="text" value={formData.expDate} onChange={(e) => handleInputChange(e, 'expDate')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>REVISION NO.:</label>
-                <input type="text" value={formData.revisionNo} onChange={(e) => handleInputChange(e, 'revisionNo')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-              <div className="coa-detail-row">
-                <label>DATE REPORTED:</label>
-                <input type="text" value={formData.dateReported} onChange={(e) => handleInputChange(e, 'dateReported')} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-              </div>
-            </div>
-          </div>
-        </div>
+          <table className="coa-cert">
+            <tbody>
+              <tr>
+                <th>Product Name:</th>
+                <td>
+                  {isReadOnly ? (formData.product || formData.productTop || '—') : (
+                    <AsyncSelect
+                      cacheOptions
+                      defaultOptions
+                      loadOptions={fetchProducts}
+                      value={selectedProduct}
+                      onChange={(selected) => {
+                        setSelectedProduct(selected);
+                        setFormData(prev => ({
+                          ...prev,
+                          itemCode: selected ? selected.value : '',
+                          itemName: selected ? (selected.itemName || '') : '',
+                          productTop: selected ? selected.label : '',
+                          product: selected ? (selected.itemName || selected.label || '') : '',
+                          productLine: selected ? selected.productLine : ''
+                        }));
+                        if (selected && selected.value) fetchProductDetails(selected.value, selected.productLine);
+                      }}
+                      styles={customSelectStyles}
+                      placeholder="Search Product..."
+                      isClearable
+                    />
+                  )}
+                </td>
+                <th>Sampling Date:</th>
+                <td><input type="text" value={formData.samplingDate} onChange={(e) => handleInputChange(e, 'samplingDate')} readOnly={isReadOnly} /></td>
+              </tr>
+              <tr>
+                <th>Product Code:</th>
+                <td><input type="text" value={formData.itemCode} readOnly placeholder="fetch by system" /></td>
+                <th>Sample Quantity:</th>
+                <td><input type="text" value={formData.sampleQuantity} onChange={(e) => handleInputChange(e, 'sampleQuantity')} readOnly={isReadOnly} /></td>
+              </tr>
+              <tr>
+                <th>Nominal Volume:</th>
+                <td><input type="text" value={formData.nominalVolume} onChange={(e) => handleInputChange(e, 'nominalVolume')} readOnly={isReadOnly} /></td>
+                <th>Test Completion Date:</th>
+                <td><input type="text" value={formData.sampleCompletionDate} onChange={(e) => handleInputChange(e, 'sampleCompletionDate')} readOnly={isReadOnly} /></td>
+              </tr>
+              <tr>
+                <th>Batch No:</th>
+                <td>
+                  {isReadOnly ? (formData.batch || '—') : (
+                    <Select
+                      value={formData.batch ? { value: formData.batch, label: formData.batch } : null}
+                      onChange={(selected) => {
+                        const match = batchOptions.find((batch) => batch.batch === selected?.value);
+                        setFormData(prev => ({
+                          ...prev,
+                          batch: selected ? selected.value : '',
+                          batchSize: match?.batchSize || prev.batchSize,
+                          sopNo: match?.bmrNo || prev.sopNo,
+                          mfgDate: match ? formatDate(match.mfgDate) : prev.mfgDate,
+                          expDate: match ? formatDate(match.expDate) : prev.expDate,
+                        }));
+                      }}
+                      options={batchOptions.map((batch) => ({ value: batch.batch, label: batch.batch }))}
+                      styles={customSelectStyles}
+                      placeholder="Select batch..."
+                      isClearable
+                      isSearchable
+                    />
+                  )}
+                </td>
+                <th>Reporting Date:</th>
+                <td><input type="text" value={formData.dateReported} readOnly={isReadOnly || formData.locked?.dateReported} /></td>
+              </tr>
+              <tr>
+                <th>Batch Size:</th>
+                <td><input type="text" value={formData.batchSize} readOnly={isReadOnly || formData.locked?.batchSize} /></td>
+                <th>Revision No:</th>
+                <td><input type="text" value={formData.revisionNo} onChange={(e) => handleInputChange(e, 'revisionNo')} readOnly={isReadOnly || formData.locked?.revisionNo} /></td>
+              </tr>
+              <tr>
+                <th>Pack Presentation:</th>
+                <td><input type="text" value={formData.packSize} readOnly={isReadOnly || formData.locked?.packSize} /></td>
+                <th>CoA Issuance Date:</th>
+                <td><input type="text" value={formData.issueDate} onChange={(e) => handleInputChange(e, 'issueDate')} readOnly={isReadOnly} /></td>
+              </tr>
+              <tr>
+                <th>Registration No:</th>
+                <td><input type="text" value={formData.reg} onChange={(e) => handleInputChange(e, 'reg')} readOnly={isReadOnly} /></td>
+                <th>Manufacturing Date:</th>
+                <td><input type="text" value={formData.mfgDate} readOnly={isReadOnly || formData.locked?.mfgDate} /></td>
+              </tr>
+              <tr>
+                <th>CAT No:</th>
+                <td><input type="text" value={formData.catNo} readOnly={isReadOnly || formData.locked?.catNo} /></td>
+                <th>Expiry Date:</th>
+                <td><input type="text" value={formData.expDate} readOnly={isReadOnly || formData.locked?.expDate} /></td>
+              </tr>
+              <tr>
+                <th>Tube Type:</th>
+                <td><input type="text" value={formData.processStage} readOnly={isReadOnly || formData.locked?.processStage} /></td>
+                <th>Test Procedure No:</th>
+                <td><input type="text" value={formData.sopNo} readOnly={isReadOnly || formData.locked?.sopNo} /></td>
+              </tr>
+              <tr>
+                <th>Specifications:</th>
+                <td colSpan={3}><textarea value={formData.composition} readOnly={isReadOnly || formData.locked?.composition} /></td>
+              </tr>
+            </tbody>
+          </table>
 
         {/* Tests Table Section */}
         <div className="coa-table-section">
@@ -1049,22 +1189,22 @@ const COA = () => {
             <thead>
               <tr>
                 <th className="coa-col-sn">S.#</th>
-                <th className="coa-col-tests">TESTS</th>
-                <th className="coa-col-specs">SPECIFICATIONS</th>
-                <th className="coa-col-analyzed">ANALYZED BY</th>
-                <th className="coa-col-result">RESULT</th>
-                <th className="coa-col-conclusion">CONCLUSION</th>
+                <th className="coa-col-tests">Test</th>
+                <th className="coa-col-specs">Specifications</th>
+                <th className="coa-col-analyzed">Analyzed By</th>
+                <th className="coa-col-result">Results</th>
+                <th className="coa-col-conclusion">Conclusion</th>
               </tr>
             </thead>
             <tbody>
               {formData.tests.map((test, index) => (
                 <tr key={index}>
                   <td>{index + 1}</td>
-                  <td><textarea value={test.tests} onChange={(e) => handleTestChange(index, 'tests', e.target.value)} onInput={(e) => handleAutoResize(e.target)} ref={handleAutoResize} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} /></td>
-                  <td><textarea value={test.specifications} onChange={(e) => handleTestChange(index, 'specifications', e.target.value)} onInput={(e) => handleAutoResize(e.target)} ref={handleAutoResize} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} /></td>
-                  <td><input type="text" value={test.analyzedBy} onChange={(e) => handleTestChange(index, 'analyzedBy', e.target.value)} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} /></td>
-                  <td><input type="text" value={test.result} onChange={(e) => handleTestChange(index, 'result', e.target.value)} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} /></td>
-                  <td><input type="text" value={test.conclusion} onChange={(e) => handleTestChange(index, 'conclusion', e.target.value)} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} /></td>
+                  <td><textarea value={test.tests} onChange={(e) => handleTestChange(index, 'tests', e.target.value)} readOnly={isReadOnly || formData.testsFromTemplate} /></td>
+                  <td><textarea value={test.specifications} onChange={(e) => handleTestChange(index, 'specifications', e.target.value)} readOnly={isReadOnly || formData.testsFromTemplate} /></td>
+                  <td><input type="text" value={test.analyzedBy} onChange={(e) => handleTestChange(index, 'analyzedBy', e.target.value)} readOnly={isReadOnly || formData.testsFromTemplate} /></td>
+                  <td><input type="text" value={test.result} onChange={(e) => handleTestChange(index, 'result', e.target.value)} readOnly={isReadOnly || formData.testsFromTemplate} /></td>
+                  <td><input type="text" value={test.conclusion} onChange={(e) => handleTestChange(index, 'conclusion', e.target.value)} readOnly={isReadOnly || formData.testsFromTemplate} /></td>
                 </tr>
               ))}
             </tbody>
@@ -1072,41 +1212,94 @@ const COA = () => {
 
         </div>
 
+        {Array.isArray(formData.footerNotes) && formData.footerNotes.length > 0 && (
+          <div className="coa-notes">
+            {formData.footerNotes.map((note) => (
+              <p key={note.NoteNo}>Note {note.NoteNo}: {note.Text}</p>
+            ))}
+          </div>
+        )}
+
+        {Array.isArray(formData.conformityOptions) && formData.conformityOptions.length > 0 && (
+          <div className="coa-conformity">
+            <div className="coa-conformity-label">Statement of Conformity:</div>
+            <select
+              value={formData.conformity}
+              disabled={isReadOnly}
+              onChange={(e) => handleInputChange(e, 'conformity')}
+            >
+              <option value="">Select</option>
+              {formData.conformityOptions.map((option) => (
+                <option key={option.Value} value={option.Value}>{option.Text}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Remarks Section */}
-        <div className="coa-remarks-section">
-          <div className="coa-remarks-label">REMARKS</div>
-          <div className="coa-remarks-input">
-            <textarea value={formData.remarks} onChange={(e) => handleInputChange(e, 'remarks')} onInput={(e) => handleAutoResize(e.target)} ref={handleAutoResize} readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-          </div>
-        </div>
+        <table className="coa-sign-table">
+          <tbody>
+            <tr>
+              <th>REMARKS</th>
+              <td colSpan={2}>
+                <textarea value={formData.remarks} onChange={(e) => handleInputChange(e, 'remarks')} readOnly={isReadOnly} />
+              </td>
+            </tr>
+            <tr>
+              <th>ANALYZED BY</th>
+              <th>CHECKED BY</th>
+              <th>APPROVED BY</th>
+            </tr>
+            <tr>
+              <td>
+                <div className="coa-sign-role">{formData.analyzedBy.title}</div>
+                <div>{formData.analyzedBy.date}</div>
+              </td>
+              <td>
+                <div className="coa-sign-role">{formData.checkedBy.title}</div>
+                <div>{formData.checkedBy.date}</div>
+              </td>
+              <td>
+                <div className="coa-sign-role">{formData.approvedBy.title}</div>
+                <div>{formData.approvedBy.date}</div>
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={3} className="coa-sign-status">
+                {isReadOnly ? formData.approvalStatus : (
+                  <select value={formData.approvalStatus} onChange={(e) => handleInputChange(e, 'approvalStatus')}>
+                    <option>APPROVED</option>
+                    <option>HOLD</option>
+                    <option>REJECT</option>
+                  </select>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={3}>This is SAP-PMS generated Document and does not require signature</td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="coa-end-document">End of Document</div>
 
-        {/* Signatures Section */}
-        <div className="coa-signatures-section">
-          <div className="coa-signature-block">
-            <div className="coa-sig-header">ANALYZED BY</div>
-            <input type="text" placeholder="Name" value={formData.analyzedBy.name} onChange={(e) => handleInputChange(e, 'analyzedBy', 'name')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Title" value={formData.analyzedBy.title} onChange={(e) => handleInputChange(e, 'analyzedBy', 'title')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Date" value={formData.analyzedBy.date} onChange={(e) => handleInputChange(e, 'analyzedBy', 'date')} className="coa-sign-input-grey-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
+        {qaPermission && clearanceReview && (
+          <div className="qa-clearance-decision no-print">
+            <span>Clearance decision</span>
+            <div className="qa-clearance-status-actions">
+              {['Released', 'Hold', 'Reject'].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  className={`qa-clearance-status-btn qa-clearance-status-btn--${status.toLowerCase()}`}
+                  onClick={() => setClearanceStatus(status)}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="coa-signature-block">
-            <div className="coa-sig-header">CHECKED BY</div>
-            <input type="text" placeholder="Name" value={formData.checkedBy.name} onChange={(e) => handleInputChange(e, 'checkedBy', 'name')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Title" value={formData.checkedBy.title} onChange={(e) => handleInputChange(e, 'checkedBy', 'title')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Date" value={formData.checkedBy.date} onChange={(e) => handleInputChange(e, 'checkedBy', 'date')} className="coa-sign-input-grey-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-          </div>
-          <div className="coa-signature-block">
-            <div className="coa-sig-header">APPROVED BY</div>
-            <input type="text" placeholder="Name" value={formData.approvedBy.name} onChange={(e) => handleInputChange(e, 'approvedBy', 'name')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Title" value={formData.approvedBy.title} onChange={(e) => handleInputChange(e, 'approvedBy', 'title')} className="coa-sign-input-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-            <input type="text" placeholder="Date" value={formData.approvedBy.date} onChange={(e) => handleInputChange(e, 'approvedBy', 'date')} className="coa-sign-input-grey-bold" readOnly={isReadOnly} tabIndex={isReadOnly ? -1 : undefined} />
-          </div>
-        </div>
-
-        {/* Footer Section */}
-        <div className="coa-footer-status">
-          <div className="coa-approved-text">APPROVED</div>
-        </div>
-
+        )}
+        {!clearance && (
         <div className="coa-form-actions no-print">
           <button type="button" onClick={handleCloseForm} className="coa-secondary-btn">
             Cancel
@@ -1115,7 +1308,7 @@ const COA = () => {
             mode === 'edit' ? (
               <button
                 type="button"
-                onClick={() => handleSave(formData.status === 'Generated' ? 'Generated' : 'Draft')}
+                onClick={() => setPendingSave(formData.status === 'Pending' || formData.status === 'Generated' ? 'Pending' : 'Draft')}
                 className="btn btn-primary"
                 disabled={isSaving}
               >
@@ -1125,7 +1318,7 @@ const COA = () => {
               <>
                 <button
                   type="button"
-                  onClick={() => handleSave('Draft')}
+                  onClick={() => setPendingSave('Draft')}
                   className="btn btn-primary"
                   disabled={isSaving}
                 >
@@ -1133,28 +1326,123 @@ const COA = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleSave('Generated')}
+                  onClick={() => setPendingSave('Pending')}
                   className="btn btn-primary"
                   disabled={isSaving}
                 >
-                  Generate Report
+                  Send for approval
                 </button>
               </>
             )
           )}
-          <button
-            type="button"
-            onClick={handleFormPrint}
-            className="btn btn-primary"
-          >
-            Print PDF
-          </button>
+          {String(formData.status || '').toLowerCase() === 'released' && (
+            <button
+              type="button"
+              onClick={handleFormPrint}
+              className="btn btn-primary"
+            >
+              Print PDF
+            </button>
+          )}
         </div>
+        )}
       </div>
     </div>
       )}
 
       <div className={`coa-reports-section no-print${showForm ? ' coa-section-hidden' : ''}`}>
+        <div className="po-filter-toolbar-card">
+          <div className="po-filter-toolbar-grid">
+            <div className="po-filter-item po-filter-search-box">
+              <label className="po-filter-label">Search</label>
+              <div style={{ position: 'relative' }}>
+                <IconSearch size={18} className="po-filter-search-icon" />
+                <input
+                  type="text"
+                  placeholder="COA, item, batch, created by..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
+                  className="po-filter-search-input"
+                />
+              </div>
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Status</label>
+              <select
+                className="po-filter-select"
+                value={filters.status}
+                onChange={(e) => {
+                  setFilters((prev) => ({ ...prev, status: e.target.value }));
+                  setPage(1);
+                }}
+              >
+                <option value="">All statuses</option>
+                {statusOptions.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Product Line</label>
+              <select
+                className="po-filter-select"
+                value={filters.productLine}
+                onChange={(e) => {
+                  setFilters((prev) => ({ ...prev, productLine: e.target.value }));
+                  setPage(1);
+                }}
+              >
+                <option value="">All lines</option>
+                {productLines.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Created From</label>
+              <input
+                type="date"
+                className="po-filter-date-input"
+                value={filters.fromDate}
+                onChange={(e) => {
+                  setFilters((prev) => ({ ...prev, fromDate: e.target.value }));
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">Created To</label>
+              <input
+                type="date"
+                className="po-filter-date-input"
+                value={filters.toDate}
+                onChange={(e) => {
+                  setFilters((prev) => ({ ...prev, toDate: e.target.value }));
+                  setPage(1);
+                }}
+              />
+            </div>
+            <div className="po-filter-item">
+              <label className="po-filter-label">&nbsp;</label>
+              <button
+                type="button"
+                className="po-filter-reset-btn"
+                disabled={!searchQuery && !filters.status && !filters.productLine && !filters.fromDate && !filters.toDate}
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilters({ status: '', productLine: '', fromDate: '', toDate: '' });
+                  setPage(1);
+                }}
+              >
+                <IconRefresh size={16} />
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
         <Table
           data={reports}
           columns={reportColumns}
@@ -1171,6 +1459,62 @@ const COA = () => {
           }}
         />
       </div>
+      {clearanceStatus && (
+        <GlobalPopup
+          title="QA clearance"
+          onClose={() => { if (!isSaving) setClearanceStatus(''); }}
+          showClose={false}
+          className="po-create-confirm-popup"
+        >
+          <div className="po-create-confirm">
+            <h3 className="po-create-confirm-title">Set status to {clearanceStatus}?</h3>
+            <p className="po-create-confirm-text">
+              The certificate stays as you read it. Only the status changes to {clearanceStatus}.
+            </p>
+            <div className="po-create-confirm-actions">
+              <Button variant="outline" disabled={isSaving} onClick={() => setClearanceStatus('')}>Back</Button>
+              <Button variant="primary" isLoading={isSaving} disabled={isSaving} onClick={applyClearanceStatus}>
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
+      {pendingSave && (
+        <GlobalPopup
+          title={pendingSave === 'Pending' ? 'Generate report' : 'Save draft'}
+          onClose={() => { if (!isSaving) setPendingSave(null); }}
+          showClose={false}
+          className="po-create-confirm-popup"
+        >
+          <div className="po-create-confirm">
+            <h3 className="po-create-confirm-title">
+              {pendingSave === 'Pending' ? 'Generate this report?' : 'Save this draft?'}
+            </h3>
+            <p className="po-create-confirm-text">
+              {pendingSave === 'Pending'
+                ? 'This certificate will be saved with status Pending.'
+                : 'This certificate will be saved as a draft. You can still edit it later.'}
+            </p>
+            <div className="po-create-confirm-actions">
+              <Button variant="outline" onClick={() => setPendingSave(null)} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                isLoading={isSaving}
+                disabled={isSaving}
+                onClick={async () => {
+                  const saved = await handleSave(pendingSave);
+                  if (saved) setPendingSave(null);
+                }}
+              >
+                {pendingSave === 'Pending' ? 'Send QA for clearance' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </GlobalPopup>
+      )}
     </div>
   );
 };

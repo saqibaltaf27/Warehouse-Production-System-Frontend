@@ -683,6 +683,16 @@
 }
 
 /* PO Table Filter Toolbar */
+.po-kanban-column-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  color: #64748b;
+  font-size: 13px;
+}
+
 .po-filter-toolbar-card {
   background: var(--row-hover);
   border: 1px solid #e2e8f0;

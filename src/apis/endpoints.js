@@ -48,7 +48,9 @@ export const API_ENDPOINTS = {
     MONTH_WORKING_POS: '/production-planning/month-working-pos',
     GET_MACHINES: '/production-planning/machines',
     GET_PLANS: '/production-planning/plans',
+    LINE_CLEARANCE: '/production-planning/line-clearance',
     CREATE_PLAN: '/production-planning/plan',
+    STAFF_GROUPS: '/production-planning/staff-groups',
     UPDATE_PLAN: '/production-planning/plan',
     MAN_EFFICIENCY: '/production-planning/man-efficiency',
     MACHINE_EFFICIENCY_API: '/production-planning/machine-efficiency',
@@ -90,9 +92,12 @@ export const API_ENDPOINTS = {
       if (filters.lifecycle) params.append('lifecycle', filters.lifecycle);
       if (filters.project) params.append('project', filters.project);
       if (filters.product) params.append('product', filters.product);
+      if (filters.productLine) params.append('productLine', filters.productLine);
       if (filters.warehouse) params.append('warehouse', filters.warehouse);
       if (filters.fromDate) params.append('fromDate', filters.fromDate);
       if (filters.toDate) params.append('toDate', filters.toDate);
+      if (filters.createdFrom) params.append('createdFrom', filters.createdFrom);
+      if (filters.createdTo) params.append('createdTo', filters.createdTo);
       if (sortConfig && sortConfig.key) {
         params.append('sortBy', sortConfig.key);
         params.append('sortOrder', sortConfig.direction === 'ascending' || sortConfig.direction === 'asc' ? 'asc' : 'desc');
@@ -109,6 +114,7 @@ export const API_ENDPOINTS = {
     LOOKUP_ITEMS: '/complain/lookup/items',
     CREATE_COMPLAINT: '/complain',
     GET_COMPLAINTS: '/complain',
+    TREND: '/complain/trend',
     UPDATE_COMPLAINT: '/complain',
     COA_PRODUCT_DETAILS: (itemCode) => `/complain/coa/product-details/${encodeURIComponent(itemCode)}`,
   },
@@ -150,10 +156,12 @@ export const API_ENDPOINTS = {
     CREATE_TEMPLATE: '/coa-template',
     GET_ALL_TEMPLATES: '/coa-template',
     GET_TEMPLATE: (itemCode) => `/coa-template/${encodeURIComponent(itemCode)}`,
+    GET_TEMPLATE_BY_LINE: '/coa-template/by-line',
     LIST_COA_REPORTS: '/coa-report',
     USED_COA_BATCHES: '/coa-report/used-batches',
     GET_COA_REPORT: (coaNo) => `/coa-report/${coaNo}`,
-    SAVE_COA_REPORT: '/coa-report'
+    SAVE_COA_REPORT: '/coa-report',
+    UPDATE_COA_STATUS: (coaNo) => `/coa-report/${coaNo}/status`
   },
 
   SAMPLING: {
@@ -176,6 +184,7 @@ export const API_ENDPOINTS = {
   STANDARD_UNIT_MAN_HOURS: {
     LIST: '/standard-unit-man-hours',
     CREATE: '/standard-unit-man-hours',
+    UPDATE: (id) => `/standard-unit-man-hours/${id}`,
     ITEMS: '/standard-unit-man-hours/items',
   },
 

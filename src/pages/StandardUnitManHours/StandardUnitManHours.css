@@ -4,6 +4,17 @@
   gap: 16px;
 }
 
+.sumh-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sumh-option input {
+  margin-top: 2px;
+  pointer-events: none;
+}
+
 .sumh-header {
   display: flex;
   justify-content: flex-end;

@@ -20,6 +20,7 @@ const AddTodayPlan = () => {
   const [openPOs, setOpenPOs] = useState([]);
   const [machines, setMachines] = useState([]);
   const [staffList, setStaffList] = useState([]);
+  const [staffGroups, setStaffGroups] = useState([]);
 
   const getInitialPlanFormData = () => ({
     date: getTodayDate(),
@@ -146,11 +147,21 @@ const AddTodayPlan = () => {
     }
   }, []);
 
+  const fetchStaffGroups = useCallback(async () => {
+    try {
+      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.STAFF_GROUPS);
+      if (res.data?.success) setStaffGroups(res.data.data || []);
+    } catch (err) {
+      console.error('Fetch staff groups error:', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchOpenPOs();
     fetchMachines();
     fetchStaff();
-  }, [fetchOpenPOs, fetchMachines, fetchStaff]);
+    fetchStaffGroups();
+  }, [fetchOpenPOs, fetchMachines, fetchStaff, fetchStaffGroups]);
 
   useEffect(() => {
     const actual = parseFloat(planFormData.actualManpower) || 0;
@@ -224,6 +235,12 @@ const AddTodayPlan = () => {
       label: '★ All Staff (Include All)',
       isAll: true
     },
+    ...staffGroups.map((group) => ({
+      value: `group:${group.GroupID}`,
+      label: group.GroupName,
+      isGroup: true,
+      staffIds: group.StaffIDs || [],
+    })),
     ...staffList.map(s => ({
       value: s.StaffID,
       label: s.Name,
@@ -278,6 +295,27 @@ const AddTodayPlan = () => {
           ...prev,
           jdItems: [...allItems, ...customItems]
         }));
+        return;
+      }
+
+      if (option?.isGroup) {
+        const existingMap = new Map();
+        planFormData.jdItems.forEach(item => {
+          if (item.staffId != null && item.staffId !== '') existingMap.set(Number(item.staffId), item);
+        });
+        const members = staffList.filter((s) => (option.staffIds || []).some((id) => Number(id) === Number(s.StaffID)));
+        const memberItems = members.map((s) => {
+          const existing = existingMap.get(Number(s.StaffID));
+          return {
+            staffId: s.StaffID,
+            name: s.Name,
+            jd: existing?.jd || s.Designation || '',
+            hours: existing?.hours || '8'
+          };
+        });
+        const memberIds = new Set(memberItems.map((item) => Number(item.staffId)));
+        const rest = planFormData.jdItems.filter((item) => !memberIds.has(Number(item.staffId)));
+        setPlanFormData(prev => ({ ...prev, jdItems: [...rest, ...memberItems] }));
         return;
       }
 
@@ -852,14 +890,25 @@ const formatDate = (dateString) => {
                   filterOption={(option, rawInput) => {
                     if (!rawInput) return true;
                     const term = rawInput.toLowerCase();
-                    if (option.data.isAll) {
-                      return 'all staff include all'.includes(term);
+                    if (option.data.isAll || option.data.isGroup) {
+                      const label = String(option.data.label || '').toLowerCase();
+                      return label.includes(term) || (option.data.isAll && 'all staff'.includes(term));
                     }
                     const name = (option.data.label || '').toLowerCase();
                     const designation = (option.data.designation || '').toLowerCase();
                     return name.includes(term) || designation.includes(term);
                   }}
                   formatOptionLabel={(option, { context }) => {
+                    if (option.isGroup) {
+                      return (
+                        <div style={{ fontWeight: 600, color: '#1b47db' }}>
+                          {option.label}
+                          <span style={{ fontSize: '11px', color: '#6b7280', fontWeight: 500, marginLeft: 8 }}>
+                            ({option.staffIds?.length || 0} employees)
+                          </span>
+                        </div>
+                      );
+                    }
                     if (option.isAll) {
                       return (
                         <div style={{ fontWeight: 600, color: allStaffSelected ? '#15803d' : '#1b47db', display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>

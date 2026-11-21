@@ -55,12 +55,7 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
       public: true,
       icon: <IconStack2 size={18} stroke={1.5} />,
     },
-    {
-      title: "SOP Record Management",
-      path: "/policy-management",
-      public: true,
-      icon: <IconFile size={18} stroke={1.5} />,
-    },
+ 
     {
       title: "Production",
       path: "/production",
@@ -105,9 +100,9 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           ]
         },
         { title: 'Complain Management', path: '/qc?tab=complaints', tabKey: 'complaints', sub_module: 'Complain Management' },
-        { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
+         { title: 'Certificate of Analysis', path: '/qc?tab=coa', tabKey: 'coa', sub_module: 'Certificate of Analysis' },
         { title: 'COA Templates', path: '/qc?tab=template', tabKey: 'template', sub_module: 'COA Templates' },
-        { title: 'Tickets', path: '/qc/tickets' ,sub_module: 'QC Tickets' },
+          { title: 'Tickets', path: '/qc/tickets' ,sub_module: 'QC Tickets' },
        ]
     },
     {
@@ -201,6 +196,12 @@ const MenuBar = ({ onNavigate, user, isOpen }) => {
           ]
         },
       ]
+    },
+    {
+      title: "SOP Record Management",
+      path: "/policy-management",
+      public: true,
+      icon: <IconFile size={18} stroke={1.5} />,
     },
 
   ];

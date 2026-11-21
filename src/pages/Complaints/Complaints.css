@@ -5,6 +5,36 @@
   align-items: center;
 }
 
+.complaints-trend {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  padding: 16px 16px 8px;
+  margin-bottom: 16px;
+}
+
+.complaints-trend h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #202224;
+}
+
+.complaints-trend-tip {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #0f172a;
+  line-height: 1.45;
+}
+
+.complaints-trend-empty {
+  margin: 12px 0 16px;
+  color: #64748b;
+}
+
 .complaints-header h1 {
   font-size: 24px;
   font-weight: 500;

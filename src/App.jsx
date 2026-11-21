@@ -13,6 +13,7 @@ import Inventory from './pages/Inventory/Inventory.jsx';
 import ItemMasterView from './pages/Inventory/ItemMasterView.jsx';
 import Complaints from './pages/Complaints/Complaints.jsx';
 import QC from './pages/QC/QC.jsx';
+import QAClearance from './pages/QC/QAClearance.jsx';
 import AccessControl from './pages/AccessControl/AccessControl.jsx';
 import PermissionControl from './pages/AccessControl/PermissionControl.jsx';
 import AccessPermission from './pages/AccessControl/AccessPermission.jsx';
@@ -80,6 +81,7 @@ function AppContent() {
             <Route path="machine-efficiency" element={<ProtectedRoute requiredRoute="/machine-efficiency"><MachineEfficiency /></ProtectedRoute>} />
             <Route path="cost-analysis" element={<ProtectedRoute requiredRoute="/cost-analysis"><CostAnalysis /></ProtectedRoute>} />
             <Route path="qc" element={<ProtectedRoute requiredRoute="/qc"><QC /></ProtectedRoute>} />
+            <Route path="QA-Clearance" element={<ProtectedRoute requiredRoute="/QA-Clearance"><QAClearance /></ProtectedRoute>} />
             <Route path="machine" element={<ProtectedRoute requiredRoute="/machine"><Machine /></ProtectedRoute>} />
             <Route path="access-control">
               <Route index element={<AccessControl />} />

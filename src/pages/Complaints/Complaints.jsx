@@ -1,4 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import Table from '../../global-components/Table/Table';
 import Button from '../../global-components/Button/Button';
 import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
@@ -7,8 +16,9 @@ import { useAuth } from '../../context/AuthContext';
 import AsyncSelect from 'react-select/async';
 import toast, { Toaster } from 'react-hot-toast';
 import { API_ENDPOINTS } from '../../apis/endpoints';
-import { IconEdit } from '@tabler/icons-react';
+import { IconEdit, IconSearch, IconRefresh } from '@tabler/icons-react';
 import './Complaints.css';
+import '../ProductionOrders/ProductionOrders.css';
 
 const ExpandableText = ({ text = '', maxLength = 30 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -40,6 +50,48 @@ const formatDate = (dateString) => {
   return `${day} ${month} ${year}`;
 };
 
+const wrapLabel = (value, size = 18) => {
+  const words = String(value || '').split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+  words.forEach((word) => {
+    const next = line ? `${line} ${word}` : word;
+    if (next.length > size && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  });
+  if (line) lines.push(line);
+  return lines.slice(0, 4);
+};
+
+const AxisTick = ({ x, y, payload }) => {
+  const lines = wrapLabel(payload?.value);
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text textAnchor="middle" fill="#334155" fontSize={11}>
+        {lines.map((line, index) => (
+          <tspan key={index} x={0} dy={index === 0 ? 14 : 13}>{line}</tspan>
+        ))}
+      </text>
+    </g>
+  );
+};
+
+const TrendTooltip = ({ active, payload }) => {
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+  return (
+    <div className="complaints-trend-tip">
+      <div>{row.name}</div>
+      <strong>{row.total} complaints</strong>
+    </div>
+  );
+};
+
 const Complaints = () => {
   const { user } = useAuth();
   const initiatedByValue = user ? `${user.FirstName}` : '';
@@ -54,11 +106,32 @@ const Complaints = () => {
   const [complaintsData, setComplaintsData] = useState([]);
   const [totalComplaints, setTotalComplaints] = useState(0);
   const [editingComplaint, setEditingComplaint] = useState(null);
+  const [trendRows, setTrendRows] = useState([]);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    department: '',
+    productCategory: '',
+    fromDate: '',
+    toDate: '',
+  });
+  const [departments, setDepartments] = useState([]);
+  const [productCategories, setProductCategories] = useState([]);
 
   const fetchComplaints = async () => {
     try {
+      setTableLoading(true);
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.GET_COMPLAINTS}?page=${currentPage}&limit=${pageSize}`, {
+      const params = new URLSearchParams({
+        page: String(currentPage),
+        limit: String(pageSize),
+      });
+      if (searchQuery.trim()) params.set('search', searchQuery.trim());
+      if (filters.department) params.set('department', filters.department);
+      if (filters.productCategory) params.set('productCategory', filters.productCategory);
+      if (filters.fromDate) params.set('fromDate', filters.fromDate);
+      if (filters.toDate) params.set('toDate', filters.toDate);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.GET_COMPLAINTS}?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -67,16 +140,45 @@ const Complaints = () => {
       if (data.success) {
         setComplaintsData(data.data.data);
         setTotalComplaints(data.data.total);
+        if (Array.isArray(data.data.departments)) setDepartments(data.data.departments);
+        if (Array.isArray(data.data.productCategories)) setProductCategories(data.data.productCategories);
       }
     } catch (error) {
       console.error('Error fetching complaints:', error);
       toast.error('Failed to fetch complaints');
+    } finally {
+      setTableLoading(false);
+    }
+  };
+
+  const fetchTrend = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.TREND}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (data.success) setTrendRows(data.data || []);
+    } catch (error) {
+      console.error('Error fetching complaint trend:', error);
     }
   };
 
   useEffect(() => {
     fetchComplaints();
-  }, [currentPage, pageSize]);
+  }, [currentPage, pageSize, searchQuery, filters]);
+
+  useEffect(() => {
+    fetchTrend();
+  }, []);
+
+  const trendChart = useMemo(() => (
+    trendRows.map((row) => ({
+      key: row.product,
+      name: [row.itemDescription || row.product, row.itemName].filter(Boolean).join(' — '),
+      total: Number(row.total || 0),
+    }))
+  ), [trendRows]);
 
   const handleOpenModal = () => {
     setEditingComplaint(null);
@@ -220,6 +322,7 @@ const Complaints = () => {
       const data = await response.json();
       if (data.success) {
         toast.success(editingComplaint ? 'Complaint updated successfully!' : `Complaint created successfully! Number: ${data.data.complaintNumber}`);
+        fetchTrend();
         setIsModalOpen(false);
         fetchComplaints(); // Refresh table
       } else {
@@ -297,6 +400,115 @@ const Complaints = () => {
           Generate Complain
         </Button>
       </div>
+      <div className="po-filter-toolbar-card">
+        <div className="po-filter-toolbar-grid">
+          <div className="po-filter-item po-filter-search-box">
+            <label className="po-filter-label">Search</label>
+            <div style={{ position: 'relative' }}>
+              <IconSearch size={18} className="po-filter-search-icon" />
+              <input
+                type="text"
+                placeholder="Number, product, batch, complaint by..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="po-filter-search-input"
+              />
+            </div>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Department</label>
+            <select
+              className="po-filter-select"
+              value={filters.department}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, department: e.target.value }));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All departments</option>
+              {departments.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Product Category</label>
+            <select
+              className="po-filter-select"
+              value={filters.productCategory}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, productCategory: e.target.value }));
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">All categories</option>
+              {productCategories.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Report From</label>
+            <input
+              type="date"
+              className="po-filter-date-input"
+              value={filters.fromDate}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, fromDate: e.target.value }));
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Report To</label>
+            <input
+              type="date"
+              className="po-filter-date-input"
+              value={filters.toDate}
+              onChange={(e) => {
+                setFilters((prev) => ({ ...prev, toDate: e.target.value }));
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">&nbsp;</label>
+            <button
+              type="button"
+              className="po-filter-reset-btn"
+              disabled={!searchQuery && !filters.department && !filters.productCategory && !filters.fromDate && !filters.toDate}
+              onClick={() => {
+                setSearchQuery('');
+                setFilters({ department: '', productCategory: '', fromDate: '', toDate: '' });
+                setCurrentPage(1);
+              }}
+            >
+              <IconRefresh size={16} />
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="complaints-trend">
+        <h2>Complaint trend by product</h2>
+        {trendChart.length === 0 ? (
+          <p className="complaints-trend-empty">No complaints to chart yet.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={trendChart} margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" interval={0} height={78} tick={<AxisTick />} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <Tooltip content={<TrendTooltip />} />
+              <Bar dataKey="total" fill="#1b47db" maxBarSize={36} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+  
       <div className="complaints-table-section">
         <Table
           columns={columns}
@@ -304,6 +516,7 @@ const Complaints = () => {
           totalEntries={totalComplaints}
           currentPage={currentPage}
           pageSize={pageSize}
+          isLoading={tableLoading}
           onPageChange={handlePageChange}
           onItemsPerPageChange={handleItemsPerPageChange}
           showActions={false}
