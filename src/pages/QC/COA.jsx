@@ -730,6 +730,28 @@ const COA = ({ clearance = false }) => {
     return [];
   };
 
+  const loadEditBatches = async (itemCode, currentBatch) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}${API_ENDPOINTS.COMPLAINTS.COA_PRODUCT_DETAILS(itemCode)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await response.json();
+      const allBatches = Array.isArray(data.data?.batches) ? data.data.batches : [];
+      const usedBatches = await fetchUsedBatches(itemCode);
+      const availableBatches = allBatches.filter((b) => {
+        const batchNo = String(b?.batch || "");
+        if (!batchNo) return false;
+        if (currentBatch && batchNo === String(currentBatch)) return true;
+        return !usedBatches.includes(batchNo);
+      });
+      setBatchOptions(availableBatches);
+    } catch (error) {
+      console.error("Error loading edit batches:", error);
+    }
+  };
+
   const fetchProductDetails = async (itemCode, productLineStr) => {
     if (!itemCode) return;
     try {
@@ -1095,6 +1117,9 @@ const COA = ({ clearance = false }) => {
       setBatchOptions([]);
       setMode(nextMode);
       setShowForm(true);
+      if (nextMode === "edit" && data.ItemCode) {
+        loadEditBatches(data.ItemCode, data.BatchNo || "");
+      }
       if (data.ProductLine) {
         try {
           const templateRes = await axiosInstance.get(
@@ -1666,8 +1691,7 @@ const COA = ({ clearance = false }) => {
                       <th>Batch No:</th>
                       <td>
                         {isReadOnly ||
-                        mode !== "create" ||
-                        batchOptions.length <= 1 ? (
+                        (mode === "create" && batchOptions.length <= 1) ? (
                           formData.batch || "—"
                         ) : (
                           <Select
@@ -1897,8 +1921,7 @@ const COA = ({ clearance = false }) => {
                       <th>Batch No:</th>
                       <td>
                         {isReadOnly ||
-                        mode !== "create" ||
-                        batchOptions.length <= 1 ? (
+                        (mode === "create" && batchOptions.length <= 1) ? (
                           formData.batch || "—"
                         ) : (
                           <Select
@@ -2137,8 +2160,7 @@ const COA = ({ clearance = false }) => {
                       <th>Batch No:</th>
                       <td>
                         {isReadOnly ||
-                        mode !== "create" ||
-                        batchOptions.length <= 1 ? (
+                        (mode === "create" && batchOptions.length <= 1) ? (
                           formData.batch || "—"
                         ) : (
                           <Select
