@@ -12,8 +12,9 @@
 .coa-top-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 5px;
+  width: 100%;
 }
 
 .coa-top-logo {
@@ -42,6 +43,34 @@
   font-weight: bold;
   font-size: 16px;
   padding-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.coa-template-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.coa-template-pick span {
+  color: #555;
+}
+
+.coa-template-pick select {
+  min-width: 220px;
+  height: 34px;
+  padding: 4px 10px;
+  border: 1px solid #c5cdd6;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #222;
 }
 
 .coa-document {
@@ -55,7 +84,8 @@
 }
 
 .coa-document input,
-.coa-document textarea {
+.coa-document textarea,
+.coa-document select {
   background: transparent;
   border: none;
   border-radius: 0;
@@ -192,19 +222,14 @@
   outline: none;
   box-shadow: none;
 }
-  width: 100%;
-  border: 0;
-  color: #111;
-  font-weight: 600;
-  background: transparent;
-  resize: vertical;
-}
+
 
 .coa-notes,
 .coa-conformity {
   padding: 8px 12px;
   border-bottom: 1px solid #111;
   font-size: 13px;
+  padding: 10px 25px;
 }
 
 .coa-notes p,
@@ -220,6 +245,7 @@
 
 .coa-sign-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   color: #111;
 }
@@ -236,15 +262,39 @@
   font-weight: 700;
 }
 
-.coa-sign-table tr:first-child th {
+.coa-remarks-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #111;
+  margin-bottom: -1px;
+}
+
+.coa-remarks-table th,
+.coa-remarks-table td {
+  border: 1px solid #111;
+  padding: 8px;
+  color: #111;
+}
+
+.coa-remarks-table th {
   width: 140px;
   text-align: left;
+  font-weight: 700;
+}
+
+.coa-remarks-table td {
+  text-align: left;
+}
+
+.coa-sign-table tr:first-child th {
+  text-align: center;
 }
 
 .coa-sign-table tr:first-child td {
   text-align: left;
 }
 
+.coa-remarks-table textarea,
 .coa-sign-table textarea,
 .coa-sign-table select {
   width: 100%;
@@ -264,6 +314,7 @@
   box-shadow: none;
 }
 
+.coa-remarks-table textarea,
 .coa-sign-table textarea {
   text-align: left;
   font-weight: 500;
@@ -993,8 +1044,21 @@
   padding: 10px;
 }
 
+.coa-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coa-header-brand span {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+}
+
 .coa-header-logo-img {
-  max-width: 100%;
-  max-height: 110px;
+  max-width: 70px;
+  max-height: 70px;
   object-fit: contain;
 }

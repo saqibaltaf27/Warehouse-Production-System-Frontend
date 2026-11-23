@@ -1,16 +1,35 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AsyncSelect from 'react-select/async';
 import { API_ENDPOINTS } from '../../apis/endpoints';
+import { inventoryPlanningApi } from '../../apis/Inventory/inventory-planning';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../global-components/Button/Button';
 import Table from '../../global-components/Table/Table';
-import GlobalPopup from '../../global-components/GlobalPopup/GlobalPopup';
 import toast, { Toaster } from 'react-hot-toast';
 import { IconEdit, IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
 import './COA.css';
 import '../Sampling/Sampling.css';
 import '../ProductionOrders/ProductionOrders.css';
+
+const emptyTemplate = () => ({
+  line: '',
+  templateName: '',
+  templateId: null,
+  headers: [{ label: '', value: '' }],
+  notes: [{ text: '' }],
+  conformityOptions: [
+    { value: 'Complies', text: 'The product complies with the prescribed standard of quality as per specifications.' },
+    { value: 'Does Not Comply', text: 'The product not complies with the prescribed standard of quality as per specifications.' }
+  ],
+  tests: [{ id: 1, test: '', specification: '', analyzedBy: '', result: '', conclusion: '' }]
+});
+
+const parseJson = (value, fallback) => {
+  if (!value) return fallback;
+  if (typeof value !== 'string') return value;
+  try { return JSON.parse(value); } catch { return fallback; }
+};
 
 const COATemplates = () => {
   const { user } = useAuth();
@@ -21,18 +40,18 @@ const COATemplates = () => {
   // Table and Modal states
   const [savedTemplates, setSavedTemplates] = useState([]);
   const [isFetchingTemplates, setIsFetchingTemplates] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [formData, setFormData] = useState(emptyTemplate);
 
-  const [formData, setFormData] = useState({
-    products: [],
-    tests: [
-      { id: 1, test: '', specification: '', result: '' }
-    ]
-  });
+  useEffect(() => {
+    inventoryPlanningApi.getRawMaterials({ page: 1, pageSize: 1 })
+      .then((res) => setProductLines((res?.productLines || []).filter(Boolean)))
+      .catch(() => setProductLines([]));
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [productLines, setProductLines] = useState([]);
 
   const fetchSavedTemplates = async () => {
     try {
@@ -59,7 +78,7 @@ const COATemplates = () => {
       if (fromDate && created && created < fromDate) return false;
       if (toDate && created && created > toDate) return false;
       if (!query) return true;
-      const haystack = [row.ItemCode, row.ItemName, row.CreatedByName, row.CreatedBy]
+      const haystack = [row.Line, row.TemplateName, row.CreatedByName, row.CreatedBy]
         .filter(Boolean)
         .join(' ')
         .toLowerCase();
@@ -98,7 +117,7 @@ const COATemplates = () => {
   const addTestRow = () => {
     setFormData(prev => ({
       ...prev,
-      tests: [...prev.tests, { id: prev.tests.length + 1, test: '', specification: '', result: '' }]
+      tests: [...prev.tests, { id: prev.tests.length + 1, test: '', specification: '', analyzedBy: '', result: '', conclusion: '' }]
     }));
   };
 
@@ -152,19 +171,16 @@ const COATemplates = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      products: [],
-      tests: [{ id: 1, test: '', specification: '', result: '' }]
-    });
+    setFormData(emptyTemplate());
     setIsEditing(false);
     setShowError(false);
   };
 
   const handleSave = async () => {
-    const selectedProducts = Array.isArray(formData.products) ? formData.products : [];
-    if (!selectedProducts.length) {
+    const line = String(formData.line || '').trim();
+    if (!line) {
       setShowError(true);
-      toast.error('Please select at least one product.');
+      toast.error('Please enter the product line.');
       return;
     }
     setShowError(false);
@@ -177,8 +193,32 @@ const COATemplates = () => {
     try {
       setIsSaving(true);
       const payload = {
-        itemCodes: selectedProducts.map((p) => p.value),
-        description: JSON.stringify(validTests),
+        line,
+        templateName: formData.templateName,
+        templateId: formData.templateId || null,
+        description: validTests.map((t, index) => ({
+          SrNo: index + 1,
+          Test: t.test,
+          Specifications: t.specification,
+          AnalyzedBy: t.analyzedBy,
+          Results: t.result,
+          Conclusion: t.conclusion
+        })),
+        header: Object.fromEntries(
+          formData.headers
+            .map((item) => [String(item.label || '').trim(), item.value || ''])
+            .filter(([label]) => label)
+        ),
+        footer: {
+          Notes: formData.notes.map((note) => String(note.text || '').trim()).filter(Boolean).map((text, index) => ({ NoteNo: index + 1, Text: text })),
+          StatementOfConformity: {
+            Label: 'Statement of Conformity',
+            Dropdown: true,
+            Options: formData.conformityOptions
+              .map((option) => ({ Value: String(option.value || '').trim(), Text: String(option.text || '').trim() }))
+              .filter((option) => option.Value || option.Text)
+          }
+        },
         createdBy: user?.EmpID || user?.emp_id || user?.id || 0
       };
 
@@ -200,40 +240,32 @@ const COATemplates = () => {
     }
   };
 
-  const handleRowClick = (row) => {
-    try {
-      const testsArray = JSON.parse(row.Description);
-      setSelectedTemplate({ ...row, parsedTests: testsArray });
-    } catch (e) {
-      console.error("Failed to parse description", e);
-      setSelectedTemplate({ ...row, parsedTests: [] });
-    }
-  };
-
   const handleEdit = async (e, row) => {
     e.stopPropagation(); // Prevent row click from opening modal
     try {
-      let fullLabel = row.ItemName
-        ? `${row.ItemCode} - ${row.ItemName}`
-        : row.ItemCode;
-      if (!row.ItemName) {
-        try {
-          const items = await fetchProducts(row.ItemCode);
-          const matched = items.find(i => i.value === row.ItemCode);
-          if (matched) fullLabel = matched.label;
-        } catch (err) {
-          console.error("Failed to fetch full item label", err);
-        }
-      }
-
-      const testsArray = JSON.parse(row.Description);
+      const testsArray = parseJson(row.Description, []);
+      const header = parseJson(row.Header, {});
+      const footer = parseJson(row.Footer, {});
       setFormData({
-        products: [{ value: row.ItemCode, label: fullLabel }],
-        tests: testsArray.map((t, index) => ({
+        line: row.Line || '',
+        templateName: row.TemplateName || '',
+        templateId: row.ID || null,
+        headers: Object.keys(header || {}).length
+          ? Object.entries(header).map(([label, value]) => ({ label, value: value ?? '' }))
+          : [{ label: '', value: '' }],
+        notes: (footer.Notes || []).length
+          ? footer.Notes.map((note) => ({ text: note.Text || '' }))
+          : [{ text: '' }],
+        conformityOptions: (footer.StatementOfConformity?.Options || []).length
+          ? footer.StatementOfConformity.Options.map((option) => ({ value: option.Value || '', text: option.Text || '' }))
+          : emptyTemplate().conformityOptions,
+        tests: (Array.isArray(testsArray) ? testsArray : []).map((t, index) => ({
           id: index + 1,
-          test: t.test || t.tests,
-          specification: t.specification || t.specifications,
-          result: t.result
+          test: t.test || t.tests || t.Test || '',
+          specification: t.specification || t.specifications || t.Specifications || '',
+          analyzedBy: t.analyzedBy || t.AnalyzedBy || '',
+          result: t.result || t.Results || '',
+          conclusion: t.conclusion || t.Conclusion || ''
         }))
       });
       setIsEditing(true);
@@ -252,13 +284,9 @@ const COATemplates = () => {
   };
 
   const tableColumns = [
-    { key: 'ItemCode', header: 'Item Code', width: '18%' },
-    {
-      key: 'ItemName',
-      header: 'Item Name',
-      width: '28%',
-      render: (row) => row.ItemName || '—'
-    },
+    { key: 'ID', header: 'ID', width: '8%', render: (row) => row.ID ?? '—' },
+    { key: 'TemplateName', header: 'Template Name', width: '20%', render: (row) => row.TemplateName || '—' },
+    { key: 'Line', header: 'Product Line', width: '22%', render: (row) => row.Line || '—' },
     { 
       key: 'CreatedBy', 
       header: 'Created By', 
@@ -288,13 +316,6 @@ const COATemplates = () => {
     }
   ];
 
-  const modalColumns = [
-    { key: 'id', header: 'S.#', width: '10%' },
-    { key: 'tests', header: 'TEST', width: '30%' },
-    { key: 'specifications', header: 'SPECIFICATION', width: '40%' },
-    { key: 'result', header: 'RESULT', width: '20%' }
-  ];
-
   return (
     <div className="coa-document-wrapper coa-template-wrapper">
       <Toaster position="top-right" />
@@ -313,102 +334,129 @@ const COATemplates = () => {
       </div>
 
       {showCreateForm && (
-        <div className="add-sample-wrapper">
-          <div className="add-sample-grid">
-            <div className="add-sample-col" style={{ maxWidth: '100%' }}>
-              <div className="add-sample-field">
-                <label className="add-sample-label">Product(s)</label>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <AsyncSelect
-                    cacheOptions
-                    defaultOptions
-                    isMulti
-                    closeMenuOnSelect={false}
-                    loadOptions={fetchProducts}
-                    onChange={(selected) => {
-                      setFormData(prev => ({ ...prev, products: selected || [] }));
-                      if (selected?.length) setShowError(false);
-                    }}
-                    value={formData.products}
-                    styles={customSelectStyles}
-                    placeholder="Search and select one or more products..."
-                    isClearable
-                    menuPortalTarget={document.body}
-                    menuPosition="fixed"
-                  />
-                  {showError && <span className="coa-template-error">Select at least one product</span>}
-                </div>
-              </div>
+        <div className="coa-document">
+          <div className="coa-header coa-cert-head">
+            <div className="coa-title-section">
+              <h2>LAB DIAGNOSTIC SYSTEMS (SMC) PRIVATE LIMITED</h2>
+              <p>Plot No 36-A, PSIC, SIE, Taxila – Rawalpindi, Pakistan</p>
+              <h3>CERTIFICATE OF ANALYSIS</h3>
+              <h4>(Finished Product)</h4>
             </div>
           </div>
-
-        {/* Tests Table */}
-        <div className="po-grid-container" style={{ minHeight: 'auto' }}>
-          <table className="po-table" style={{ whiteSpace: 'normal' }}>
-            <thead>
-              <tr>
-                <th className="coa-template-th-sn">S.#</th>
-                <th>TEST</th>
-                <th>SPECIFICATION</th>
-                <th>RESULT</th>
-                <th className="coa-template-th-action">ACTION</th>
-              </tr>
-            </thead>
+          <table className="coa-cert">
             <tbody>
-              {formData.tests.map((test, index) => (
+              <tr>
+                <th>Template Name:</th>
+                <td colSpan={3}>
+                  <input type="text" value={formData.templateName} placeholder="Template name" onChange={(e) => setFormData(prev => ({ ...prev, templateName: e.target.value }))} />
+                </td>
+              </tr>
+              <tr>
+                <th>Product Line:</th>
+                <td colSpan={3}>
+                  <input
+                    type="text"
+                    list="coa-product-lines"
+                    value={formData.line}
+                    placeholder="Select or paste a product line"
+                    onChange={(e) => { setFormData(prev => ({ ...prev, line: e.target.value })); if (e.target.value.trim()) setShowError(false); }}
+                  />
+                  <datalist id="coa-product-lines">
+                    {productLines.map((line) => (
+                      <option key={line} value={line} />
+                    ))}
+                  </datalist>
+                  {showError && <span className="coa-template-error">Enter the product line</span>}
+                </td>
+              </tr>
+              {formData.headers.map((item, index) => (
                 <tr key={index}>
-                  <td className="coa-template-td-center">{index + 1}</td>
-                  <td className="coa-template-td-nopadding">
-                    <textarea 
-                      value={test.test} 
-                      onChange={(e) => handleTestChange(index, 'test', e.target.value)} 
-                      onInput={(e) => handleAutoResize(e.target)} 
-                      ref={handleAutoResize} 
-                      placeholder="Enter test name"
-                      className="coa-template-textarea"
-                    />
+                  <th>
+                    <input type="text" value={item.label} placeholder="Header name" onChange={(e) => setFormData(prev => ({ ...prev, headers: prev.headers.map((row, i) => i === index ? { ...row, label: e.target.value } : row) }))} />
+                  </th>
+                  <td colSpan={2}>
+                    <input type="text" value={item.value} placeholder="Header value" onChange={(e) => setFormData(prev => ({ ...prev, headers: prev.headers.map((row, i) => i === index ? { ...row, value: e.target.value } : row) }))} />
                   </td>
-                  <td className="coa-template-td-nopadding">
-                    <textarea 
-                      value={test.specification} 
-                      onChange={(e) => handleTestChange(index, 'specification', e.target.value)} 
-                      onInput={(e) => handleAutoResize(e.target)} 
-                      ref={handleAutoResize} 
-                      placeholder="Enter specification"
-                      className="coa-template-textarea"
-                    />
-                  </td>
-                  <td className="coa-template-td-nopadding">
-                    <textarea 
-                      value={test.result} 
-                      onChange={(e) => handleTestChange(index, 'result', e.target.value)} 
-                      onInput={(e) => handleAutoResize(e.target)} 
-                      ref={handleAutoResize} 
-                      placeholder="Enter result"
-                      className="coa-template-textarea"
-                    />
-                  </td>
-                  <td className="coa-template-td-center">
-                    <Button variant="danger" size="sm" onClick={() => removeTestRow(index)}>Remove</Button>
+                  <td>
+                    <Button variant="danger" size="sm" onClick={() => setFormData(prev => ({ ...prev, headers: prev.headers.filter((_, i) => i !== index) }))}>Remove</Button>
                   </td>
                 </tr>
               ))}
+              <tr>
+                <td colSpan={4}>
+                  <Button variant="secondary" size="sm" onClick={() => setFormData(prev => ({ ...prev, headers: [...prev.headers, { label: '', value: '' }] }))}>+ Add Header</Button>
+                </td>
+              </tr>
             </tbody>
           </table>
+          <div className="coa-table-section">
+            <table className="coa-table">
+              <thead>
+                <tr>
+                  <th>S.#</th>
+                  <th>TEST</th>
+                  <th>SPECIFICATIONS</th>
+                  <th>ANALYZED BY</th>
+                  <th>RESULTS</th>
+                  <th>CONCLUSION</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {formData.tests.map((test, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td><textarea value={test.test} onChange={(e) => handleTestChange(index, 'test', e.target.value)} /></td>
+                    <td><textarea value={test.specification} onChange={(e) => handleTestChange(index, 'specification', e.target.value)} /></td>
+                    <td><input type="text" value={test.analyzedBy} onChange={(e) => handleTestChange(index, 'analyzedBy', e.target.value)} /></td>
+                    <td><input type="text" value={test.result} onChange={(e) => handleTestChange(index, 'result', e.target.value)} /></td>
+                    <td><input type="text" value={test.conclusion} onChange={(e) => handleTestChange(index, 'conclusion', e.target.value)} /></td>
+                    <td><Button variant="danger" size="sm" onClick={() => removeTestRow(index)}>Remove</Button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="coa-template-add-btn-wrapper">
+              <Button variant="secondary" size="sm" onClick={addTestRow}>+ Add Row</Button>
+            </div>
+          </div>
+          <table className="coa-remarks-table">
+            <tbody>
+              <tr>
+                <th>Notes</th>
+                <td>
+                  {formData.notes.map((note, index) => (
+                    <div key={index} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                      <span>Note {index + 1}</span>
+                      <textarea value={note.text} onChange={(e) => setFormData(prev => ({ ...prev, notes: prev.notes.map((item, i) => i === index ? { text: e.target.value } : item) }))} />
+                      <Button variant="danger" size="sm" onClick={() => setFormData(prev => ({ ...prev, notes: prev.notes.filter((_, i) => i !== index) }))}>Delete</Button>
+                    </div>
+                  ))}
+                  <Button variant="secondary" size="sm" onClick={() => setFormData(prev => ({ ...prev, notes: [...prev.notes, { text: '' }] }))}>+ Add Note</Button>
+                </td>
+              </tr>
+              <tr>
+                <th>Statement of Conformity</th>
+                <td>
+                  {formData.conformityOptions.map((option, index) => (
+                    <div key={index} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                      <input type="text" value={option.value} placeholder="Option name" onChange={(e) => setFormData(prev => ({ ...prev, conformityOptions: prev.conformityOptions.map((item, i) => i === index ? { ...item, value: e.target.value } : item) }))} />
+                      <textarea value={option.text} placeholder="Option text" onChange={(e) => setFormData(prev => ({ ...prev, conformityOptions: prev.conformityOptions.map((item, i) => i === index ? { ...item, text: e.target.value } : item) }))} />
+                      <Button variant="danger" size="sm" onClick={() => setFormData(prev => ({ ...prev, conformityOptions: prev.conformityOptions.filter((_, i) => i !== index) }))}>Delete</Button>
+                    </div>
+                  ))}
+                  <Button variant="secondary" size="sm" onClick={() => setFormData(prev => ({ ...prev, conformityOptions: [...prev.conformityOptions, { value: '', text: '' }] }))}>+ Add Option</Button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div className="add-sample-footer">
+            <Button variant="outline" onClick={() => { resetForm(); setShowCreateForm(false); }}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave} isLoading={isSaving}>
+              {isEditing ? 'Save Changes' : 'Save Template'}
+            </Button>
+          </div>
         </div>
-
-        <div className="coa-template-add-btn-wrapper">
-          <Button variant="secondary" size="sm" onClick={addTestRow}>+ Add Row</Button>
-        </div>
-
-        <div className="add-sample-footer">
-          <Button variant="outline" onClick={() => { resetForm(); setShowCreateForm(false); }}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave} isLoading={isSaving}>
-            {isEditing ? 'Save Changes' : 'Save Template'}
-          </Button>
-        </div>
-
-      </div>
       )}
 
       {!showCreateForm && <div className="coa-document-container coa-template-container">
@@ -420,7 +468,7 @@ const COATemplates = () => {
                 <IconSearch size={18} className="po-filter-search-icon" />
                 <input
                   type="text"
-                  placeholder="Item code, name, created by..."
+                  placeholder="Product line, created by..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="po-filter-search-input"
@@ -458,53 +506,8 @@ const COATemplates = () => {
           columns={tableColumns}
           isLoading={isFetchingTemplates}
           showActions={false}
-          onRowClick={handleRowClick}
         />
       </div>}
-
-      {/* Template Details Modal */}
-      {selectedTemplate && (
-        <GlobalPopup 
-          title={`Template Details - ${selectedTemplate.ItemCode}${selectedTemplate.ItemName ? ` — ${selectedTemplate.ItemName}` : ''}`} 
-          onClose={() => setSelectedTemplate(null)}
-          className="coa-template-modal"
-        >
-          <div className="coa-template-modal-content">
-            
-            {/* Modal Header matching the screenshot style */}
-            <div className="coa-template-modal-header">
-              <div className="coa-template-modal-title-wrapper">
-                <h2 className="coa-template-modal-title">
-                  Item Code : {selectedTemplate.ItemCode}
-                  {selectedTemplate.ItemName ? ` — ${selectedTemplate.ItemName}` : ''}
-                </h2>
-             
-              </div>
-              <p className="coa-template-modal-subtitle">
-                Created on {new Date(selectedTemplate.CreatedDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} 
-                &nbsp;&nbsp;•&nbsp;&nbsp; 
-                Created By: {selectedTemplate.CreatedByName || selectedTemplate.CreatedBy || 'N/A'}
-              </p>
-            </div>
-
-            {/* Modal Table */}
-            <div className="coa-template-modal-table-wrapper">
-              <Table 
-                data={selectedTemplate.parsedTests?.map((t, index) => ({
-                  id: index + 1,
-                  tests: t.test || t.tests,
-                  specifications: t.specification || t.specifications,
-                  result: t.result
-                })) || []}
-                columns={modalColumns}
-                showActions={false}
-                showPagination={false}
-              />
-            </div>
-
-          </div>
-        </GlobalPopup>
-      )}
 
     </div>
   );
