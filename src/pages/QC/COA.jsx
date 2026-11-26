@@ -747,6 +747,15 @@ const COA = ({ clearance = false }) => {
         return !usedBatches.includes(batchNo);
       });
       setBatchOptions(availableBatches);
+      const match = availableBatches.find((batch) => String(batch.batch) === String(currentBatch));
+      if (match?.batchSize) {
+        setFormData((prev) => ({
+          ...prev,
+          batchSize: match.batchSize,
+          mfgDate: match.mfgDate ? formatDate(match.mfgDate) : prev.mfgDate,
+          expDate: match.expDate ? formatDate(match.expDate) : prev.expDate,
+        }));
+      }
     } catch (error) {
       console.error("Error loading edit batches:", error);
     }

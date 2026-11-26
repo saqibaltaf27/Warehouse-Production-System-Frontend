@@ -767,9 +767,16 @@ const ProductionOrders = () => {
 
   const tableColumns = [
     { key: "DocNum", header: "PO No.", width: "8%" },
+  
     { key: "ProductNo", header: "Item No.", width: "11%" },
     { key: "ProductDescription", header: "Item Name", width: "24%" },
     { key: "PlannedQty", header: "Planned Qty", width: "9%" },
+    {
+      key: "CreateDate",
+      header: "Created Date",
+      width: "10%",
+      render: (row) => formatDate(row.CreateDate),
+    },
     {
       key: "DueDate",
       header: "Due Date",
