@@ -1824,7 +1824,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.catNo}
-                          readOnly={isReadOnly || formData.locked?.catNo}
+                          onChange={(e) => handleInputChange(e, "catNo")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>CoA Issuance Date:</th>
@@ -2054,7 +2055,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.catNo}
-                          readOnly={isReadOnly || formData.locked?.catNo}
+                          onChange={(e) => handleInputChange(e, "catNo")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>CoA Issuance Date:</th>
@@ -2292,7 +2294,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.catNo}
-                          readOnly={isReadOnly || formData.locked?.catNo}
+                          onChange={(e) => handleInputChange(e, "catNo")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>
