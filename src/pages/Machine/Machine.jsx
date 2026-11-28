@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { axiosInstance } from '../../apis/axiosinstance';
 import { API_ENDPOINTS } from '../../apis/endpoints';
 import Table from '../../global-components/Table/Table';
+import Pagination from '../../global-components/Pagination/Pagination';
 import Button from '../../global-components/Button/Button';
 import { IconSearch, IconFileSpreadsheet, IconRefresh } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
@@ -15,17 +16,24 @@ const Machine = () => {
   const [error, setError] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    fetchMachines();
-  }, []);
-
-  const fetchMachines = async () => {
+  const fetchMachines = async (pageNo = page, size = pageSize, statusValue = status, search = searchQuery) => {
     try {
       setLoading(true);
-      const res = await axiosInstance.get(API_ENDPOINTS.MACHINE.GET_MACHINES_LIST);
+      setError(null);
+      const res = await axiosInstance.get(API_ENDPOINTS.MACHINE.GET_MACHINES_LIST, {
+        params: { page: pageNo, pageSize: size, status: statusValue || undefined, search: search || undefined },
+        skipGlobalLoading: true,
+      });
       if (res.data?.success) {
-        setMachines(res.data.data);
+        setMachines(res.data.data || []);
+        setTotal(res.data.total || 0);
+        setTotalPages(res.data.totalPages || 1);
       } else {
         setError('Failed to fetch machines.');
       }
@@ -37,31 +45,47 @@ const Machine = () => {
     }
   };
 
-  const filteredData = useMemo(() => {
-    return machines.filter(m => {
-      const matchSearch = 
-        (m.Code && m.Code.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (m.Description && m.Description.toLowerCase().includes(searchQuery.toLowerCase()));
-
-      return matchSearch;
-    });
-  }, [machines, searchQuery]);
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      fetchMachines(page, pageSize, status, searchQuery);
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [page, pageSize, status, searchQuery]);
 
   const fmtNum = (val) => {
     if (val == null || isNaN(val)) return '-';
     return Number(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
-  const handleExportExcel = () => {
-    const rows = filteredData.map((row) => ({
-      Code: row.Code ?? '',
+  const formatDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const handleExportExcel = async () => {
+    const res = await axiosInstance.get(API_ENDPOINTS.MACHINE.GET_MACHINES_LIST, {
+      params: { page: 1, pageSize: 20, all: '1', status: status || undefined, search: searchQuery || undefined },
+      skipGlobalLoading: true,
+    });
+    const exportRows = res.data?.data || [];
+    const rows = exportRows.map((row) => ({
+      Capitalized: row.Capitalized ? formatDate(row.Capitalized) : '',
+      'Fiscal Year': row.FiscalYear ?? '',
+      Class: row.Class ?? '',
+      'Asset Group': row.AssetGroup ?? '',
+      'Item Code': row.ItemCode ?? '',
       Description: row.Description ?? '',
-      Type: row.Type ?? '',
+      'Serial No': row.SerialNo ?? '',
       Location: row.Location ?? '',
-      'Useful Life (M)': row['Useful Life (M)'] ?? '',
-      'Remaining Life (M)': row['Remaining Life (M)'] ?? '',
-      APC: row.APC ?? '',
-      Dep: row.Dep ?? '',
+      Category: row.Category ?? '',
+      Division: row.Division ?? '',
+      Type: row.Type ?? '',
+      'Product Line': row.ProductLine ?? '',
+      Staff: row.Staff ?? '',
+      APV: row.APV ?? '',
+      DPR: row.DPR ?? '',
       FBV: row.FBV ?? '',
     }));
     if (!rows.length) {
@@ -76,14 +100,21 @@ const Machine = () => {
   };
 
   const columns = [
-    { header: 'Code', key: 'Code' },
-    { header: 'Description', key: 'Description' },
-    { header: 'Type', key: 'Type' },
+    { header: 'Capitalized', key: 'Capitalized', render: (r) => formatDate(r.Capitalized) },
+    { header: 'Fiscal Year', key: 'FiscalYear' },
+    { header: 'Class', key: 'Class' },
+    { header: 'Asset Group', key: 'AssetGroup' },
+    { header: 'Item Code', key: 'ItemCode' },
+    { header: 'Description', key: 'Description', width: '220px', render: (r) => <span className="machine-desc">{r.Description}</span> },
+    { header: 'Serial No', key: 'SerialNo' },
     { header: 'Location', key: 'Location' },
-    { header: 'Useful Life (M)', key: 'Useful Life (M)' },
-    { header: 'Remaining Life (M)', key: 'Remaining Life (M)' },
-    { header: 'APC', key: 'APC', render: (r) => fmtNum(r.APC) },
-    { header: 'Dep', key: 'Dep', render: (r) => fmtNum(r.Dep) },
+    { header: 'Category', key: 'Category' },
+    { header: 'Division', key: 'Division' },
+    { header: 'Type', key: 'Type' },
+    { header: 'Product Line', key: 'ProductLine' },
+    { header: 'Staff', key: 'Staff' },
+    { header: 'APV', key: 'APV', render: (r) => fmtNum(r.APV) },
+    { header: 'DPR', key: 'DPR', render: (r) => fmtNum(r.DPR) },
     { header: 'FBV', key: 'FBV', render: (r) => fmtNum(r.FBV) }
   ];
 
@@ -97,12 +128,30 @@ const Machine = () => {
               <IconSearch size={18} className="po-filter-search-icon" />
               <input
                 type="text"
-                placeholder="Search by Code or Description..."
+                placeholder="Search by item, description, serial, or location..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="po-filter-search-input"
               />
             </div>
+          </div>
+          <div className="po-filter-item">
+            <label className="po-filter-label">Status</label>
+            <select
+              className="po-filter-search-input"
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setPage(1);
+              }}
+            >
+              <option value="">All</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
           </div>
           <div className="po-filter-item">
             <label className="po-filter-label">&nbsp;</label>
@@ -121,8 +170,12 @@ const Machine = () => {
               <button
                 type="button"
                 className="po-filter-reset-btn"
-                onClick={() => setSearchQuery('')}
-                disabled={!searchQuery}
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatus('');
+                  setPage(1);
+                }}
+                disabled={!searchQuery && !status}
                 title={searchQuery ? 'Reset search' : 'No filters applied'}
               >
                 <IconRefresh size={16} />
@@ -139,11 +192,25 @@ const Machine = () => {
         ) : error ? (
           <div className="machine-error">{error}</div>
         ) : (
-          <Table 
-            columns={columns}
-            data={filteredData}
-            showActions={false}
-          />
+          <>
+            <Table
+              columns={columns}
+              data={machines}
+              showActions={false}
+              showPagination={false}
+            />
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
+          </>
         )}
       </div>
     </div>

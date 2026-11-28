@@ -1305,31 +1305,31 @@ const COA = ({ clearance = false }) => {
     {
       key: "ItemCode",
       header: "Item No",
-      width: "14%",
+      width: "10%",
       render: (row) => row.ItemCode || "—",
     },
     {
       key: "ItemName",
       header: "Item Name",
-      width: "24%",
+      width: "18%",
       render: (row) => row.ItemName || row.Product || "—",
     },
     {
       key: "BatchNo",
       header: "Batch",
-      width: "12%",
+      width: "11%",
       render: (row) => row.BatchNo || "—",
     },
     {
       key: "CreatedByName",
       header: "Created By",
-      width: "14%",
+      width: "12%",
       render: (row) => row.CreatedByName || row.CreatedBy || "—",
     },
     {
       key: "CreatedAt",
-      header: "Date",
-      width: "12%",
+      header: "Created Date",
+      width: "10%",
       render: (row) =>
         row.CreatedAt
           ? new Date(row.CreatedAt).toLocaleDateString("en-GB", {
@@ -1338,6 +1338,12 @@ const COA = ({ clearance = false }) => {
               year: "numeric",
             })
           : "—",
+    },
+    {
+      key: "IssueDate",
+      header: "CoA Issuance Date",
+      width: "12%",
+      render: (row) => row.IssueDate || "—",
     },
     {
       key: "Status",
@@ -1409,8 +1415,7 @@ const COA = ({ clearance = false }) => {
                 <IconHourglass size={16} stroke={2} />
               </button>
             )}
-          {!clearance &&
-            String(row.Status || "").toLowerCase() === "released" && (
+          {!qaOnly && !clearance && (
               <button
                 type="button"
                 className="dome-table-action-btn dome-table-action-btn--check"
@@ -1781,7 +1786,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.packSize}
-                          readOnly={isReadOnly || formData.locked?.packSize}
+                          onChange={(e) => handleInputChange(e, "packSize")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>Reporting Date:</th>
@@ -1794,7 +1800,7 @@ const COA = ({ clearance = false }) => {
                               dateReported: value,
                             }))
                           }
-                          readOnly={isReadOnly || formData.locked?.dateReported}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -1838,7 +1844,7 @@ const COA = ({ clearance = false }) => {
                               issueDate: value,
                             }))
                           }
-                          readOnly
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -1858,7 +1864,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, mfgDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.mfgDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -1886,7 +1892,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, expDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.expDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2012,7 +2018,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.packSize}
-                          readOnly={isReadOnly || formData.locked?.packSize}
+                          onChange={(e) => handleInputChange(e, "packSize")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>Reporting Date:</th>
@@ -2025,7 +2032,7 @@ const COA = ({ clearance = false }) => {
                               dateReported: value,
                             }))
                           }
-                          readOnly={isReadOnly || formData.locked?.dateReported}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2069,7 +2076,7 @@ const COA = ({ clearance = false }) => {
                               issueDate: value,
                             }))
                           }
-                          readOnly
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2088,7 +2095,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, mfgDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.mfgDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2112,7 +2119,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, expDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.expDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2221,7 +2228,7 @@ const COA = ({ clearance = false }) => {
                               dateReported: value,
                             }))
                           }
-                          readOnly={isReadOnly || formData.locked?.dateReported}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2250,7 +2257,8 @@ const COA = ({ clearance = false }) => {
                         <input
                           type="text"
                           value={formData.packSize}
-                          readOnly={isReadOnly || formData.locked?.packSize}
+                          onChange={(e) => handleInputChange(e, "packSize")}
+                          readOnly={isReadOnly}
                         />
                       </td>
                       <th>CoA Issuance Date:</th>
@@ -2263,7 +2271,7 @@ const COA = ({ clearance = false }) => {
                               issueDate: value,
                             }))
                           }
-                          readOnly
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2284,7 +2292,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, mfgDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.mfgDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>
@@ -2309,7 +2317,7 @@ const COA = ({ clearance = false }) => {
                           onChange={(value) =>
                             setFormData((prev) => ({ ...prev, expDate: value }))
                           }
-                          readOnly={isReadOnly || formData.locked?.expDate}
+                          readOnly={isReadOnly}
                         />
                       </td>
                     </tr>

@@ -125,10 +125,17 @@ const AddTodayPlan = () => {
 
   const fetchMachines = useCallback(async () => {
     try {
-      const res = await axiosInstance.get(API_ENDPOINTS.PRODUCTION_PLANNING.GET_MACHINES);
-      if (res.data?.success) {
-        setMachines(res.data.data);
-      }
+      const labRes = await axiosInstance.get(API_ENDPOINTS.MACHINE.GET_MACHINES_LIST, { params: { all: '1', page: 1, pageSize: 5000 } });
+      const machines = (labRes.data?.data || [])
+        .map((machine) => {
+          const name = String(machine.Description || '').trim();
+          if (!name) return null;
+          const code = machine.ItemCode ? `${machine.ItemCode} - ` : '';
+          return { key: machine.ItemCode || name, label: `${code}${name}`, value: name };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.label.localeCompare(b.label));
+      setMachines(machines);
     } catch (err) {
       console.error('Fetch Machines error:', err);
     }
@@ -775,7 +782,7 @@ const formatDate = (dateString) => {
       {/* Assigned Machines */}
       <div className="plan-table-section">
         <div className="plan-table-header-row">
-          <h3>Assigned Machines</h3>
+          <h3>Assigned Machines ({machines.length})</h3>
           {!isReadOnly && (
             <Button
               size="sm"
@@ -810,8 +817,8 @@ const formatDate = (dateString) => {
                         onChange={(e) => handleMachineItemChange(idx, 'name', e.target.value)}
                       >
                         <option value="">Select Machine</option>
-                        {machines.map(m => (
-                          <option key={m.ItemName} value={m.ItemName}>{m.ItemName}</option>
+                        {machines.map((m) => (
+                          <option key={m.key} value={m.value}>{m.label}</option>
                         ))}
                       </select>
                     )}

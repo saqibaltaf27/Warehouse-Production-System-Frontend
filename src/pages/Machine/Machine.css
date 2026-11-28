@@ -91,3 +91,11 @@
 .machine-error {
   color: #ef4444;
 }
+
+.machine-desc {
+  display: block;
+  width: 220px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+}
